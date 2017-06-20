@@ -25,6 +25,10 @@ contract Voting {
 	uint voteQuota;			/// type of majority necessary for winning poll
 	address[] trusted;		/// list of trusted addresses
 
+	function Voting(address[] _trusted) {
+		trusted = _trusted;
+	}
+
 	/// MODIFIERS:
 	/// true if the commit period is active (i.e. commit period expiration date not yet reached)
 	modifier commitPeriodActive(uint pollID) {
@@ -44,7 +48,10 @@ contract Voting {
 
 	/// true if the msg.sender (or tx.origin) is in the trusted list
 	modifier isTrusted(address user) {
-
+		for (uint idx = 0; idx < trusted.length; idx++) {
+			if (user == trusted[idx]) return;
+		}
+		throw;
 		_;
 	}
 
@@ -58,6 +65,4 @@ contract Voting {
 	function validPollID(uint pollID) returns (bool) {
 		/// NOT YET IMPLEMENTED
 	}
-
-
 }
