@@ -2,13 +2,14 @@ contract Voting {
 	struct Poll {
 		uint commitEndDate; /// expiration date of commit period for poll
 		uint revealEndDate; /// expiration date of reveal period for poll
-		uint voteQuota;		/// snapshot of canonical voteQuota
+		uint voteQuotaSnap;	/// snapshot of canonical voteQuota
 		uint votesFor;		/// tally of votes supporting proposal
 		uint votesAgainst;  /// tally of votes countering proposal
 	}
 
 	/// maps pollID to Poll struct
-	mapping(uint => Poll) pollMap; 
+	mapping(uint => Poll) pollMap;
+	uint pollNonce;
 
 	struct VoteNode {
 		bytes32 commitHash; /// hash of vote option and salt
@@ -25,24 +26,22 @@ contract Voting {
 	uint voteQuota;			/// type of majority necessary for winning poll
 	address[] trusted;		/// list of trusted addresses
 
+	/// CONSTRUCTOR:
 	function Voting(address[] _trusted) {
 		trusted = _trusted;
+		pollNonce = 0;
 	}
 
 	/// MODIFIERS:
 	/// true if the commit period is active (i.e. commit period expiration date not yet reached)
 	modifier commitPeriodActive(uint pollID) {
-		require(
-			!isExpired(pollMap[pollID].commitEndDate)
-		);
+		require(!isExpired(pollMap[pollID].commitEndDate));
 		_;
 	}
 
 	/// true if the reveal period is active (i.e. reveal period expiration date not yet reached)
 	modifier revealPeriodActive(uint pollID) {
-		require(
-			!isExpired(pollMap[pollID].revealEndDate)
-		);
+		require(!isExpired(pollMap[pollID].revealEndDate));
 		_;
 	}
 
@@ -55,6 +54,21 @@ contract Voting {
 		_;
 	}
 
+	///CORE FUNCTIONS:
+	function startPoll() isTrusted(msg.sender) returns (uint) {
+		pollNonce = pollNonce + 1;
+
+		pollMap[pollNonce] = Poll({
+			commitEndDate = block.timestamp + commitDuration,
+			revealEndDate = block.timestamp + revealDuration,
+			voteQuotaSnap = voteQuota,
+			votesFor 	  = 0,
+			votesAgainst  = 0
+		});
+		
+		return pollNonce;
+	}
+
 	///HELPER FUNCTIONS:
 	/// determines if current timestamp is past termination timestamp 
 	function isExpired(uint terminationDate) returns (bool) {
@@ -65,4 +79,6 @@ contract Voting {
 	function validPollID(uint pollID) returns (bool) {
 		/// NOT YET IMPLEMENTED
 	}
+
+
 }
