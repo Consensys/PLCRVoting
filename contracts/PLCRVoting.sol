@@ -24,4 +24,37 @@ contract Voting {
 	uint revealDuration;	/// length of reveal period
 	uint voteQuota;			/// type of majority necessary for winning poll
 	address[] trusted;		/// list of trusted addresses
+
+	bytes32 constant ZERO_NODE_COMMIT_HASH = 0xabc;
+	bytes32 constant NODE_INVALID_COMMIT_HASH = 0x1337;
+
+	function validateNode(VoteNode potentialNode) 
+		returns (VoteNode) {
+			VoteNode prevNode = voteMap[sha3(msg.sender, prevPollID)];
+		
+			// Check if the potential previous node has
+			// less tokens than the current node
+			if (potentialPrevNode.numTokens < numTokens) {
+				VoteNode potentialNextNode = 
+					voteMap[sha3(msg.sender, potentialPrevNode.nextID)];
+				if (potentialNextNode.commitHash == ZERO_NODE_COMMIT_HASH
+					|| numTokens < potentialNextNode.numTokens) {
+					// Good to insert since the next node is the zero node
+					// or the next node has more tokens 
+					// than the current node
+					potentialNode.previousID = prevPollID;
+					potentialNode.nextID = potentialPrevNode.nextID;
+
+					// Update the previous/next nodes to point to
+					// the new node
+					potentialPrevNode.nextID = pollID;
+					potentialNextNode.previousID = pollID;
+
+					return potentialNode;
+				} 
+			}
+			potentialNode.commitHash = NODE_INVALID_COMMIT_HASH;
+			return potentialNode;
+		}
+
 }
