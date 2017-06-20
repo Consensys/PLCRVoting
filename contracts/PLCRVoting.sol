@@ -1,25 +1,27 @@
 contract Voting {
 	struct Poll {
-		uint commitEndBlock;
-		uint revealEndBlock;
-		uint voteQuota;
-		uint votesFor;
-		uint votesAgainst;
+		uint commitEndDate; /// expiration date of commit period for poll
+		uint revealEndDate; /// expiration date of reveal period for poll
+		uint voteQuota;		/// snapshot of canonical voteQuota
+		uint votesFor;		/// tally of votes supporting proposal
+		uint votesAgainst;  /// tally of votes countering proposal
 	}
 
-	mapping(uint => Poll) pollMap;
+	/// maps pollID to Poll struct
+	mapping(uint => Poll) pollMap; 
 
 	struct VoteNode {
-		bytes32 commitHash;
-		uint numTokens;
-		uint previousID;
-		uint nextID;
+		bytes32 commitHash; /// hash of vote option and salt
+		uint numTokens;		/// number of tokens attached to vote
+		uint previousID;    /// reference to previous vote node
+		uint nextID;		/// reference to following vote node 
 	}
 
-	mapping(bytes32 => VoteNode) voteMap;
+	/// maps hash of user's address and pollID to VoteNode struct
+	mapping(bytes32 => VoteNode) voteMap;  
 
-	uint commitDuration;
-	uint revealDuration;
-	uint voteQuota;
-	address[] trusted;
+	uint commitDuration;	/// length of commit period
+	uint revealDuration;	/// length of reveal period
+	uint voteQuota;			/// type of majority necessary for winning poll
+	address[] trusted;		/// list of trusted addresses
 }
