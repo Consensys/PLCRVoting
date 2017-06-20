@@ -202,4 +202,36 @@ contract PLCRVoting {
     user = user;
     return 0; //just for testing
   }
+	/// MODIFIERS:
+	/// true if the commit period is active (i.e. commit period expiration date not yet reached)
+	modifier commitPeriodActive(uint pollID) {
+		require(
+			!isExpired(pollMap[pollID].commitEndDate)
+		);
+		_;
+	}
+
+	/// true if the reveal period is active (i.e. reveal period expiration date not yet reached)
+	modifier revealPeriodActive(uint pollID) {
+		require(
+			!isExpired(pollMap[pollID].revealEndDate)
+		);
+		_;
+	}
+
+	/// true if the msg.sender (or tx.origin) is in the trusted list
+	modifier isTrusted(address user) {
+		_;
+	}
+
+	///HELPER FUNCTIONS:
+	/// determines if current timestamp is past termination timestamp 
+	function isExpired(uint terminationDate) returns (bool) {
+		return (block.timestamp > terminationDate);
+	}
+
+	/// true if the poll ID corresponds to a valid poll; false otherwise
+	function validPollID(uint pollID) returns (bool) {
+		/// NOT YET IMPLEMENTED
+	}
 }
