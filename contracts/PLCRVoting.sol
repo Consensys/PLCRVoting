@@ -24,4 +24,32 @@ contract Voting {
 	uint revealDuration;	/// length of reveal period
 	uint voteQuota;			/// type of majority necessary for winning poll
 	address[] trusted;		/// list of trusted addresses
+
+	StandardToken token;
+
+	/// maps user's address to voteToken balance
+	mapping(address => uint) voteTokenBalance;
+
+	function Voting(address tokenAddr) {
+		token = StandardToken(tokenAddr);
+	}
+
+	/// interface for users to purchase votingTokens by exchanging ERC20 token
+	function loadTokens(uint numTokens) {
+		require(token.balanceOf(msg.sender) >= numTokens);
+		require(token.transferFrom(msg.sender, this, numTokens));
+		voteTokenBalance[msg.sender] += numTokens;
+	}
+
+	/// interface for users to withdraw votingTokens and exchange for ERC20 token
+	function withdrawTokens(uint numTokens) {
+		uint availableTokens = voteTokenBalance[msg.sender] - getMaxVoted(msg.sender);
+		require(availableTokens >= numTokens);
+		require(token.transfer(msg.sender, numTokens));
+		voteTokenBalance[msg.sender] -= numTokens;
+	}
+
+	function getMaxVoted(address user) {
+		return 10; //just for testing
+	}
 }
