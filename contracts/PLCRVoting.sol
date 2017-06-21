@@ -32,6 +32,10 @@ contract Voting {
 		uint prevPollID) commitPeriodActive(pollID) 
 		returns (bool) {
 
+		// Make sure user is not trying to manually commit
+		// a vote corresponding the zero node
+		require(pollID != 0);
+
 		// Check to see if we are making an update
 		// as opposed to an insert
 		bool isUpdatingExistingNode = false;
@@ -43,7 +47,7 @@ contract Voting {
 
 			// Check to see if the previous poll ID was not set,
 			// which would imply that poll ID can not be valid
-			if (prevPollID == 0x0) {
+			if (prevPollID == 0) {
 				return false;
 			}
 
@@ -70,6 +74,16 @@ contract Voting {
 					the node at <prevPollID>:
 
 				*/
+
+				// Check if the zero node is the only node
+				// in the double-linked list
+				if (prevPollID == 0 
+					&& getNextID(prevPollID) == 0) {
+					/*
+						TODO: insert the >node at poll ID> after
+						the zero node 
+					*/
+				}
 			}
 		}
 
@@ -79,6 +93,12 @@ contract Voting {
 
 	function validateNode(uint256 prevPollID, uint256 numTokens) 
 		returns (bool) {
+			if (prevPollID == 0 
+				&& getNextID(prevPollID) == 0) {
+				// Only the zero node exists
+				return true;
+			}
+
 			uint256 prevNodeTokens = getNumTokens(prevPollID);
 			// Check if the potential previous node has
 			// less tokens than the current node
