@@ -73,7 +73,7 @@ contract Voting {
 	function checkWinner(uint pollID) returns (bool) {
 		Poll poll = pollMap[pollID];
 		require(isExpired(poll.revealEndDate));
-		return (100 - poll.voteQuota) * poll.votesFor >= poll.voteQuota * poll.votesAgainst;
+		return ((100 - poll.voteQuota) * poll.votesFor) >= (poll.voteQuota * poll.votesAgainst);
 	}
 
 	///HELPER FUNCTIONS:
