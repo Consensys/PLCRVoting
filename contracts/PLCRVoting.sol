@@ -26,7 +26,6 @@ contract Voting {
 	address[] trusted;		/// list of trusted addresses
 
 	bytes32 constant ZERO_NODE_COMMIT_HASH = 0xabc;
-	bytes32 constant NODE_INVALID_COMMIT_HASH = 0x1337;
 
 	function commitVote(uint pollID, 
 		bytes32 hashOfVoteAndSalt, uint numTokens, 
