@@ -26,4 +26,11 @@ contract PLCRVoting {
 	uint revealDuration;	/// length of reveal period
 	uint voteQuota;			/// type of majority necessary for winning poll
 	address[] trusted;		/// list of trusted addresses
+
+	function revealVote(uint pollID, 
+		uint salt, bool voteOption) 
+		revealPeriodActive(pollID) notYetRevealed(pollID) returns bool {
+
+		bytes32 currHash = sha3(voteOption, salt);
+	}
 }
