@@ -59,21 +59,21 @@ contract Voting {
 		pollNonce = pollNonce + 1;
 
 		pollMap[pollNonce] = Poll({
-			commitEndDate = block.timestamp + commitDuration,
-			revealEndDate = block.timestamp + revealDuration,
-			voteQuotaSnap = voteQuota,
-			votesFor 	  = 0,
-			votesAgainst  = 0
+			commitEndDate: block.timestamp + commitDuration,
+			revealEndDate: block.timestamp + revealDuration,
+			voteQuotaSnap: voteQuota,
+			votesFor: 0,
+			votesAgainst: 0
 		});
 
 		return pollNonce;
 	}
 
 	/// check if votesFor / (totalVotes) >= (voteQuota / 100) 
-	function checkWinner(uint pollID) returns (bool) {
+	function isPassed(uint pollID) returns (bool) {
 		Poll poll = pollMap[pollID];
 		require(isExpired(poll.revealEndDate));
-		return ((100 - poll.voteQuota) * poll.votesFor) >= (poll.voteQuota * poll.votesAgainst);
+		return ((100 - poll.voteQuotaSnap) * poll.votesFor) >= (poll.voteQuotaSnap * poll.votesAgainst);
 	}
 
 	///HELPER FUNCTIONS:
