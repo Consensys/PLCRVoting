@@ -33,61 +33,66 @@ contract Voting {
 		uint prevPollID) commitPeriodActive(pollID) 
 		returns (bool) {
 
-		VoteNode nodeToInsert;
-
+		// Check to see if we are making an update
+		// as opposed to an insert
+		bool isUpdatingExistingNode = false;
 		if (pollID == prevPollID) {
-			// Prepare an existing node for validation
-			nodeToInsert = voteMap[pollID];
-			if (nodeToInsert)
-			nodeToInsert.commitHash = hashOfVoteAndSalt;
-			nodeToInsert.numTokens = numTokens;
-		} else {
-			// Prepare a new node for validation
-			nodeToInsert = VoteNode({
-				commitHash: hashOfVoteAndSalt,
-				numTokens: numTokens,
-				previousID: prevPollID
-			});
-		}
+			// Making an update --> the previous node
+			// has already been set, and so that
+			// node can be used for validation
+			prevPollID = getPreviousID(pollID);
 
-		VoteNode node = validateNode(nodeToInsert);
+			// Check to see if the previous poll ID was not set,
+			// which would imply that poll ID can not be valid
+			if (prevPollID == 0x0) {
+				return false;
+			}
+
+			isUpdatingExistingNode = true;
+		} 
+
+		// Determine if the new node can be inserted/updated
+		// at the given spot (i.e. the node right after prevPollID)
+		bool isValid = 
+			validateNode(prevPollID, numTokens);
 
 		// Node is valid
-		if (node.commitHash != NODE_INVALID_COMMIT_HASH) {
+		if (isValid) {
 			// Update a previous commit
-			if (node.pollID == prevPollID) {
-			/*
-				TODO: Update the <node at poll ID> to equal <node>
-			*/
+			if (isUpdatingExistingNode) {
+				/*
+					TODO: Update the <node at poll ID>:
+						update numTokens attribute
+						update commitHash attribute
+				*/
 			} else {
-			/*
-			TODO: Insert node into double linked-list
-			*/
+				/*
+					TODO: insert the <node at poll ID> after
+					the node at <prevPollID>:
+
+				*/
+			}
 		}
 
 		// Invalid prevPollID
 		return false;
 	}
 
-	function validateNode(uint256 pollID, 
-		uint256 prevPollID, uint256 numTokens) 
+	function validateNode(uint256 prevPollID, uint256 numTokens) 
 		returns (bool) {
 			uint256 prevNodeTokens = getNumTokens(prevPollID);
 			// Check if the potential previous node has
 			// less tokens than the current node
-			if (prevNodeTokens < numTokens) {
+			if (prevNodeTokens <= numTokens) {
 				uint256 nextNodeID = getNextID(prevPollID);
 				uint256 nextNodeTokens = 
 					getNumTokens(nextNodeID);
 				if (getCommitHash(nextNodeID).commitHash == ZERO_NODE_COMMIT_HASH
-					|| numTokens < nextNodeTokens) {
-					//TODO: return should insert
+					|| numTokens <= nextNodeTokens) {
 					return true;
 				} 
 			}
 
-			//TODO: return should not insert
-			potentialNode.commitHash = NODE_INVALID_COMMIT_HASH;
 			return false;
 		}
 
