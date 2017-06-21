@@ -29,7 +29,12 @@ contract PLCRVoting {
 
 	function revealVote(uint pollID, 
 		uint salt, bool voteOption) 
-		revealPeriodActive(pollID) notYetRevealed(pollID) returns bool {
+		revealPeriodActive(pollID) returns bool {
+
+		/*
+			TODO: Cem-- implement 'hasBeenRevealed'
+		*/
+		require(!hasBeenRevealed(pollID));
 
 		bytes32 currHash = sha3(voteOption, salt);
 
