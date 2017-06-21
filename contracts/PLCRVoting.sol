@@ -1,4 +1,6 @@
-contract Voting {
+pragma solidity ^0.4.4;
+
+contract PLCRVoting {
 	struct Poll {
 		uint commitEndDate; /// expiration date of commit period for poll
 		uint revealEndDate; /// expiration date of reveal period for poll
