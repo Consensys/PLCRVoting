@@ -12,9 +12,9 @@ contract Voting {
 
 	struct VoteNode {
 		bytes32 commitHash; /// hash of vote option and salt
-		uint numTokens;		/// number of tokens attached to vote
-		uint previousID;    /// reference to previous vote node
-		uint nextID;		/// reference to following vote node 
+		uint256 numTokens;		/// number of tokens attached to vote
+		uint256 previousID;    /// reference to previous vote node
+		uint256 nextID;		/// reference to following vote node 
 	}
 
 	/// maps hash of user's address and pollID to VoteNode struct
@@ -38,6 +38,7 @@ contract Voting {
 		if (pollID == prevPollID) {
 			// Prepare an existing node for validation
 			nodeToInsert = voteMap[pollID];
+			if (nodeToInsert)
 			nodeToInsert.commitHash = hashOfVoteAndSalt;
 			nodeToInsert.numTokens = numTokens;
 		} else {
@@ -68,33 +69,26 @@ contract Voting {
 		return false;
 	}
 
-	function validateNode(VoteNode potentialNode) 
-		returns (VoteNode) {
-			VoteNode prevNode = voteMap[sha3(msg.sender, prevPollID)];
-		
+	function validateNode(uint256 pollID, 
+		uint256 prevPollID, uint256 numTokens) 
+		returns (bool) {
+			uint256 prevNodeTokens = getNumTokens(prevPollID);
 			// Check if the potential previous node has
 			// less tokens than the current node
-			if (potentialPrevNode.numTokens < numTokens) {
-				VoteNode potentialNextNode = 
-					voteMap[sha3(msg.sender, potentialPrevNode.nextID)];
-				if (potentialNextNode.commitHash == ZERO_NODE_COMMIT_HASH
-					|| numTokens < potentialNextNode.numTokens) {
-					// Good to insert since the next node is the zero node
-					// or the next node has more tokens 
-					// than the current node
-					potentialNode.previousID = prevPollID;
-					potentialNode.nextID = potentialPrevNode.nextID;
-
-					// Update the previous/next nodes to point to
-					// the new node
-					potentialPrevNode.nextID = pollID;
-					potentialNextNode.previousID = pollID;
-
-					return potentialNode;
+			if (prevNodeTokens < numTokens) {
+				uint256 nextNodeID = getNextID(prevPollID);
+				uint256 nextNodeTokens = 
+					getNumTokens(nextNodeID);
+				if (getCommitHash(nextNodeID).commitHash == ZERO_NODE_COMMIT_HASH
+					|| numTokens < nextNodeTokens) {
+					//TODO: return should insert
+					return true;
 				} 
 			}
+
+			//TODO: return should not insert
 			potentialNode.commitHash = NODE_INVALID_COMMIT_HASH;
-			return potentialNode;
+			return false;
 		}
 
 	function getPreviousID(bytes32 pollID) returns (bytes32) {
