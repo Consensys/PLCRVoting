@@ -32,5 +32,48 @@ contract PLCRVoting {
 		revealPeriodActive(pollID) notYetRevealed(pollID) returns bool {
 
 		bytes32 currHash = sha3(voteOption, salt);
+
+		// Check if the hash from the input is the 
+		// same as the commit hash
+		if (currHash == getCommitHash(pollID)) {
+			// Record the vote
+			if (voteOption) {
+				pollMap[pollID].votesFor++;
+			} else {
+				pollMap[pollID].votesAgainst++;
+			}
+
+			/*
+				TODO: Delete the element from the double linked-list
+				that corresponds to this poll for the msg sender
+			*/
+			return true;
+		}
+		return false;
+	}
+
+	function getPreviousID(uint pollID) returns (uint) {
+		return uint(getAttribute(pollID, "prevID"));
+	}
+
+	function getNextID(uint pollID) returns (uint) {
+		return uint(getAttribute(pollID, "nextID"));
+	}
+
+	function getNumTokens(uint pollID) returns (uint256) {
+		return uint(getAttribute(pollID, "numTokens"));
+	}
+
+	function getCommitHash(uint pollID) returns (bytes32) {
+		return getAttribute(pollID, "commitHash");
+	}
+
+	function getAttribute(uint pollID, string attrName) returns (bytes32) {
+		return voteMap[sha3(msg.sender, pollID, attrName)];
+	}
+
+	function setAttribute(uint pollID, 
+		string attrName, bytes32 attrVal) {
+		voteMap[sha3(msg.sender, pollID, attrName)] = attrVal;
 	}
 }
