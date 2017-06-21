@@ -12,15 +12,8 @@ contract PLCRVoting {
 	/// maps pollID to Poll struct
 	mapping(uint => Poll) pollMap; 
 
-	struct VoteNode {
-		bytes32 commitHash; /// hash of vote option and salt
-		uint256 numTokens;		/// number of tokens attached to vote
-		uint256 previousID;    /// reference to previous vote node
-		uint256 nextID;		/// reference to following vote node 
-	}
-
 	/// maps hash of user's address and pollID to VoteNode struct
-	mapping(bytes32 => VoteNode) voteMap;  
+	mapping(bytes32 => bytes32) voteMap;  
 
 	uint commitDuration;	/// length of commit period
 	uint revealDuration;	/// length of reveal period
@@ -29,9 +22,14 @@ contract PLCRVoting {
 
 	bytes32 constant ZERO_NODE_COMMIT_HASH = 0xabc;
 
+	modifier commitPeriodActive(uint pollID) {
+		require(true);
+		_;
+	}
+
 	function commitVote(uint pollID, 
 		bytes32 hashOfVoteAndSalt, uint numTokens, 
-		uint prevPollID) commitPeriodActive(pollID) 
+		uint prevPollID) 
 		returns (bool) {
 
 		// Make sure user is not trying to manually commit
@@ -58,8 +56,8 @@ contract PLCRVoting {
 
 		// Determine if the new node can be inserted/updated
 		// at the given spot (i.e. the node right after prevPollID)
-		bool isValid = 
-			validateNode(prevPollID, numTokens);
+		bool isValid = true;
+			// validateNode(prevPollID, numTokens);
 
 		// Node is valid
 		if (isValid) {
@@ -93,51 +91,49 @@ contract PLCRVoting {
 		return false;
 	}
 
-	function validateNode(uint256 prevPollID, uint256 numTokens) 
-		returns (bool) {
-			if (prevPollID == 0 
-				&& getNextID(prevPollID) == 0) {
-				// Only the zero node exists
-				return true;
-			}
-
-			uint256 prevNodeTokens = getNumTokens(prevPollID);
-			// Check if the potential previous node has
-			// less tokens than the current node
-			if (prevNodeTokens <= numTokens) {
-				uint256 nextNodeID = getNextID(prevPollID);
-				uint256 nextNodeTokens = 
-					getNumTokens(nextNodeID);
-				if (getCommitHash(nextNodeID).commitHash == ZERO_NODE_COMMIT_HASH
-					|| numTokens <= nextNodeTokens) {
-					return true;
-				} 
-			}
-
-			return false;
+	function validateNode(uint prevPollID, uint256 numTokens) returns (bool) {
+		if (prevPollID == 0 
+			&& getNextID(prevPollID) == 0) {
+			// Only the zero node exists
+			return true;
 		}
 
-	function getPreviousID(bytes32 pollID) returns (bytes32) {
-		return getAttribute(pollID, "prevID");
+		uint256 prevNodeTokens = getNumTokens(prevPollID);
+		// Check if the potential previous node has
+		// less tokens than the current node
+		if (prevNodeTokens <= numTokens) {
+			uint256 nextNodeID = getNextID(prevPollID);
+			uint256 nextNodeTokens = getNumTokens(nextNodeID);
+			if (getCommitHash(nextNodeID) == ZERO_NODE_COMMIT_HASH
+				|| numTokens <= nextNodeTokens) {
+				return true;
+			} 
+		}
+
+		return false;
 	}
 
-	function getNextID(bytes32 pollID) returns (bytes32) {
-		return getAttribute(pollID, "nextID");
+	function getPreviousID(uint pollID) returns (uint) {
+		return uint(getAttribute(pollID, "prevID"));
 	}
 
-	function getNumTokens(bytes32 pollID) returns (bytes32) {
-		return getAttribute(pollID, "numTokens");
+	function getNextID(uint pollID) returns (uint) {
+		return uint(getAttribute(pollID, "nextID"));
 	}
 
-	function getCommitHash(bytes32 pollID) returns (bytes32) {
+	function getNumTokens(uint pollID) returns (uint256) {
+		return uint(getAttribute(pollID, "numTokens"));
+	}
+
+	function getCommitHash(uint pollID) returns (bytes32) {
 		return getAttribute(pollID, "commitHash");
 	}
 
-	function getAttribute(bytes32 pollID, string attrName) returns (bytes32) {
+	function getAttribute(uint pollID, string attrName) returns (bytes32) {
 		return voteMap[sha3(msg.sender, pollID, attrName)];
 	}
 
-	function setAttribute(bytes32 pollID, 
+	function setAttribute(uint pollID, 
 		string attrName, bytes32 attrVal) {
 		voteMap[sha3(msg.sender, pollID, attrName)] = attrVal;
 	}
