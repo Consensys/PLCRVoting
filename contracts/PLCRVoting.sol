@@ -9,15 +9,18 @@ contract PLCRVoting {
         uint votesAgainst;      /// tally of votes countering proposal
         string proposal;        /// proposal to be voted for/against
     }
-
+    
     /// maps pollID to Poll struct
     mapping(uint => Poll) public pollMap;
     uint pollNonce;
-
     event PollCreated(uint pollID);
 
-    /// maps hash of user's address and pollID to VoteNode struct
-    mapping(bytes32 => uint) voteMap;  
+    // represent a double linked list through mapping
+    // sha3(userAddress, pollID, "prevID") => byte32 prevID
+    // sha3(userAddress, pollID, "nextID") => byte32 nextID
+    // sha3(userAddress, pollID, "numTokens") => byte32 numTokens
+    // sha3(userAddress, pollID, "commitHash") => byte32 commitHash
+    mapping(bytes32 => uint) public voteMap;  
 
     bytes32 constant ZERO_NODE_COMMIT_HASH = 0xabc;
     uint constant INITIAL_COMMIT_DURATION = 100;
@@ -63,6 +66,10 @@ contract PLCRVoting {
         PollCreated(pollNonce);
     }
 
+    /*
+     * Helper Functions
+     */
+ 
     /// check if votesFor / (totalVotes) >= (voteQuota / 100) 
     function isPassed(uint pollID) returns (bool) {
         Poll poll = pollMap[pollID];
@@ -70,7 +77,6 @@ contract PLCRVoting {
         return ((100 - poll.voteQuotaSnap) * poll.votesFor) >= (poll.voteQuotaSnap * poll.votesAgainst);
     }
 
-    ///HELPER FUNCTIONS:
     /// determines if current timestamp is past termination timestamp 
     function isExpired(uint terminationDate) returns (bool) {
         return (block.timestamp > terminationDate);
@@ -110,8 +116,8 @@ contract PLCRVoting {
     }
 
     modifier pollEnded(uint pollID) {
-        require(block.timestamp > pollMap[pollID].revealEndDate);
-    _;
+        require(block.timestamp > pollMap[pollID].revealEndDate);   
+        _;
     }
     
     function getTotalNumberOfTokensForWinningOption(uint pollID) pollEnded(pollID) returns (uint) {
@@ -121,5 +127,18 @@ contract PLCRVoting {
         } else {
             return pollMap[pollID].votesAgainst;
         }
+    }
+    
+    // get any attribute that is not commitHash 
+    function getAttribute(uint pollID, string attrName) returns (uint) {    
+        return voteMap[sha3(msg.sender, pollID, attrName)]; 
+    }
+    
+    function getCommitHash(uint pollID) returns (bytes32) { 
+        return bytes32(voteMap[sha3(msg.sender, pollID, 'commitHash')]);    
+    }
+    
+    function setAttribute(uint pollID, string attrName, uint attrVal) { 
+        voteMap[sha3(msg.sender, pollID, attrName)] = attrVal;  
     }
 }
