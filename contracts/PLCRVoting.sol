@@ -13,7 +13,7 @@ contract PLCRVoting {
 	mapping(uint => Poll) pollMap; 
 
 	/// maps hash of user's address and pollID to VoteNode struct
-	mapping(bytes32 => bytes32) voteMap;  
+	mapping(bytes32 => uint) voteMap;  
 
 	uint commitDuration;	/// length of commit period
 	uint revealDuration;	/// length of reveal period
@@ -68,6 +68,7 @@ contract PLCRVoting {
 
 		// Node is valid
 		if (isValid) {
+			uint hashAsInt = uint(hashOfVoteAndSalt);
 			// Update a previous commit
 			if (isUpdatingExistingNode) {
 				/*
