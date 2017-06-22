@@ -22,7 +22,14 @@ contract PLCRVoting {
 
 	bytes32 constant ZERO_NODE_COMMIT_HASH = 0xabc;
 
+	/// TODO: Implement (Yorke may have done this)
 	modifier commitPeriodActive(uint pollID) {
+		require(true);
+		_;
+	}
+
+	/// TODO: Implement (Yorke may have done this)
+	modifier hasEnoughTokens(uint pollID) {
 		require(true);
 		_;
 	}
