@@ -5,6 +5,7 @@ contract Voting {
 		uint voteQuotaSnap;	/// snapshot of canonical voteQuota
 		uint votesFor;		/// tally of votes supporting proposal
 		uint votesAgainst;  /// tally of votes countering proposal
+		string proposal;    /// proposal to be voted for/against
 	}
 
 	/// maps pollID to Poll struct
@@ -55,7 +56,7 @@ contract Voting {
 	}
 
 	///CORE FUNCTIONS:
-	function startPoll() isTrusted(msg.sender) returns (uint) {
+	function startPoll(string proposal) isTrusted(msg.sender) returns (uint) {
 		pollNonce = pollNonce + 1;
 
 		pollMap[pollNonce] = Poll({
@@ -63,7 +64,8 @@ contract Voting {
 			revealEndDate: block.timestamp + revealDuration,
 			voteQuotaSnap: voteQuota,
 			votesFor: 0,
-			votesAgainst: 0
+			votesAgainst: 0,
+			proposal: proposal
 		});
 
 		return pollNonce;
