@@ -4,7 +4,7 @@ contract('Voting', function(accounts) {
   it("validate node, empty double linked-list", function() {
 	return PLCRVoting.deployed()
 	.then(function(instance) {
-
+		
 	});
   });
   it("validate node, single element double linked-list", function() {
@@ -28,7 +28,7 @@ contract('Voting', function(accounts) {
   it("validate node, multiple nodes deleted from 5 elements double linked-list", function() {
 	return PLCRVoting.deployed()
 	.then(function(instance) {
-
+		
 	});
   });
   it("single commit to a single poll (commit period active)", function() {
