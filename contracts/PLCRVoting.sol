@@ -22,6 +22,11 @@ contract Voting {
 	/// maps hash of user's address and pollID to VoteNode struct
 	mapping(bytes32 => VoteNode) voteMap;  
 
+
+	constant uint INITIAL_COMMIT_DURATION = 100;
+	constant uint INITIAL_REVEAL_DURATION = 100;
+	constant uint INITIAL_VOTE_QUOTA = 50;
+	constant uint INITIAL_POLL_NONCE = 0;
 	uint commitDuration;	/// length of commit period
 	uint revealDuration;	/// length of reveal period
 	uint voteQuota;			/// type of majority necessary for winning poll
@@ -30,7 +35,10 @@ contract Voting {
 	/// CONSTRUCTOR:
 	function Voting(address[] _trusted) {
 		trusted = _trusted;
-		pollNonce = 0;
+		pollNonce = INITIAL_POLL_NONCE;
+		commitDuration = INITIAL_COMMIT_DURATION;
+		revealDuration = INITIAL_REVEAL_DURATION;
+		voteQuota = INITIAL_VOTE_QUOTA;
 	}
 
 	/// MODIFIERS:
@@ -89,5 +97,18 @@ contract Voting {
 		/// NOT YET IMPLEMENTED
 	}
 
+    /// sets the commit duration
+    function setCommitDuration(uint _commitDuration) isTrusted(msg.sender) {
+    	commitDuration = _commitDuration;
+    }
 
+    /// sets the reveal duration
+    function setRevealDuration(uint _revealDuration) isTrusted(msg.sender) {
+    	revealDuration = _revealDuration;
+    }
+
+    /// sets the vote quota
+    function setVoteQuota(uint _voteQuota) isTrusted(msg.sender) {
+    	voteQuota = _voteQuota;
+    }
 }
