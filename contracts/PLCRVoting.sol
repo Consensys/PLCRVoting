@@ -57,8 +57,7 @@ contract PLCRVoting {
 
 		// Determine if the new node can be inserted/updated
 		// at the given spot (i.e. the node right after prevPollID)
-		bool isValid = true;
-			// validateNode(prevPollID, numTokens);
+		bool isValid = validateNode(prevPollID, numTokens);
 
 		// Node is valid
 		if (isValid) {
