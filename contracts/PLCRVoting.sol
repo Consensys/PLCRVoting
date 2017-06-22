@@ -93,8 +93,10 @@ contract Voting {
 	}
 
 	/// true if the poll ID corresponds to a valid poll; false otherwise
+	/// a valid poll can be defined as any poll that has been started (whether
+	/// it has finished does not matter)
 	function validPollID(uint pollID) returns (bool) {
-		/// NOT YET IMPLEMENTED
+		return pollMap[pollID].commitEndDate > 0;
 	}
 
     /// sets the commit duration
