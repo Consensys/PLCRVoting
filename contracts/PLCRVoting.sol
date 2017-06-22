@@ -29,7 +29,8 @@ contract PLCRVoting {
 
 	function commitVote(uint pollID, 
 		bytes32 hashOfVoteAndSalt, uint numTokens, 
-		uint prevPollID) 
+		uint prevPollID) hasEnoughTokens(numTokens) 
+		commitPeriodActive(pollID)
 		returns (bool) {
 
 		// Make sure user is not trying to manually commit
