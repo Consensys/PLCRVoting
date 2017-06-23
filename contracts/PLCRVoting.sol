@@ -22,26 +22,25 @@ contract PLCRVoting {
   uint revealDuration;      /// length of reveal period
   uint voteQuota;           /// type of majority necessary for winning poll
   address[] trusted;        /// list of trusted addresses
-   
- /* 
+  
+  // insert to double-linked-list given that the prevID is valid
   function insertToDll(uint pollID, uint prevID, uint numTokens, bytes32 commitHash){
-    uint nextID = uint(getAttribute(bytes32 prevID, "nextID"));
+    uint nextID = uint(getAttribute(prevID, "nextID"));
 
     // make nextNode.prev point to newNode
-    setAttribute(nextID, "prevID", bytes32(pollID));
+    setAttribute(nextID, "prevID", pollID);
 
     // make prevNode.next point to newNode
-    setAttribute(prevID, "nextID", bytes32(pollID));
+    setAttribute(prevID, "nextID", pollID);
 
     // make newNode point to next and prev 
-    setAttribute(pollID, "prevID", bytes32(prevID)); 
-    setAttribute(pollID, "prevID", bytes32(nextID)); 
+    setAttribute(pollID, "prevID", prevID); 
+    setAttribute(pollID, "nextID", nextID); 
 
     // set properties of newNode
-    setAttribute(pollID, "numTokens", bytes32(numTokens));
-    setAttribute(pollID, "commitHash", bytes32(commitHash));
+    setAttribute(pollID, "numTokens", numTokens);
+    setAttribute(pollID, "commitHash", uint(commitHash));
   }
- */
 
  /*
   * Helper Functions
