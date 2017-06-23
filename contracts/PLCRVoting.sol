@@ -4,9 +4,10 @@ import "./HumanStandardToken.sol";
 contract PLCRVoting {
 	
 	struct Poll {
+                string proposal;
 		uint commitEndDate;	 /// expiration date of commit period for 
 		uint revealEndDate;	 /// expiration date of reveal period for 
-		uint voteQuota;	 /// snapshot of canonical voteQ
+		uint voteQuotaSnap;	 /// snapshot of canonical voteQ
 		uint votesFor;	/// tally of votes supporting prop
 		uint votesAgainst;	/// tally of votes countering proposal
 	}
@@ -19,6 +20,9 @@ contract PLCRVoting {
 	uint revealDuration;	/// length of reveal period
 	uint voteQuota;			/// type of majority necessary for winning poll
 	address[] trusted;		/// list of trusted addresses
+
+        uint pollNonce;
+        event PollCreated(uint pollId);
 
 	bytes32 constant ZERO_NODE_COMMIT_HASH = 0xabc;
 
@@ -231,7 +235,39 @@ contract PLCRVoting {
 
 	/// true if the msg.sender (or tx.origin) is in the trusted list
 	modifier isTrusted(address user) {
+		bool flag = false;
+		for (uint idx = 0; idx < trusted.length; idx++) {
+			if (user == trusted[idx]) {
+				flag = true;
+				break;
+			}
+		}
+		require(flag);
 		_;
+	}
+
+	///CORE FUNCTIONS:
+	function startPoll(string proposal, uint voteQuota) isTrusted(msg.sender)
+		{
+		pollNonce = pollNonce + 1;
+
+		pollMap[pollNonce] = Poll({
+			commitEndDate: block.timestamp + commitDuration,
+			revealEndDate: block.timestamp + revealDuration,
+			voteQuotaSnap: voteQuota,
+			votesFor: 0,
+			votesAgainst: 0,
+			proposal: proposal
+		});
+
+		PollCreated(pollNonce);
+	}
+
+	/// check if votesFor / (totalVotes) >= (voteQuota / 100) 
+	function isPassed(uint pollID) returns (bool) {
+		Poll poll = pollMap[pollID];
+		require(isExpired(poll.revealEndDate));
+		return ((100 - poll.voteQuotaSnap) * poll.votesFor) >= (poll.voteQuotaSnap * poll.votesAgainst);
 	}
 
 	///HELPER FUNCTIONS:
