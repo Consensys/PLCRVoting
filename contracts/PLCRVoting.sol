@@ -24,7 +24,6 @@ contract PLCRVoting {
 	constant uint INITIAL_POLL_NONCE = 0;
 	uint commitDuration;	/// length of commit period
 	uint revealDuration;	/// length of reveal period
-	uint voteQuota;			/// type of majority necessary for winning poll
 	address[] trusted;		/// list of trusted addresses
 
 	/// CONSTRUCTOR:
@@ -33,7 +32,6 @@ contract PLCRVoting {
 		pollNonce = INITIAL_POLL_NONCE;
 		commitDuration = INITIAL_COMMIT_DURATION;
 		revealDuration = INITIAL_REVEAL_DURATION;
-		voteQuota = INITIAL_VOTE_QUOTA;
 	}
 
 	/// MODIFIERS:
@@ -59,7 +57,7 @@ contract PLCRVoting {
 	}
 
 	///CORE FUNCTIONS:
-	function startPoll(string proposal) isTrusted(msg.sender) returns (uint) {
+	function startPoll(string proposal, uint voteQuota) isTrusted(msg.sender) returns (uint) {
 		pollNonce = pollNonce + 1;
 
 		pollMap[pollNonce] = Poll({
@@ -102,11 +100,6 @@ contract PLCRVoting {
     /// sets the reveal duration
     function setRevealDuration(uint _revealDuration) isTrusted(msg.sender) {
     	revealDuration = _revealDuration;
-    }
-
-    /// sets the vote quota
-    function setVoteQuota(uint _voteQuota) isTrusted(msg.sender) {
-    	voteQuota = _voteQuota;
     }
 
 	/// TODO: Implement (Yorke may have done this)
