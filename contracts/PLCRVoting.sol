@@ -129,7 +129,11 @@ contract PLCRVoting {
 	function getTotalNumberOfTokensForWinningOption(uint pollID) 
 		returns (uint) pollEnded(pollID) {
 		Poll poll = pollMap[pollID];
-		return max(poll.votesFor, poll.votesAgainst);
+		if (didProposalPass(pollID)) {
+			return pollMap[pollID].votesFor;
+		} else {
+			return pollMap[pollID].votesAgainst;
+		}
 	}
 
 	function getPreviousID(uint pollID) returns (uint) {
