@@ -32,7 +32,7 @@ contract PLCRVoting {
 	HumanStandardToken public token;
 
 	/// maps user's address to voteToken balance
-	mapping(address => uint) voteTokenBalance;
+	mapping(address => uint) public voteTokenBalance;
 
 	function PLCRVoting(address tokenAddr) {
 		token = HumanStandardToken(tokenAddr);
