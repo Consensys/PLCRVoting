@@ -1,4 +1,6 @@
-pragma solidity ^0.4.4;
+pragma solidity ^0.4.8;
+
+import "./HumanStandardToken.sol";
 
 contract PLCRVoting {
 	struct Poll {
@@ -27,19 +29,19 @@ contract PLCRVoting {
 	uint voteQuota;			/// type of majority necessary for winning poll
 	address[] trusted;		/// list of trusted addresses
 
-	StandardToken token;
+	HumanStandardToken public token;
 
 	/// maps user's address to voteToken balance
 	mapping(address => uint) voteTokenBalance;
 
 	function Voting(address tokenAddr) {
-		token = StandardToken(tokenAddr);
+		token = HumanStandardToken(tokenAddr);
 	}
 
 	/// interface for users to purchase votingTokens by exchanging ERC20 token
 	function loadTokens(uint numTokens) {
 		require(token.balanceOf(msg.sender) >= numTokens);
-		require(token.transferFrom(msg.sender, this, numTokens));
+		// require(token.transferFrom(msg.sender, this, numTokens));
 		voteTokenBalance[msg.sender] += numTokens;
 	}
 
@@ -51,7 +53,8 @@ contract PLCRVoting {
 		voteTokenBalance[msg.sender] -= numTokens;
 	}
 
-	function getMaxVoted(address user) {
-		return 10; //just for testing
+	function getMaxVoted(address user) returns (uint) {
+		user = user;
+		return 0; //just for testing
 	}
 }
