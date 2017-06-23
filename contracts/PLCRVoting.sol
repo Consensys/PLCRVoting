@@ -17,11 +17,11 @@ contract PLCRVoting {
 	/// maps hash of user's address and pollID to VoteNode struct
 	mapping(bytes32 => uint) voteMap;  
 
-	constant bytes32 ZERO_NODE_COMMIT_HASH = 0xabc;
-	constant uint INITIAL_COMMIT_DURATION = 100;
-	constant uint INITIAL_REVEAL_DURATION = 100;
-	constant uint INITIAL_VOTE_QUOTA = 50;
-	constant uint INITIAL_POLL_NONCE = 0;
+	bytes32 constant ZERO_NODE_COMMIT_HASH = 0xabc;
+	uint constant INITIAL_COMMIT_DURATION = 100;
+	uint constant INITIAL_REVEAL_DURATION = 100;
+	uint constant INITIAL_VOTE_QUOTA = 50;
+	uint constant INITIAL_POLL_NONCE = 0;
 	uint commitDuration;	/// length of commit period
 	uint revealDuration;	/// length of reveal period
 	address[] trusted;		/// list of trusted addresses
@@ -113,8 +113,8 @@ contract PLCRVoting {
 		_;
 	}
 
-	function getTotalNumberOfTokensForWinningOption(uint pollID) 
-		returns (uint) pollEnded(pollID) {
+	function getTotalNumberOfTokensForWinningOption(uint pollID) pollEnded(pollID)
+		returns (uint) {
 		Poll poll = pollMap[pollID];
 		if (isPassed(pollID)) {
 			return pollMap[pollID].votesFor;
