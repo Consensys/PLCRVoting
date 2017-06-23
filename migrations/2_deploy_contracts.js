@@ -6,7 +6,7 @@ const TokenContract = artifacts.require("./HumanStandardToken.sol");
 const fs = require(`fs`);
 
 module.exports = (deployer, network, accounts) => {
-	let tokenConf = JSON.parse(fs.readFileSync('./conf/testToken.json'));
+	let tokenConf = JSON.parse(fs.readFileSync('../conf/testToken.json'));
 
 	deployer.deploy(TokenContract,
 		tokenConf.initialAmount,
