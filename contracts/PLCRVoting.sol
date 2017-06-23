@@ -121,6 +121,17 @@ contract PLCRVoting {
 		return false;
 	}
 
+	modifier pollEnded(uint pollID) {
+		require(block.timestamp > pollMap[pollID].revealEndDate);
+		_;
+	}
+
+	function getTotalNumberOfTokensForWinningOption(uint pollID) 
+		returns (uint) pollEnded(pollID) {
+		Poll poll = pollMap[pollID];
+		return max(poll.votesFor, poll.votesAgainst);
+	}
+
 	function getPreviousID(uint pollID) returns (uint) {
 		return uint(getAttribute(pollID, "prevID"));
 	}
