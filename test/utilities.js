@@ -5,9 +5,16 @@ contract('Voting', function(accounts) {
   // and then the existence of the poll and then that the poll
   // is in commit phase
   it("start single poll", function() {
+    let instance;
+    let watcher;
     return PLCRVoting.deployed()
-    .then(function(instance) {
-
+    .then(function(_instance) {
+    	instance = _instance;
+        return instance.startPoll("proposal", 50);
+    })
+    .then(function(result) {
+    	assert.equal(result.logs[0].args.pollID.toString(), 
+    		"1", "poll ID should have been 1");
     })
   });
   it("start three polls", function() {
