@@ -11,8 +11,10 @@ contract PLCRVoting {
 	}
 
 	/// maps pollID to Poll struct
-	mapping(uint => Poll) pollMap;
+	mapping(uint => Poll) public pollMap;
 	uint pollNonce;
+
+	event PollCreated(uint pollID);
 
 	/// maps hash of user's address and pollID to VoteNode struct
 	mapping(bytes32 => uint) voteMap;  
@@ -27,7 +29,7 @@ contract PLCRVoting {
 	address[] trusted;		/// list of trusted addresses
 
 	/// CONSTRUCTOR:
-	function Voting(address[] _trusted) {
+	function PLCRVoting(address[] _trusted) {
 		trusted = _trusted;
 		pollNonce = INITIAL_POLL_NONCE;
 		commitDuration = INITIAL_COMMIT_DURATION;
@@ -57,7 +59,8 @@ contract PLCRVoting {
 	}
 
 	///CORE FUNCTIONS:
-	function startPoll(string proposal, uint voteQuota) isTrusted(msg.sender) returns (uint) {
+	function startPoll(string proposal, uint voteQuota) isTrusted(msg.sender) 
+		returns (uint) {
 		pollNonce = pollNonce + 1;
 
 		pollMap[pollNonce] = Poll({
@@ -69,7 +72,7 @@ contract PLCRVoting {
 			proposal: proposal
 		});
 
-		return pollNonce;
+		PollCreated(pollNonce);
 	}
 
 	/// check if votesFor / (totalVotes) >= (voteQuota / 100) 
