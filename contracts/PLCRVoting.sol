@@ -51,16 +51,20 @@ contract PLCRVoting {
 
 	/// true if the msg.sender (or tx.origin) is in the trusted list
 	modifier isTrusted(address user) {
+		bool flag = false;
 		for (uint idx = 0; idx < trusted.length; idx++) {
-			if (user == trusted[idx]) return;
+			if (user == trusted[idx]) {
+				flag = true;
+				break;
+			}
 		}
-		throw;
+		require(flag);
 		_;
 	}
 
 	///CORE FUNCTIONS:
-	function startPoll(string proposal, uint voteQuota) isTrusted(msg.sender) 
-		returns (uint) {
+	function startPoll(string proposal, uint voteQuota) isTrusted(msg.sender)
+		{
 		pollNonce = pollNonce + 1;
 
 		pollMap[pollNonce] = Poll({
