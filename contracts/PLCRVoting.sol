@@ -1,4 +1,6 @@
-contract Voting {
+pragma solidity ^0.4.4;
+
+contract PLCRVoting {
 	struct Poll {
 		uint commitEndDate; /// expiration date of commit period for poll
 		uint revealEndDate; /// expiration date of reveal period for poll
@@ -12,17 +14,10 @@ contract Voting {
 	mapping(uint => Poll) pollMap;
 	uint pollNonce;
 
-	struct VoteNode {
-		bytes32 commitHash; /// hash of vote option and salt
-		uint numTokens;		/// number of tokens attached to vote
-		uint previousID;    /// reference to previous vote node
-		uint nextID;		/// reference to following vote node 
-	}
-
 	/// maps hash of user's address and pollID to VoteNode struct
-	mapping(bytes32 => VoteNode) voteMap;  
+	mapping(bytes32 => uint) voteMap;  
 
-
+	constant bytes32 ZERO_NODE_COMMIT_HASH = 0xabc;
 	constant uint INITIAL_COMMIT_DURATION = 100;
 	constant uint INITIAL_REVEAL_DURATION = 100;
 	constant uint INITIAL_VOTE_QUOTA = 50;
@@ -113,4 +108,25 @@ contract Voting {
     function setVoteQuota(uint _voteQuota) isTrusted(msg.sender) {
     	voteQuota = _voteQuota;
     }
+
+	/// TODO: Implement (Yorke may have done this)
+	modifier hasEnoughTokens(uint pollID) {
+		require(true);
+		_;
+	}
+
+	modifier pollEnded(uint pollID) {
+		require(block.timestamp > pollMap[pollID].revealEndDate);
+		_;
+	}
+
+	function getTotalNumberOfTokensForWinningOption(uint pollID) 
+		returns (uint) pollEnded(pollID) {
+		Poll poll = pollMap[pollID];
+		if (isPassed(pollID)) {
+			return pollMap[pollID].votesFor;
+		} else {
+			return pollMap[pollID].votesAgainst;
+		}
+	}
 }
