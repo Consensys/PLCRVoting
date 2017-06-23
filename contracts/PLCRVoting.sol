@@ -34,14 +34,14 @@ contract PLCRVoting {
 	/// maps user's address to voteToken balance
 	mapping(address => uint) voteTokenBalance;
 
-	function Voting(address tokenAddr) {
+	function PLCRVoting(address tokenAddr) {
 		token = HumanStandardToken(tokenAddr);
 	}
 
 	/// interface for users to purchase votingTokens by exchanging ERC20 token
 	function loadTokens(uint numTokens) {
 		require(token.balanceOf(msg.sender) >= numTokens);
-		// require(token.transferFrom(msg.sender, this, numTokens));
+		require(token.transferFrom(msg.sender, this, numTokens));
 		voteTokenBalance[msg.sender] += numTokens;
 	}
 
