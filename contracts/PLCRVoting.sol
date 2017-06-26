@@ -26,11 +26,14 @@ contract PLCRVoting {
 	uint constant INITIAL_POLL_NONCE = 0;
 	uint commitDuration;	/// length of commit period
 	uint revealDuration;	/// length of reveal period
-	address[] trusted;		/// list of trusted addresses
+
+	mapping(address => bool) trustedMap; //maps addresses to trusted value
 
 	/// CONSTRUCTOR:
 	function PLCRVoting(address[] _trusted) {
-		trusted = _trusted;
+		for (uint idx = 0; idx < _trusted.length; idx++) {
+			trustedMap[_trusted[idx]] = true;
+		}
 		pollNonce = INITIAL_POLL_NONCE;
 		commitDuration = INITIAL_COMMIT_DURATION;
 		revealDuration = INITIAL_REVEAL_DURATION;
@@ -40,14 +43,7 @@ contract PLCRVoting {
 
 	/// true if the msg.sender (or tx.origin) is in the trusted list
 	modifier isTrusted(address user) {
-		bool flag = false;
-		for (uint idx = 0; idx < trusted.length; idx++) {
-			if (user == trusted[idx]) {
-				flag = true;
-				break;
-			}
-		}
-		require(flag);
+		require(trustedMap[user]);
 		_;
 	}
 
@@ -66,8 +62,6 @@ contract PLCRVoting {
 		});
 
 		PollCreated(pollNonce);
-
-		throw;
 	}
 
 	/// check if votesFor / (totalVotes) >= (voteQuota / 100) 
