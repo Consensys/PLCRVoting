@@ -14,7 +14,7 @@ contract PLCRVoting {
   // maps pollID to Poll struct
   mapping(uint => Poll) public pollMap; 
 
-  /// maps user's address to voteToken balance
+  /// maps user"s address to voteToken balance
   mapping(address => uint) public voteTokenBalance;
 
   HumanStandardToken public token;
@@ -44,7 +44,7 @@ contract PLCRVoting {
 
   /// interface for users to withdraw votingTokens and exchange for ERC20 token
   function withdrawTokens(uint numTokens) {
-    uint availableTokens = voteTokenBalance[msg.sender] - getMaxVoted(msg.sender);
+    uint availableTokens = voteTokenBalance[msg.sender] - getMaxTokens();
     require(availableTokens >= numTokens);
     require(token.transfer(msg.sender, numTokens));
     voteTokenBalance[msg.sender] -= numTokens;
@@ -69,25 +69,45 @@ contract PLCRVoting {
     setAttribute(pollID, "commitHash", uint(commitHash));
   }
 
+  // delete node from double-linked-list by removing pointers to the node, and 
+  // setting its prev and next to its own pollID
+  function deleteNode(uint pollID){
+    // get next and prev node pollIDs
+    uint prevID = uint(getAttribute(pollID, "prevID"));
+    uint nextID = uint(getAttribute(pollID, "nextID"));
+
+    // remove node from list
+    setAttribute(prevID, "nextID", nextID);
+    setAttribute(nextID, "prevID", prevID);
+
+    // set nodes prev and next to its own pollID
+    setAttribute(pollID, "nextID", pollID); 
+    setAttribute(pollID, "prevID", pollID); 
+  }
+
+  // return the pollID of the last node in a dll
+  function getLastNode() returns (uint){
+    return getAttribute(0, "prevID");
+  }
+
   /*
    *  Helper Functions
    */
- 
-  // get any attribute that is not commitHash
+
+  // return max number of tokens locked for user
+  function getMaxTokens() returns (uint) {
+    return getAttribute(getLastNode(), "numTokens");
+  }
+  // return any attribute that is not commitHash
   function getAttribute(uint pollID, string attrName) returns (uint) {
     return voteMap[sha3(msg.sender, pollID, attrName)];
   }
 
   function getCommitHash(uint pollID) returns (bytes32) {
-    return bytes32(voteMap[sha3(msg.sender, pollID, 'commitHash')]);
+    return bytes32(voteMap[sha3(msg.sender, pollID, "commitHash")]);
   }
 
   function setAttribute(uint pollID, string attrName, uint attrVal) {
     voteMap[sha3(msg.sender, pollID, attrName)] = attrVal;
-  }
-
-  function getMaxVoted(address user) returns (uint) {
-    user = user;
-    return 0; //just for testing
   }
 }
