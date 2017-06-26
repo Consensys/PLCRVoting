@@ -229,4 +229,37 @@ contract('Data Structure Testing', (accounts) => {
       assert.equal(node_prev, pollID, "Testing failed");
     });
   });
+
+  it("should return the pollID of last node", () => {
+    let voting;
+    let pollID = '35';
+    let lastNode;
+    return PLCRVoting.deployed()
+    .then((instance) => voting = instance)
+
+    // initialize double linked list
+    .then(() => voting.setAttribute('0', 'nextID', '10', {from:accounts[7]}))
+    .then(() => voting.setAttribute('10', 'nextID', pollID, {from:accounts[7]}))
+    .then(() => voting.setAttribute(pollID, 'nextID', '0', {from:accounts[7]}))
+    .then(() => voting.setAttribute('0', 'prevID', pollID, {from:accounts[7]}))
+    .then(() => voting.setAttribute('10', 'prevID', '0', {from:accounts[7]}))
+    .then(() => voting.setAttribute(pollID, 'prevID', '10', {from:accounts[7]}))
+    .then(() => voting.setAttribute('10', 'numTokens', '1200', {from:accounts[7]}))
+    .then(() => voting.setAttribute(pollID, 'numTokens', '30000', {from:accounts[7]}))
+    .then(() => voting.setAttribute('10', 'commitHash', '0xca817d209103a160ddcfed5d97912c7e207da04a8a9960c64875cecec0bfb0de', {from:accounts[7]}))
+    .then(() => voting.setAttribute(pollID, 'commitHash', '0xab817d209103a160ddcfed5d97912c7e207da04a8a9960c64875cecec0bfb0de', {from:accounts[7]}))
+
+    // use the function being tested
+    .then(() => voting.getLastNode.call({from:accounts[7]}))
+    .then((result) => lastNode = result)
+
+    // get attributes to check
+    .then(() => voting.getAttribute.call('0', 'prevID', {from:accounts[7]}))
+    .then((result) => prev_0 = result)
+
+    // check equality
+    .then(() => {
+      assert.equal(Number(lastNode), Number(prev_0), "Testing failed");
+    });
+  });
 });

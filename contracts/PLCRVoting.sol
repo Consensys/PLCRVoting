@@ -14,7 +14,7 @@ contract PLCRVoting {
   // maps pollID to Poll struct
   mapping(uint => Poll) public pollMap; 
 
-  /// maps user's address to voteToken balance
+  /// maps user"s address to voteToken balance
   mapping(address => uint) public voteTokenBalance;
 
   HumanStandardToken public token;
@@ -85,6 +85,12 @@ contract PLCRVoting {
     setAttribute(pollID, "prevID", pollID); 
   }
 
+  // returns the pollID of the last node in a dll
+  function getLastNode() returns (uint){
+    return getAttribute(0, "prevID");
+  }
+
+
   /*
    *  Helper Functions
    */
@@ -95,7 +101,7 @@ contract PLCRVoting {
   }
 
   function getCommitHash(uint pollID) returns (bytes32) {
-    return bytes32(voteMap[sha3(msg.sender, pollID, 'commitHash')]);
+    return bytes32(voteMap[sha3(msg.sender, pollID, "commitHash")]);
   }
 
   function setAttribute(uint pollID, string attrName, uint attrVal) {
