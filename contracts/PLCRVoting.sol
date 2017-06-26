@@ -69,6 +69,22 @@ contract PLCRVoting {
     setAttribute(pollID, "commitHash", uint(commitHash));
   }
 
+  // delete node from double-linked-list by removing pointers to the node, and 
+  // setting its prev and next to its own pollID
+  function deleteNode(uint pollID){
+    // get next and prev node pollIDs
+    uint prevID = uint(getAttribute(pollID, "prevID"));
+    uint nextID = uint(getAttribute(pollID, "nextID"));
+
+    // remove node from list
+    setAttribute(prevID, "nextID", nextID);
+    setAttribute(nextID, "prevID", prevID);
+
+    // set nodes prev and next to its own pollID
+    setAttribute(pollID, "nextID", pollID); 
+    setAttribute(pollID, "prevID", pollID); 
+  }
+
   /*
    *  Helper Functions
    */
