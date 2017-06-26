@@ -74,7 +74,7 @@ contract PLCRVoting {
    */
  
   function hasEnoughTokens(uint numTokens) returns (bool) {
-  	return voteTokenMap[msg.sender] >= numTokens;
+  	return voteTokenBalance[msg.sender] >= numTokens;
   }
 
   // get any attribute that is not commitHash
