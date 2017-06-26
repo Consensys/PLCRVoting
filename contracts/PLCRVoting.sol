@@ -10,10 +10,10 @@ contract PLCRVoting {
 	}
 
 	/// maps pollID to Poll struct
-	mapping(uint => Poll) pollMap; 
+	mapping(uint => Poll) public pollMap; 
 
 	/// maps hash of user's address and pollID to VoteNode struct
-	mapping(bytes32 => uint) voteMap;  
+	mapping(bytes32 => uint) public voteMap;  
 
 	uint commitDuration;	/// length of commit period
 	uint revealDuration;	/// length of reveal period
@@ -124,20 +124,10 @@ contract PLCRVoting {
 
 	
 
-  // maps pollID to Poll struct
-  mapping(uint => Poll) public pollMap; 
-
   /// maps user's address to voteToken balance
   mapping(address => uint) public voteTokenBalance;
 
   HumanStandardToken public token;
-
-  // represent a double linked list through mapping
-  // sha3(userAddress, pollID, "prevID") => byte32 prevID
-  // sha3(userAddress, pollID, "nextID") => byte32 nextID
-  // sha3(userAddress, pollID, "numTokens") => byte32 numTokens
-  // sha3(userAddress, pollID, "commitHash") => byte32 commitHash
-  mapping(bytes32 => uint) public voteMap;  
 
   function PLCRVoting(address tokenAddr) {
     token = HumanStandardToken(tokenAddr);
