@@ -67,12 +67,16 @@ contract PLCRVoting {
     // set properties of newNode
     setAttribute(pollID, "numTokens", numTokens);
     setAttribute(pollID, "commitHash", uint(commitHash));
-  }
+  }  
 
   /*
    *  Helper Functions
    */
  
+  function hasEnoughTokens(uint numTokens) returns (bool) {
+  	return voteTokenMap[msg.sender] >= numTokens;
+  }
+
   // get any attribute that is not commitHash
   function getAttribute(uint pollID, string attrName) returns (uint) {
     return voteMap[sha3(msg.sender, pollID, attrName)];
