@@ -4,58 +4,67 @@ contract('Voting', function(accounts) {
   // Check for non-existence of the single poll
   // and then the existence of the poll and then that the poll
   // is in commit phase
+
+  function getVoteContract() {
+    return PLCRVoting.deployed();
+  }
+
+  function launchPoll(proposal) {
+    return getVoteContract()
+    .then((vote) => vote.startPoll(proposal, 50))
+    .then((result) => result.logs[0].args.pollID.toString());
+  }
+
+  function getPoll(pollID) {
+    return getVoteContract()
+    .then((instance) => instance.pollMap.call(pollID));
+  }
+
+      // pollIDinstance = pollID;
+      //   assert.equal(pollID, i, "poll ID should have been " + i);
+      // .then((poll) => {
+      //   assert.equal(50 + i, poll[2], "vote quota incorrect");
+      //   assert.equal("prop" + i, poll[5], "proposal incorrect");
+      // })
+      // .then(() => pollIDinstance);
+
   it("start single poll", function() {
-    let instance;
-    return PLCRVoting.deployed()
-    .then(function(_instance) {
-    	instance = _instance;
-        return instance.startPoll("prop", 50);
-    })
-    .then(function(result) {
-    	var pollID = result.logs[0].args.pollID.toString();
-    	assert.equal(pollID, 
-    		"1", "poll ID should have been 1");
-    	return instance.pollMap.call(pollID);
-    })
-    .then(function(result) {
-    	assert.equal("50", result[2], "vote quota incorrect");
-    	assert.equal("prop", result[5], "proposal incorrect");
-    });
+    const propStr = "first poll";
+    return launchPoll(propStr)
+    .then((pollID) => getPoll(pollID))
+    .then((pollArr) => assert.equal(pollArr[5], propStr, "poll created incorrectly"));
   });
+
   it("start three polls", function() {
     // Check for existence of the three polls and that they 
-    // are in commit phase
-    let instance;
-    
-    var test = function (i) {
-	    return PLCRVoting.deployed()
-	    .then(function(_instance) {
-	    	instance = _instance;
-	        return instance.startPoll("prop" + i, 50 + i);
-	    })
-	    .then(function(result) {
-	    	var pollID = result.logs[0].args.pollID.toString();
-	    	assert.equal(pollID, 
-	    		i, "poll ID should have been " + i);
-	    	return instance.pollMap.call(pollID);
-	    })
-	    .then(function(result) {
-	    	assert.equal(50 + i, result[2], "vote quota incorrect")
-	    	assert.equal("prop" + i, result[5], "proposal incorrect");
-	    });
-	}
-	// Start at 2 because pollID=1 is used in first test
-	test(2);
-	test(3);
-	test(4);
-  });
+    // are in commit phase   
+    const propStr = "poll";
+
+    return launchPoll(1+propStr)
+    .then((pollID) => getPoll(pollID))
+    .then((pollArr) => assert.equal(pollArr[5], 1+propStr, "poll created incorrectly"))
+    .then(() => launchPoll(2+propStr))
+    .then((pollID) => getPoll(pollID))
+    .then((pollArr) => assert.equal(pollArr[5], 2+propStr, "poll created incorrectly"))
+    .then(() => launchPoll(3+propStr))
+    .then((pollID) => getPoll(pollID))
+    .then((pollArr) => assert.equal(pollArr[5], 3+propStr, "poll created incorrectly"));
+	});
+
+
   it("commit period correctly active", function() {
     // Check commit period active, reveal period inactive, poll not ended
-    return PLCRVoting.deployed()
-    .then(function(instance) {
-
+    let pollIDinstance;
+    return launchPoll("commitTesterPoll")
+    .then((pollID) => {
+      pollIDinstance = pollID; 
+      return getVoteContract();
     })
+    .then((vote) => vote.commitPeriodActive.call(pollIDinstance))
+    .then((result) => assert.equal(result, true, "Poll wasn't active"));
   });
+
+
   it("reveal period correctly active", function() {
     // Check commit period inactive, reveal period active
     return PLCRVoting.deployed()
