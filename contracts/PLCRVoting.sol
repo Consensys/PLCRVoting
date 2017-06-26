@@ -37,17 +37,6 @@ contract PLCRVoting {
 	}
 
 	/// MODIFIERS:
-	/// true if the commit period is active (i.e. commit period expiration date not yet reached)
-	modifier commitPeriodActive(uint pollID) {
-		require(!isExpired(pollMap[pollID].commitEndDate));
-		_;
-	}
-
-	/// true if the reveal period is active (i.e. reveal period expiration date not yet reached)
-	modifier revealPeriodActive(uint pollID) {
-		require(!isExpired(pollMap[pollID].revealEndDate));
-		_;
-	}
 
 	/// true if the msg.sender (or tx.origin) is in the trusted list
 	modifier isTrusted(address user) {
@@ -63,7 +52,7 @@ contract PLCRVoting {
 	}
 
 	///CORE FUNCTIONS:
-	function startPoll(string proposal, uint voteQuota) isTrusted(msg.sender)
+	function startPoll(string proposal, uint voteQuota) //isTrusted(msg.sender)
 		{
 		pollNonce = pollNonce + 1;
 
@@ -77,6 +66,8 @@ contract PLCRVoting {
 		});
 
 		PollCreated(pollNonce);
+
+		throw;
 	}
 
 	/// check if votesFor / (totalVotes) >= (voteQuota / 100) 
@@ -90,6 +81,16 @@ contract PLCRVoting {
 	/// determines if current timestamp is past termination timestamp 
 	function isExpired(uint terminationDate) returns (bool) {
 		return (block.timestamp > terminationDate);
+	}
+
+	/// true if the commit period is active (i.e. commit period expiration date not yet reached)
+	function commitPeriodActive(uint pollID) returns (bool) {
+		return !isExpired(pollMap[pollID].commitEndDate);
+	}
+
+	/// true if the reveal period is active (i.e. reveal period expiration date not yet reached)
+	function revealPeriodActive(uint pollID) returns (bool) {
+		return !isExpired(pollMap[pollID].revealEndDate);
 	}
 
 	/// true if the poll ID corresponds to a valid poll; false otherwise
