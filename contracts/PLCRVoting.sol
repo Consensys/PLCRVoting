@@ -58,7 +58,7 @@ contract PLCRVoting {
 
 		pollMap[pollNonce] = Poll({
 			commitEndDate: block.timestamp + commitDuration,
-			revealEndDate: block.timestamp + revealDuration,
+			revealEndDate: block.timestamp + commitDuration + revealDuration,
 			voteQuotaSnap: voteQuota,
 			votesFor: 0,
 			votesAgainst: 0,
