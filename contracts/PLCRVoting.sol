@@ -67,7 +67,7 @@ contract PLCRVoting {
     // set properties of newNode
     setAttribute(pollID, "numTokens", numTokens);
     setAttribute(pollID, "commitHash", uint(commitHash));
-  }
+  }  
 
   // delete node from double-linked-list by removing pointers to the node, and 
   // setting its prev and next to its own pollID
@@ -99,6 +99,12 @@ contract PLCRVoting {
     return getAttribute(getLastNode(), "numTokens");
   }
   // return any attribute that is not commitHash
+ 
+  function hasEnoughTokens(uint numTokens) returns (bool) {
+  	return voteTokenBalance[msg.sender] >= numTokens;
+  }
+
+  // get any attribute that is not commitHash
   function getAttribute(uint pollID, string attrName) returns (uint) {
     return voteMap[sha3(msg.sender, pollID, attrName)];
   }

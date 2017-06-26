@@ -6,7 +6,7 @@
     "test": "test",
     "lint": "eslint --fix"
   },
-  "author": "Yorke Rhodes <yorke.rhodesiv@consensys.net>",
+  "author": "Yorke Rhodes <yorke.rhodesiv@consensys.net>, Aspyn Palatnick <aspyn.palatnick@consensys.net>, Cem Ozer <cem.ozer@consensys.net>",
   "license": "ISC",
   "dependencies": {
     "bn.js": "4.11.6",
