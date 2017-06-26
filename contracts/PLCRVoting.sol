@@ -44,7 +44,7 @@ contract PLCRVoting {
 
   /// interface for users to withdraw votingTokens and exchange for ERC20 token
   function withdrawTokens(uint numTokens) {
-    uint availableTokens = voteTokenBalance[msg.sender] - getMaxVoted(msg.sender);
+    uint availableTokens = voteTokenBalance[msg.sender] - getMaxTokens();
     require(availableTokens >= numTokens);
     require(token.transfer(msg.sender, numTokens));
     voteTokenBalance[msg.sender] -= numTokens;
@@ -85,17 +85,20 @@ contract PLCRVoting {
     setAttribute(pollID, "prevID", pollID); 
   }
 
-  // returns the pollID of the last node in a dll
+  // return the pollID of the last node in a dll
   function getLastNode() returns (uint){
     return getAttribute(0, "prevID");
   }
 
-
   /*
    *  Helper Functions
    */
- 
-  // get any attribute that is not commitHash
+
+  // return max number of tokens locked for user
+  function getMaxTokens() returns (uint) {
+    return getAttribute(getLastNode(), "numTokens");
+  }
+  // return any attribute that is not commitHash
   function getAttribute(uint pollID, string attrName) returns (uint) {
     return voteMap[sha3(msg.sender, pollID, attrName)];
   }
@@ -106,10 +109,5 @@ contract PLCRVoting {
 
   function setAttribute(uint pollID, string attrName, uint attrVal) {
     voteMap[sha3(msg.sender, pollID, attrName)] = attrVal;
-  }
-
-  function getMaxVoted(address user) returns (uint) {
-    user = user;
-    return 0; //just for testing
   }
 }
