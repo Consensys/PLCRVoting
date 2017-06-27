@@ -26,15 +26,15 @@ contract PLCRVoting {
 
 	bytes32 constant ZERO_NODE_COMMIT_HASH = 0xabc;
 
-	function PLCRVoting(address tokenAddr, address[] trusted) {
+	function PLCRVoting(address tokenAddr, address[] _trusted) {
 		token = HumanStandardToken(tokenAddr);
+                trusted = _trusted;
 	}
 
 	function commitVote(uint pollID, 
 		bytes32 hashOfVoteAndSalt, uint numTokens, 
 		uint prevPollID) 
 		returns (bool) {
-                if (1 == 1) return true; 
 		// require(hasEnoughTokens(numTokens));
 		// Make sure user is not trying to manually commit
 		// a vote corresponding the zero node
