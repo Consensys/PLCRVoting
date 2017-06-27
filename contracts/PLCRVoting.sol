@@ -105,7 +105,7 @@ contract PLCRVoting {
 		if (prevNodeTokens <= numTokens) {
 			uint256 nextNodeID = getNextID(prevPollID);
 			uint256 nextNodeTokens = getNumTokens(nextNodeID);
-			if (getCommitHash(nextNodeID) == ZERO_NODE_COMMIT_HASH
+			if (nextNodeID == 0 
 				|| numTokens <= nextNodeTokens) {
 				return true;
 			} 
