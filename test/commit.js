@@ -1,12 +1,46 @@
-var PLCRVoting = artifacts.require("./PLCRVoting.sol");
+const VotingContract = artifacts.require("./PLCRVoting.sol");
+const PLCRVoting = artifacts.require("./PLCRVoting.sol");
+const HumanStandardToken = artifacts.require("./HumanStandardToken.sol");
+
+/*
+contract('Token Testing', (accounts) => {
+        const [owner, user1, user2, user3] = accounts;
+
+            function getVoteContract() {
+                        return VotingContract.deployed();
+                            }
+
+                function getERC20Token() {
+                            return getVoteContract()
+            .then((vote) => vote.token.call())
+            .then((tokenAddr) => HumanStandardToken.at(tokenAddr));
+    }
+
+                    it("should exchange 25 of user1's ERC20 for 25 voting tokens", () => {
+                                return getVoteContract()
+                                .then((vote) => vote.loadTokens(25, {from: user1}));
+                        });
+});
+*/
 
 contract('Voting', function(accounts) {
+ 
+	const [owner, user1, user2, user3] = accounts;
+	const tokenAmt = 10;
+
+
+  
   it("validate node, empty double linked-list", function() {
-	return PLCRVoting.deployed()
+	return VotingContract.deployed()
 	.then(function(instance) {
-		
-	});
+            instance.loadTokens(10, {from: user1})
+            //startPoll
+            //instance.voteTokenBalance.call(owner)
+        })
+        .then(function () {
+        });
   });
+      
   it("validate node, single element double linked-list", function() {
 	return PLCRVoting.deployed()
 	.then(function(instance) {
