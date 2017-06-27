@@ -2,6 +2,13 @@ const VotingContract = artifacts.require("./PLCRVoting.sol");
 const PLCRVoting = artifacts.require("./PLCRVoting.sol");
 const HumanStandardToken = artifacts.require("./HumanStandardToken.sol");
 
+// returns the solidity-sha3 output for VoteMap indexing
+function createIndexHash(account, pollID, atr) {
+    let hash = "0x" + abi.soliditySHA3([ "address", "uint", "string" ],
+    [ new BN(account.slice(2), 16), pollID, atr ]).toString('hex'); 
+    return hash;                                   
+}
+
 contract('Voting', function(accounts) {
  
 	const [owner, user1, user2, user3] = accounts;
@@ -49,16 +56,17 @@ contract('Voting', function(accounts) {
   });
   it("validate node, 5 elements double linked-list", function() {
         let voter;
+        let promiseList = [];
         return PLCRVoting.deployed()
 	.then(function(instance) {
             voter = instance;
-            voter.insertToDll(1, 0, 5, "0xabc");
-	    voter.insertToDll(2, 1, 6, "0xbcd");
-            voter.insertToDll(3, 2, 6, "0xbcd");
-            voter.insertToDll(4, 3, 8, "0xabc");
-	    voter.insertToDll(5, 4, 9, "0xbcd");
-        })
-        .then(function() {
+            promiseList.push(voter.insertToDll(1, 0, 5, "0xabc"));
+	    promiseList.push(voter.insertToDll(2, 1, 6, "0xbcd"));
+            promiseList.push(voter.insertToDll(3, 2, 6, "0xbcd"));
+            promiseList.push(voter.insertToDll(4, 3, 8, "0xabc"));
+	    promiseList.push(voter.insertToDll(5, 4, 9, "0xbcd"));
+        });
+        Promise.all(promiseList).then(function() {
             return voter.validateNode.call(3, 7);
         })
         .then(function(result) {
@@ -71,19 +79,100 @@ contract('Voting', function(accounts) {
         })
         .then(function(result) {
             assert.equal(result, true, "should have been valid end insert");
+            return voter.validateNode.call(5, 7);
+        })
+        .then(function(result) {
+            assert.equal(result, false, "should have been invalid end insert");
+            return voter.validateNode.call(0, 5);
+        })
+        .then(function(result) {
+            assert.equal(result, true, "should have been valid start insert");
+            return voter.validateNode.call(0,6);
+        })
+        .then(function(result) {
+            assert.equal(result, false, "should have been invalid start insert");
         });
   });
   it("validate node, single node deleted from 5 elements double linked-list", function() {
-	return PLCRVoting.deployed()
+        let voter;
+        let promiseList = [];
+        return PLCRVoting.deployed()
 	.then(function(instance) {
-
-	});
+            voter = instance;
+            promiseList.push(voter.insertToDll(1, 0, 5, "0xabc"));
+	    promiseList.push(voter.insertToDll(2, 1, 6, "0xbcd"));
+            promiseList.push(voter.insertToDll(3, 2, 6, "0xbcd"));
+            promiseList.push(voter.insertToDll(4, 3, 8, "0xabc"));
+	    promiseList.push(voter.insertToDll(5, 4, 9, "0xbcd"));
+            promiseList.push(voter.deleteNode(4));
+        });
+        Promise.all(promiseList).then(function() {
+            return voter.validateNode.call(3, 7);
+        })
+        .then(function(result) {
+            assert.equal(result, true, "should have been valid middle insert");
+            return voter.validateNode.call(3, 5);
+        })
+        .then(function(result) {
+            assert.equal(result, false, "should have been invalid middle insert");
+            return voter.validateNode.call(5, 20);
+        })
+        .then(function(result) {
+            assert.equal(result, true, "should have been valid end insert");
+            return voter.validateNode.call(5, 7);
+        })
+        .then(function(result) {
+            assert.equal(result, false, "should have been invalid end insert");
+            return voter.validateNode.call(0, 5);
+        })
+        .then(function(result) {
+            assert.equal(result, true, "should have been valid start insert");
+            return voter.validateNode.call(0,6);
+        })
+        .then(function(result) {
+            assert.equal(result, false, "should have been invalid start insert");
+        });
   });
   it("validate node, multiple nodes deleted from 5 elements double linked-list", function() {
-	return PLCRVoting.deployed()
+        let voter;
+        let promiseList = [];
+        return PLCRVoting.deployed()
 	.then(function(instance) {
-		
-	});
+            voter = instance;
+            promiseList.push(voter.insertToDll(1, 0, 5, "0xabc"));
+	    promiseList.push(voter.insertToDll(2, 1, 6, "0xbcd"));
+            promiseList.push(voter.insertToDll(3, 2, 6, "0xbcd"));
+            promiseList.push(voter.insertToDll(4, 3, 8, "0xabc"));
+            promiseList.push(voter.deleteNode(2));
+	    promiseList.push(voter.insertToDll(5, 4, 9, "0xbcd"));
+            promiseList.push(voter.deleteNode(4));
+        });
+        Promise.all(promiseList).then(function() {
+            return voter.validateNode.call(3, 7);
+        })
+        .then(function(result) {
+            assert.equal(result, true, "should have been valid middle insert");
+            return voter.validateNode.call(3, 5);
+        })
+        .then(function(result) {
+            assert.equal(result, false, "should have been invalid middle insert");
+            return voter.validateNode.call(5, 20);
+        })
+        .then(function(result) {
+            assert.equal(result, true, "should have been valid end insert");
+            return voter.validateNode.call(5, 7);
+        })
+        .then(function(result) {
+            assert.equal(result, false, "should have been invalid end insert");
+            return voter.validateNode.call(0, 5);
+        })
+        .then(function(result) {
+            assert.equal(result, true, "should have been valid start insert");
+            return voter.validateNode.call(0,6);
+        })
+        .then(function(result) {
+            assert.equal(result, false, "should have been invalid start insert");
+        });   
   });
   it("single commit to a single poll (commit period active)", function() {
          let voter;
