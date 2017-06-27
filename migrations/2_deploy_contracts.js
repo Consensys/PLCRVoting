@@ -15,14 +15,19 @@ function getERC20Token() {
 	.then((tokenAddr) => HumanStandardToken.at(tokenAddr));
 }
 
-function transfer(recipient, amount, sender) {
+function transfer(recipient, sender, amount) {
 	return getERC20Token()
 	.then((token) => token.transfer(recipient, amount, {from: sender}));
 }
 
-function approve(spender, amount, holder) {
+function approve(spender, holder, amount) {
 	return getERC20Token()
 	.then((token) => token.approve(spender, amount, {from: holder}));
+}
+
+function distributeAndAllow(origin, actor, spender, amount) {
+	return transfer(actor, origin, amount)
+	.then(() => approve(spender, actor, amount));
 }
 
 module.exports = (deployer, network, accounts) => {
@@ -40,13 +45,13 @@ module.exports = (deployer, network, accounts) => {
 		tokenConf.tokenSymbol
 	)
 	.then(() => deployer.deploy(VotingContract, HumanStandardToken.address))
-	.then(() => {
-		for (var idx = 1; idx < users.length; idx++) {
-			return transfer(users[idx], tokenConf.userAmounts[idx], owner)
-			.then(() => getVoteContract())
-			.then((vote) => approve(vote.address, tokenConf.userAmounts[idx], users[idx]));
-		}
-	});
-	
+	.then(() => distributeAndAllow(
+		owner, users[0], VotingContract.address, tokenConf.userAmounts[0]
+	))
+	.then(() => distributeAndAllow(
+		owner, users[1], VotingContract.address, tokenConf.userAmounts[1]
+	))
+	.then(() => distributeAndAllow(
+		owner, users[2], VotingContract.address, tokenConf.userAmounts[2]
+	));
 };
-
