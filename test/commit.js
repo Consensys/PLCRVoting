@@ -1,16 +1,24 @@
 const VotingContract = artifacts.require("./PLCRVoting.sol");
 const PLCRVoting = artifacts.require("./PLCRVoting.sol");
 const HumanStandardToken = artifacts.require("./HumanStandardToken.sol");
+const abi = require("ethereumjs-abi");
+const BN = require("bn.js");
 
 // returns the solidity-sha3 output for VoteMap indexing
 function createIndexHash(account, pollID, atr) {
     let hash = "0x" + abi.soliditySHA3([ "address", "uint", "string" ],
-    [ new BN(account.slice(2), 16), pollID, atr ]).toString('hex'); 
+    [ account, pollID, atr ]).toString('hex'); 
     return hash;                                   
 }
 
-contract('Voting', function(accounts) {
- 
+// returns the solidity-sha3 output for vote hashing
+function createVoteHash(vote, salt) {
+    let hash = "0x" + abi.soliditySHA3([ "uint", "uint" ],
+    [ vote, salt ]).toString('hex'); 
+    return hash;                                   
+}
+
+contract('Voting', function(accounts) { 
 	const [owner, user1, user2, user3] = accounts;
 	const tokenAmt = 10;
 
@@ -18,7 +26,7 @@ contract('Voting', function(accounts) {
    VotingContract.deployed()
    .then(function(instance) {
     for (var key in Object.keys(attrNameToExpectedValueMap)) {
-        instance.voteMap.call(key)
+        instance.voteMap.call(createIndexHash(user, pollID, key))
         .then(function(result) {
             if (key !== "commitHash") {
                 assert.equal(attrNameToExpectedValueMap[key], result, "VoteMap had wrong value for " + key);
@@ -175,20 +183,21 @@ contract('Voting', function(accounts) {
         });   
   });
   it("single commit to a single poll (commit period active)", function() {
-         let voter;
-        let pollID;
+        let voter;
+        let pollId;
 	return VotingContract.deployed()
 	.then(function(instance) {
             voter = instance;
             voter.loadTokens(10, {from: user1})
         })
         .then(function () {
-            //voter.startPoll("potato", 50);
+            return voter.startPoll("potato", 50);
         }).then(function (result) {
-            pollID = result.logs[0].args.pollID.toString();
-            voter.commitVote(pollID, solidityHash(0, 79), 10, 0, {from: user1});
+            pollId = (result.logs[0].args.pollId.toString());
+            var hash = createVoteHash(0, 79);
+            voter.commitVote(pollId, hash, 10, 0, {from: user1});
         }).then(function () {
-            voteMapComparisonTest(user1, pollID, 
+            voteMapComparisonTest(user1, pollId, 
                 {prevID: 0,
                  nextID: 0,
                  numTokens: 10,
