@@ -211,18 +211,6 @@ contract PLCRVoting {
 	 *	Helper Functions
 	 */
  
-	// get any attribute that is not commitHash
-	function getAttribute(uint pollID, string attrName) returns (uint) {
-		return voteMap[sha3(msg.sender, pollID, attrName)];
-	}
-
-	function getCommitHash(uint pollID) returns (bytes32) {
-		return bytes32(voteMap[sha3(msg.sender, pollID, "commitHash")]);
-	}
-
-	function setAttribute(uint pollID, string attrName, uint attrVal) {
-		voteMap[sha3(msg.sender, pollID, attrName)] = attrVal;
-	}
 
 	/// MODIFIERS:
 	/// true if the commit period is active (i.e. commit period expiration date not yet reached)
@@ -256,4 +244,21 @@ contract PLCRVoting {
 	function validPollID(uint pollID) returns (bool) {
 		/// NOT YET IMPLEMENTED
 	}
+  // get any attribute that is not commitHash
+  function getAttribute(uint pollID, string attrName) returns (uint) {
+    return voteMap[sha3(msg.sender, pollID, attrName)];
+  }
+
+  function getCommitHash(uint pollID) returns (bytes32) {
+    return bytes32(voteMap[sha3(msg.sender, pollID, 'commitHash')]);
+  }
+
+  function setAttribute(uint pollID, string attrName, uint attrVal) {
+    voteMap[sha3(msg.sender, pollID, attrName)] = attrVal;
+  }
+
+  function getMaxVoted(address user) returns (uint) {
+    user = user;
+    return 0; //just for testing
+  }
 }
