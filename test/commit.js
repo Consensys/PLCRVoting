@@ -31,13 +31,18 @@ contract('Voting', function(accounts) {
 
   
   it("validate node, empty double linked-list", function() {
+        let voter;
 	return VotingContract.deployed()
 	.then(function(instance) {
-            instance.loadTokens(10, {from: user1})
+            voter = instance;
+            voter.loadTokens(10, {from: user1})
             //startPoll
             //instance.voteTokenBalance.call(owner)
         })
         .then(function () {
+            return voter.startPoll("potato", 50);
+        }).then(function () {
+        
         });
   });
       

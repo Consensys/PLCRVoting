@@ -1,6 +1,6 @@
 const VotingContract = artifacts.require("./PLCRVoting.sol");
 const HumanStandardToken = artifacts.require("./HumanStandardToken.sol");
-
+/*
 contract('Token Testing', (accounts) => {
 	const [owner, user1, user2, user3] = accounts;
 	const tokenAmt = 10;
@@ -60,4 +60,4 @@ contract('Token Testing', (accounts) => {
 		.then((balance) => assert.equal(balance, 15, "Vote Balance not updated"));
 		// .then(() => console.log("CHECK3"));
 	});
-});
+});*/
