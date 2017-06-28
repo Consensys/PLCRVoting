@@ -1,3 +1,4 @@
+var BN = require('bn.js');
 var PLCRVoting = artifacts.require("./PLCRVoting.sol");
 var HttpProvider = require('ethjs-provider-http');
 var EthRPC = require('ethjs-rpc');
@@ -28,8 +29,36 @@ contract('Utilities', function(accounts) {
     function getBlockTimestamp() {
         return ethQuery.blockNumber()
         .then((num) => ethQuery.getBlockByNumber(num,true))
-        .then((block) => Number(block.timestamp.toNumber(10)));
+        .then((block) => block.timestamp.toString(10));
     }
+
+    function increaseTime(seconds) {
+        return new Promise((resolve, reject) => { 
+            return ethRPC.sendAsync({
+                method: 'evm_increaseTime',
+                params: [seconds]
+            }, (err) => {
+                if (err) reject(err)
+                resolve()
+            })
+        })
+        .then(() => {
+            return new Promise((resolve, reject) => { 
+                return ethRPC.sendAsync({
+                    method: 'evm_mine',
+                    params: []
+                }, (err) => {
+                    if (err) reject(err)
+                    resolve()
+                })
+            })
+        })
+    }
+
+    // commitDuration is a base 10 string
+    // getBlockTimestamp is also a base 10 string
+    // getPoll also returns everything as base10 string
+    
     it("check proposal string", function() {
         const propStr = "first poll";
         let contract;
@@ -50,14 +79,14 @@ contract('Utilities', function(accounts) {
         return getVoteContract()
         .then((instance) => contract = instance)
         .then(() => contract.commitDuration.call())
-        .then((dur) => commitDuration = Number(dur))
+        .then((num) => commitDuration = new BN(String(num), 10))
         .then(() => launchPoll('commit poll'))
         .then((num) => pollID = num)
         .then(() => getBlockTimestamp())
-        .then((time) => timestamp = time)
+        .then((time) => timestamp = new BN(time, 10))
         .then(() => getPoll(pollID))
         .then((poll) => commitEndDate = poll[0])
-        .then(() => assert.equal(commitEndDate, timestamp + commitDuration, "poll time fucked"));
+        .then(() => assert.equal(commitEndDate, timestamp.add(commitDuration).toString(10), "poll commit end date wrong"));
     });
 
     it("check reveal end date", function() {
@@ -70,16 +99,16 @@ contract('Utilities', function(accounts) {
         return getVoteContract()
         .then((instance) => contract = instance)
         .then(() => contract.commitDuration.call())
-        .then((dur) => commitDuration = Number(dur))
+        .then((dur) => commitDuration = new BN(String(dur), 10))
         .then(() => contract.revealDuration.call())
-        .then((dur) => revealDuration = Number(dur))
+        .then((dur) => revealDuration = new BN(String(dur), 10))
         .then(() => launchPoll('reveal poll'))
         .then((num) => pollID = num)
         .then(() => getBlockTimestamp())
-        .then((time) => timestamp = time)
+        .then((time) => timestamp = new BN(time, 10))
         .then(() => getPoll(pollID))
         .then((poll) => revealEndDate = poll[1])
-        .then(() => assert.equal(revealEndDate, timestamp + commitDuration+ revealDuration, "poll time fucked")); 
+        .then(() => assert.equal(revealEndDate, timestamp.add(commitDuration).add(revealDuration).toString(10), "poll reveal end date wrong")); 
     });
 
 
@@ -101,10 +130,10 @@ contract('Utilities', function(accounts) {
     });
 
 
-    it("commit period correctly active", function() {
+    it("check if commit period correctly active", function() {
         // Check commit period active, reveal period inactive, poll not ended
         let pollIDinstance;
-        return launchPoll("commitTesterevealrPoll")
+        return launchPoll("commit period test")
         .then((pollID) => {
             pollIDinstance = pollID; 
             return getVoteContract();
@@ -114,21 +143,35 @@ contract('Utilities', function(accounts) {
     });
 
 
-    it("reveal period correctly active", function() {
+    it("check if reveal period correctly active", function() {
         // Check commit period inactive, reveal period active
-        return PLCRVoting.deployed()
-        .then(function(instance) {
-
-        })
+        let pollID;
+        let contract;
+        return launchPoll("reveal period test") 
+        .then((id) => pollID = id)
+        .then(() => getVoteContract())
+        .then((instance) => contract = instance)
+        .then(() => contract.commitDuration.call())
+        .then((dur) => increaseTime(Number(dur)))
+        .then(() => getVoteContract())
+        .then((instance) => contract.revealPeriodActive.call(pollID))
+        .then((result) => assert.equal(result, true, "Poll wasn't in reveal"));
     });
 
-    it("poll ended", function() {
+    /*
+    ***Test this modifier through functionality***
+    it("check if poll ended", function() {
         // Check commit inactive, reveal inactive, poll ended
-        return PLCRVoting.deployed()
-        .then(function(instance) {
-
-        })
+        let pollID;
+        let contract;
+        return launchPoll("poll end test") 
+        .then((id) => pollID = id)
+        .then(() => increaseTime(210))
+        .then(() => getVoteContract())
+        .then((instance) => instance.pollEnded.call(pollID))
+        .then((result) => assert.equal(result, true, "Poll had not ended"));
     });
+    */
 
     it("trusted users are correct", function() {
         // Check if the trusted users are correct
@@ -140,26 +183,48 @@ contract('Utilities', function(accounts) {
 
     it("valid poll IDs when in commit period", function() {
         // Check if the started polls in the commit period are valid,
-        return PLCRVoting.deployed()
-        .then(function(instance) {
-
-        })
+        let pollID;
+        let contract;
+        return launchPoll("valid poll ID test in commit") 
+        .then((id) => pollID = id)
+        .then(() => getVoteContract())
+        .then((instance) => instance.validPollID.call(pollID))
+        .then((result) => assert.equal(result, true, "Poll isn't valid in commit period"));
     });
 
     it("valid poll IDs when in reveal period", function() {
         // Check if the started polls in the reveal period are valid,
-        return PLCRVoting.deployed()
-        .then(function(instance) {
-
-        })
+        let pollID;
+        let contract;
+        return launchPoll("reveal period test") 
+        .then((id) => pollID = id)
+        .then(() => getVoteContract())
+        .then((instance) => contract = instance)
+        .then(() => contract.commitDuration.call())
+        .then((dur) => increaseTime(Number(dur)))
+        .then(() => contract.revealPeriodActive.call(pollID))
+        .then((result) => assert.equal(result, true, "Poll wasn't in reveal"))
+        .then(() => contract.validPollID.call(pollID))
+        .then((result) => assert.equal(result, true, "Poll isn't valid in reveal period"));
     });
 
     it("valid poll IDs when in ended period", function() {
         // Check if the started polls that have ended are valid,
-        return PLCRVoting.deployed()
-        .then(function(instance) {
-
-        })
+        let pollID;
+        let contract;
+        let commitDuration;
+        let revealDuration;
+        return launchPoll("reveal period test") 
+        .then((id) => pollID = id)
+        .then(() => getVoteContract())
+        .then((instance) => contract = instance)
+        .then(() => contract.commitDuration.call())
+        .then((dur) => commitDuration = dur)
+        .then(() => contract.revealDuration.call())
+        .then((dur) => revealDuration = dur)
+        .then(() => increaseTime(Number(commitDuration) + Number(revealDuration)))
+        .then(() => contract.validPollID.call(pollID))
+        .then((result) => assert.equal(result, true, "Poll isn't valid in reveal period"));
     });
 
     it("set commit duration", function() {
