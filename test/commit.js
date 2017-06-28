@@ -30,12 +30,10 @@ contract('Voting', function(accounts) {
                 holder.key = key;
                 if (holder.key !== "commitHash") {
                     promise = instance.voteMap.call(createIndexHash(user, pollID, key)).then(function(result) {
-                        console.log(holder.key + " :: " + result);
                         assert.equal(attrNameToExpectedValueMap[holder.key], result, "VoteMap had wrong value for " + holder.key);         
                     });
                 } else {
                     promise = instance.getCommitHash.call(pollID, {from: user}).then(function(result) {
-                        console.log(holder.key + " :: " + result);
                         assert.equal(attrNameToExpectedValueMap[holder.key], result, "VoteMap had wrong value for " + holder.key);         
                     });
                 }
@@ -186,13 +184,13 @@ contract('Voting', function(accounts) {
             assert.equal(result, false, "should have been invalid start insert");
         });   
   });
-  it("single commit to a single poll (commit period active)", function() {
+  it("single commit (user1) to a single poll (commit period active)", function() {
         let voter;
         let pollId;
         var hash = createVoteHash(0, 79);
 
-	return VotingContract.deployed()
-	.then(function(instance) {
+    	return VotingContract.deployed()
+    	.then(function(instance) {
             voter = instance;
             voter.loadTokens(10, {from: user1})
         })
@@ -208,9 +206,35 @@ contract('Voting', function(accounts) {
                  numTokens: 10,
                  commitHash: hash})
         });
- 
   });
-  it("multiple commits to a single poll (commit period active)", function() {
+  it("three commits (single user2) to a single poll (commit period active)", function() {
+        let voter;
+        let pollId;
+        var finalHash = createVoteHash(0, 80);
+
+        return VotingContract.deployed()
+        .then(function(instance) {
+            voter = instance;
+            voter.loadTokens(10, {from: user2})
+        })
+        .then(function () {
+            return voter.startPoll("potato", 50);
+        }).then(function (result) {
+            pollId = (result.logs[0].args.pollId.toString());
+            voter.commitVote(pollId, createVoteHash(0, 5), 10, 0, {from: user1});
+        }).then(function () {
+            voter.commitVote(pollId, createVoteHash(1, 35), 2, 0, {from: user1});
+        }).then(function () {
+            voter.commitVote(pollId, finalHash, 7, 0, {from: user2});
+        }).then(function () {
+            voteMapComparisonTest(user2, pollId, 
+                {prevID: 0,
+                 nextID: 0,
+                 numTokens: 7,
+                 commitHash: finalHash})
+        });
+  });
+  it("multiple commits (different users) to a single poll (commit period active)", function() {
 	return PLCRVoting.deployed()
 	.then(function(instance) {
 
