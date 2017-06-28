@@ -29,25 +29,27 @@ contract PLCRVoting {
     uint constant INITIAL_POLL_NONCE = 0;
     uint public commitDuration;    /// length of commit period
     uint public revealDuration;    /// length of reveal period
+    uint public voteQuota;
 
     mapping(address => bool) trustedMap; //maps addresses to trusted value
 
     /// CONSTRUCTOR:
-    function PLCRVoting(address[] _trusted) {
-        for (uint idx = 0; idx < _trusted.length; idx++) {
-            trustedMap[_trusted[idx]] = true;
-    }
+    function PLCRVoting(address[] trusted) {
+        for (uint idx = 0; idx < trusted.length; idx++) {
+            trustedMap[trusted[idx]] = true;
+        }
+
         pollNonce = INITIAL_POLL_NONCE;
         commitDuration = INITIAL_COMMIT_DURATION;
         revealDuration = INITIAL_REVEAL_DURATION;
+        voteQuota = INITIAL_VOTE_QUOTA;
     }
 
     /// MODIFIERS:
 
     /// true if the msg.sender (or tx.origin) is in the trusted list
-    modifier isTrusted(address user) {
-        require(trustedMap[user]);
-        _;
+    function isTrusted(address user) returns (bool) {
+        return trustedMap[user];
     }
 
     ///CORE FUNCTIONS:
@@ -100,13 +102,24 @@ contract PLCRVoting {
     }
 
     /// sets the commit duration
-    function setCommitDuration(uint _commitDuration) isTrusted(msg.sender) {
+    function setCommitDuration(uint _commitDuration) {
+        require(isTrusted(msg.sender));
         commitDuration = _commitDuration;
     }
 
     /// sets the reveal duration
-    function setRevealDuration(uint _revealDuration) isTrusted(msg.sender) {
+    function setRevealDuration(uint _revealDuration) {
+        require(isTrusted(msg.sender));
         revealDuration = _revealDuration;
+    }
+
+    function setVoteQuota(uint _voteQuota) {
+        require(isTrusted(msg.sender));
+        voteQuota = _voteQuota;
+    }
+
+    function pollEnded(uint pollID) returns (bool) {
+        return isExpired(pollMap[pollID].revealEndDate);
     }
 
     /// TODO: Implement (Yorke may have done this)
@@ -114,14 +127,9 @@ contract PLCRVoting {
         require(true);
         _;
     }
-
-    modifier pollEnded(uint pollID) {
-        require(block.timestamp > pollMap[pollID].revealEndDate);   
-        _;
-    }
     
-    function getTotalNumberOfTokensForWinningOption(uint pollID) pollEnded(pollID) returns (uint) {
-        Poll poll = pollMap[pollID];
+    function getTotalNumberOfTokensForWinningOption(uint pollID) returns (uint) {
+        require(pollEnded(pollID));
         if (isPassed(pollID)) {
             return pollMap[pollID].votesFor;
         } else {
