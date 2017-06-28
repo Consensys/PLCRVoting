@@ -22,23 +22,27 @@ contract('Voting', function(accounts) {
 	const [owner, user1, user2, user3] = accounts;
 	const tokenAmt = 10;
 
-  function voteMapComparisonTest(user, pollID, attrNameToExpectedValueMap) {
-   VotingContract.deployed()
-   .then(function(instance) {
-    for (var key in Object.keys(attrNameToExpectedValueMap)) {
-        instance.voteMap.call(createIndexHash(user, pollID, key))
-        .then(function(result) {
-            if (key !== "commitHash") {
-                assert.equal(attrNameToExpectedValueMap[key], result, "VoteMap had wrong value for " + key);
-            } else {
-                assert.notequal(attrNameToExpectedValueMap[key], result, "VoteMap commit hash not set");
-            }
+    function voteMapComparisonTest(user, pollID, attrNameToExpectedValueMap) {
+        VotingContract.deployed()
+        .then(function(instance) {
+            Object.keys(attrNameToExpectedValueMap).forEach(function (key) {
+                var holder = {};
+                holder.key = key;
+                if (holder.key !== "commitHash") {
+                    promise = instance.voteMap.call(createIndexHash(user, pollID, key)).then(function(result) {
+                        console.log(holder.key + " :: " + result);
+                        assert.equal(attrNameToExpectedValueMap[holder.key], result, "VoteMap had wrong value for " + holder.key);         
+                    });
+                } else {
+                    promise = instance.getCommitHash.call(pollID, {from: user}).then(function(result) {
+                        console.log(holder.key + " :: " + result);
+                        assert.equal(attrNameToExpectedValueMap[holder.key], result, "VoteMap had wrong value for " + holder.key);         
+                    });
+                }
+            });
         });
-    } 
-   });
-  }
+    }
 
-  
   it("validate node, empty double linked-list", function() {
         return PLCRVoting.deployed()
         .then(function(instance) {
@@ -185,6 +189,8 @@ contract('Voting', function(accounts) {
   it("single commit to a single poll (commit period active)", function() {
         let voter;
         let pollId;
+        var hash = createVoteHash(0, 79);
+
 	return VotingContract.deployed()
 	.then(function(instance) {
             voter = instance;
@@ -194,14 +200,13 @@ contract('Voting', function(accounts) {
             return voter.startPoll("potato", 50);
         }).then(function (result) {
             pollId = (result.logs[0].args.pollId.toString());
-            var hash = createVoteHash(0, 79);
             voter.commitVote(pollId, hash, 10, 0, {from: user1});
         }).then(function () {
             voteMapComparisonTest(user1, pollId, 
                 {prevID: 0,
                  nextID: 0,
                  numTokens: 10,
-                 commitHash: 0})
+                 commitHash: hash})
         });
  
   });
