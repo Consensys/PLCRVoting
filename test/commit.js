@@ -19,7 +19,7 @@ function createVoteHash(vote, salt) {
 }
 
 contract('Voting', function(accounts) { 
-	const [owner, user1, user2, user3, user4, user5] = accounts;
+	const [owner, user1, user2, user3, user4, user5, user6] = accounts;
 	const tokenAmt = 10;
 
     function voteMapComparisonTest(user, pollID, attrNameToExpectedValueMap) {
@@ -39,6 +39,22 @@ contract('Voting', function(accounts) {
                     });
                 }
             });
+        });
+    }
+
+    function startPolls(numOfPolls, callback) {
+        var ids = [];
+        var promises = [];
+        VotingContract.deployed()
+        .then(function (instance) {
+            for (var i = 0; i < numOfPolls; i++) {
+                promises.push(instance.startPoll("", 50)
+                    .then((result) => {
+                        ids.push(result.logs[0].args.pollId.toString());
+                        // console.log(ids);
+                    }));
+            }
+            Promise.all(promises).then(() => callback(ids));
         });
     }
 
@@ -276,11 +292,59 @@ contract('Voting', function(accounts) {
                  commitHash: finalHash3});
         });
   });
-  it("single commit to 2 polls (commit periods active)", function() {
-	return PLCRVoting.deployed()
-	.then(function(instance) {
 
-	});
+  function promiseChain(promise, funct) {
+    if (typeof(promise) === "undefined") {
+        promise = Promise.resolve('');
+    }
+    return promise.then(function () {
+        funct();
+    });
+  }
+
+  it("single commit to 5 polls (commit periods active)", function() {
+        var hash = createVoteHash(0, 79);
+        var promise;
+        startPolls(5, function (pollIds) {
+            VotingContract.deployed()
+            .then(function (instance) {
+                return instance.loadTokens(50, {from: user6})
+                .then(() => {
+                    for (var i = 0; i < pollIds.length; i++) {
+                        let curr = pollIds[i];
+                        let holder = {
+                            id: curr,
+                            tokens: curr,
+                            prev: curr-1,
+                            hash: hash
+                        };
+                        promise = promiseChain(promise, function () {
+                            return instance.commitVote(holder.id, holder.hash, 
+                                holder.tokens, holder.prev, {from: user6});
+                        });
+                    }
+                    promise = promiseChain(promise, function () {
+                        for (var i = 0; i < pollIds.length; i++) {
+                            let curr = pollIds[i];
+
+                            // Appropriately sets next to the next
+                            // element in pollIds or 0 if curr is the 
+                            // last element. Note: 0, not pollIds[0],
+                            // is correct because the last element in the
+                            // dll will point to 0
+                            let next = 
+                                (i + 1 < pollIds.length) ? pollIds[i + 1] : 0;
+                            
+                            voteMapComparisonTest(user6, curr, 
+                            {prevID: curr - 1,
+                             nextID: next,
+                             numTokens: curr,
+                             commitHash: hash});
+                        }
+                    });
+                });
+            });
+        });
   });
   it("single commit to a single poll (commit period inactive)", function() {
 	return PLCRVoting.deployed()
