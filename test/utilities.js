@@ -1,6 +1,11 @@
 var PLCRVoting = artifacts.require("./PLCRVoting.sol");
+var HttpProvider = require('ethjs-provider-http');
+var EthRPC = require('ethjs-rpc');
+var ethRPC = new EthRPC(new HttpProvider('http://localhost:8545'));
+var EthQuery = require('ethjs-query');
+var ethQuery = new EthQuery(new HttpProvider('http://localhost:8545'));
 
-contract('Voting', function(accounts) {
+contract('Utilities', function(accounts) {
     // Check for non-existence of the single poll
     // and then the existence of the poll and then that the poll
     // is in commit phase
@@ -19,25 +24,69 @@ contract('Voting', function(accounts) {
         return getVoteContract()
         .then((instance) => instance.pollMap.call(pollID));
     }
-
-          // pollIDinstance = pollID;
-          //   assert.equal(pollID, i, "poll ID should have been " + i);
-          // .then((poll) => {
-          //   assert.equal(50 + i, poll[2], "vote quota incorrect");
-          //   assert.equal("prop" + i, poll[5], "proposal incorrect");
-          // })
-          // .then(() => pollIDinstance);
-
-    it("start single poll", function() {
+          
+    function getBlockTimestamp() {
+        return ethQuery.blockNumber()
+        .then((num) => ethQuery.getBlockByNumber(num,true))
+        .then((block) => Number(block.timestamp.toNumber(10)));
+    }
+    it("check proposal string", function() {
         const propStr = "first poll";
-        return launchPoll(propStr)
+        let contract;
+        return getVoteContract()
+        .then((instance) => contract = instance)
+        .then(() => contract.startPoll(propStr, 50))
+        .then((result) => result.logs[0].args.pollID.toString())
         .then((pollID) => getPoll(pollID))
         .then((pollArr) => assert.equal(pollArr[5], propStr, "poll created incorrectly"));
     });
 
+    it("check commit end date", function() {
+        let contract;
+        let pollID;
+        let commitEndDate;
+        let commitDuration;
+        let timestamp;
+        return getVoteContract()
+        .then((instance) => contract = instance)
+        .then(() => contract.commitDuration.call())
+        .then((dur) => commitDuration = Number(dur))
+        .then(() => launchPoll('commit poll'))
+        .then((num) => pollID = num)
+        .then(() => getBlockTimestamp())
+        .then((time) => timestamp = time)
+        .then(() => getPoll(pollID))
+        .then((poll) => commitEndDate = poll[0])
+        .then(() => assert.equal(commitEndDate, timestamp + commitDuration, "poll time fucked"));
+    });
+
+    it("check reveal end date", function() {
+        let contract;
+        let pollID;
+        let revealEndDate;
+        let commitDuration;
+        let revealDuration;
+        let timestamp;
+        return getVoteContract()
+        .then((instance) => contract = instance)
+        .then(() => contract.commitDuration.call())
+        .then((dur) => commitDuration = Number(dur))
+        .then(() => contract.revealDuration.call())
+        .then((dur) => revealDuration = Number(dur))
+        .then(() => launchPoll('reveal poll'))
+        .then((num) => pollID = num)
+        .then(() => getBlockTimestamp())
+        .then((time) => timestamp = time)
+        .then(() => getPoll(pollID))
+        .then((poll) => revealEndDate = poll[1])
+        .then(() => assert.equal(revealEndDate, timestamp + commitDuration+ revealDuration, "poll time fucked")); 
+    });
+
+
     it("start three polls", function() {
         // Check for existence of the three polls and that they 
         // are in commit phase   
+        let contract;
         const propStr = "poll";
 
         return launchPoll(1+propStr)
@@ -55,7 +104,7 @@ contract('Voting', function(accounts) {
     it("commit period correctly active", function() {
         // Check commit period active, reveal period inactive, poll not ended
         let pollIDinstance;
-        return launchPoll("commitTesterPoll")
+        return launchPoll("commitTesterevealrPoll")
         .then((pollID) => {
             pollIDinstance = pollID; 
             return getVoteContract();

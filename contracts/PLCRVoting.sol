@@ -27,8 +27,8 @@ contract PLCRVoting {
     uint constant INITIAL_REVEAL_DURATION = 100;
     uint constant INITIAL_VOTE_QUOTA = 50;
     uint constant INITIAL_POLL_NONCE = 0;
-    uint commitDuration;    /// length of commit period
-    uint revealDuration;    /// length of reveal period
+    uint public commitDuration;    /// length of commit period
+    uint public revealDuration;    /// length of reveal period
 
     mapping(address => bool) trustedMap; //maps addresses to trusted value
 
@@ -51,7 +51,7 @@ contract PLCRVoting {
     }
 
     ///CORE FUNCTIONS:
-    function startPoll(string proposal, uint voteQuota) {
+    function startPoll(string proposalStr, uint voteQuota) {
         pollNonce = pollNonce + 1;
 
         pollMap[pollNonce] = Poll({
@@ -60,7 +60,7 @@ contract PLCRVoting {
             voteQuotaSnap: voteQuota,
             votesFor: 0,
             votesAgainst: 0,
-            proposal: proposal
+            proposal: proposalStr
         });
 
         PollCreated(pollNonce);
