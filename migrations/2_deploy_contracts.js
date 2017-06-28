@@ -32,7 +32,7 @@ function distributeAndAllow(origin, actor, spender, amount) {
 
 module.exports = (deployer, network, accounts) => {
 	const owner = accounts[0];
-	const users = accounts.slice(1, 4);
+	const users = accounts.slice(1, 10);
 
 	let tokenConf = JSON.parse(fs.readFileSync('./conf/testToken.json'));
 
@@ -44,7 +44,9 @@ module.exports = (deployer, network, accounts) => {
 		tokenConf.decimalUnits,
 		tokenConf.tokenSymbol
 	)
-	.then(() => deployer.deploy(VotingContract, HumanStandardToken.address, [accounts[0], accounts[1], accounts[2]]))
+	.then(() => deployer.deploy(VotingContract, HumanStandardToken.address, 
+		[accounts[0], accounts[1], accounts[2], 
+		accounts[3], accounts[4], accounts[5], accounts[6]]))
 	.then(() => distributeAndAllow(
 		owner, users[0], VotingContract.address, tokenConf.userAmounts[0]
 	))
@@ -53,5 +55,17 @@ module.exports = (deployer, network, accounts) => {
 	))
 	.then(() => distributeAndAllow(
 		owner, users[2], VotingContract.address, tokenConf.userAmounts[2]
+	))
+	.then(() => distributeAndAllow(
+		owner, users[3], VotingContract.address, tokenConf.userAmounts[3]
+	))
+	.then(() => distributeAndAllow(
+		owner, users[4], VotingContract.address, tokenConf.userAmounts[4]
+	))
+	.then(() => distributeAndAllow(
+		owner, users[5], VotingContract.address, tokenConf.userAmounts[5]
+	))
+	.then(() => distributeAndAllow(
+		owner, users[6], VotingContract.address, tokenConf.userAmounts[6]
 	));
 };
