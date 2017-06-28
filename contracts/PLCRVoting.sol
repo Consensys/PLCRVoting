@@ -35,10 +35,10 @@ contract PLCRVoting {
 		bytes32 hashOfVoteAndSalt, uint numTokens, 
 		uint prevPollID) 
 		returns (bool) {
-		// require(hasEnoughTokens(numTokens));
+		require(hasEnoughTokens(numTokens));
 		// Make sure user is not trying to manually commit
 		// a vote corresponding the zero node
-		// require(pollID != 0);
+		require(pollID != 0);
 
 		// Check to see if we are making an update
 		// as opposed to an insert
@@ -78,16 +78,18 @@ contract PLCRVoting {
 					the node at <prevPollID>:
 
 				*/
+				insertToDll(pollID, prevPollID, numTokens, hashOfVoteAndSalt);
 
-				// Check if the zero node is the only node
+			// Check if the zero node is the only node
 				// in the double-linked list
 				if (prevPollID == 0 
 					&& getNextID(prevPollID) == 0) {
 					/*
 						TODO: insert the >node at poll ID> after
 						the zero node 
+						//UPDATE: ASPYN SAYS NOTHING NEEDS TO HAPPEN HERE AND THIS BLOCK OF CODE COULD BE DELETED
 					*/
-				}
+				}	
 			}
 		}
 
@@ -158,7 +160,7 @@ contract PLCRVoting {
 	}
 	
 	// insert to double-linked-list given that the prevID is valid
-	function insertToDll(uint pollID, uint prevID, uint numTokens, bytes32 commitHash){
+	function insertToDll(uint pollID, uint prevID, uint numTokens, bytes32 commitHash) {
 		uint nextID = uint(getAttribute(prevID, "nextID"));
 
 		// make nextNode.prev point to newNode
