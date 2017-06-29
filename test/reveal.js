@@ -53,24 +53,24 @@ function checkDeletion(user, pollID) {
 
 function increaseTime(seconds) {
   return new Promise((resolve, reject) => {
-     return ethRPC.sendAsync({
-         method: 'evm_increaseTime',
-         params: [seconds]
-     }, (err) => {
-         if (err) reject(err)
-         resolve()
-     })
-  })
-  .then(() => {
-     return new Promise((resolve, reject) => {
-         return ethRPC.sendAsync({
-             method: 'evm_mine',
-             params: []
-         }, (err) => {
-             if (err) reject(err)
-             resolve()
-         })
-     })
+//      return ethRPC.sendAsync({
+//          method: 'evm_increaseTime',
+//          params: [seconds]
+//      }, (err) => {
+//          if (err) reject(err)
+//          resolve()
+//      })
+//   })
+//   .then(() => {
+//      return new Promise((resolve, reject) => {
+//          return ethRPC.sendAsync({
+//              method: 'evm_mine',
+//              params: []
+//          }, (err) => {
+//              if (err) reject(err)
+//              resolve()
+//          })
+//      })
   });
 }
 
@@ -125,7 +125,7 @@ contract('Voting (Reveal)', function(accounts) {
             });
         });
     });
-  it("single reveal for no commits to single poll", function() {
+  it("single reveal different vote than committed vote to single poll", function() {
       var expected = {
         votesFor: 0,
         votesAgainst: 0
@@ -172,7 +172,7 @@ contract('Voting (Reveal)', function(accounts) {
                     var pollId = pollIds[0];
                     var hash = createVoteHash(1, 100);
                       increaseTime(11)
-                        .then(() => instance.revealVote(pollId, 100, 0, {from: accounts[1]}))
+                        .then(() => instance.revealVote(pollId, 100, 1, {from: accounts[1]}))
                         .then(() => pollComparison(accounts[1], pollId, expected))
                         .then(() => checkDeletion(accounts[1], pollId))
                         .then(() =>
@@ -180,7 +180,7 @@ contract('Voting (Reveal)', function(accounts) {
                             return instance.hasBeenRevealed.call(pollId, {from: accounts[1]});
                         })
                         .then((result) => { 
-                            assert.equal(false, result, "node should have been revealed");
+                            assert.equal(false, result, "node should not have been revealed");
                         });
                 });
             });
