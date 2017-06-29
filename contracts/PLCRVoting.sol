@@ -127,7 +127,7 @@ contract PLCRVoting {
 
 	function revealVote(uint pollID, 
 		uint salt, uint voteOption) 
-		revealPeriodActive(pollID) returns (bool) {
+		/*revealPeriodActive(pollID)*/ returns (bool) {
 
 		require(!hasBeenRevealed(pollID));
 
