@@ -119,7 +119,35 @@ contract PLCRVoting {
 				return true;
 			} 
 		}
+        }
 
+	function revealVote(uint pollID, 
+		uint salt, bool voteOption) 
+		revealPeriodActive(pollID) returns (bool) {
+
+		/*
+			TODO: Cem-- implement 'hasBeenRevealed'
+		*/
+		require(!hasBeenRevealed(pollID));
+
+		bytes32 currHash = sha3(voteOption, salt);
+
+		// Check if the hash from the input is the 
+		// same as the commit hash
+		if (currHash == getCommitHash(pollID)) {
+			// Record the vote
+			if (voteOption) {
+				pollMap[pollID].votesFor++;
+			} else {
+				pollMap[pollID].votesAgainst++;
+			}
+
+			/*
+				TODO: Delete the element from the double linked-list
+				that corresponds to this poll for the msg sender
+			*/
+			return true;
+		}
 		return false;
 	}
 
