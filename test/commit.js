@@ -18,7 +18,7 @@ function createVoteHash(vote, salt) {
     return hash;                                   
 }
 
-contract('Voting', function(accounts) { 
+contract('Voting (commit)', function(accounts) { 
 	const [owner, user1, user2, user3, user4, user5, user6] = accounts;
 	const tokenAmt = 10;
 

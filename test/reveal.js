@@ -1,6 +1,6 @@
 var PLCRVoting = artifacts.require("./PLCRVoting.sol");
 
-contract('Voting', function(accounts) {
+contract('Voting (Reveal)', function(accounts) {
   it("single reveal for single commit to single poll", function() {
     return PLCRVoting.deployed()
     .then(function(instance) {
