@@ -142,14 +142,18 @@ contract PLCRVoting {
 				pollMap[pollID].votesAgainst++;
 			}
 
-			/*
-				TODO: Delete the element from the double linked-list
-				that corresponds to this poll for the msg sender
-			*/
-			return true;
+
+                        deleteNode(pollID);
+			
+                        return true;
 		}
 		return false;
 	}
+
+        function hasBeenRevealed(uint pollID) returns (bool) {
+            // TODO: Implement or get from Cem
+            return true;
+        }
 
 	function getPreviousID(uint pollID) returns (uint) {
 		return uint(getAttribute(pollID, "prevID"));
