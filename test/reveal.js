@@ -19,17 +19,37 @@ function createVoteHash(vote, salt) {
 }
 
 function pollComparison(user, pollID, expected) {
+    let voter;
     return PLCRVoting.deployed()
-        .then((instance) => instance.pollMap.call(pollID), {from: user})
+        .then((instance) => {
+            voter = instance; 
+            return voter.pollMap.call(pollID, {from: user});
+        })
         .then((results) => 
                 {
                     let votesFor = results[4].toString();
                     let votesAgainst = results[5].toString();
                     assert.equal(votesFor, expected.votesFor, "votesFor incorrect");
                     assert.equal(votesAgainst, expected.votesAgainst, "votesAgainst inccorect");
-                });
+                }
+            );           
 }                
 
+function checkDeletion(user, pollID) {
+    let voter;
+    return PLCRVoting.deployed()
+        .then((instance) => {
+            voter = instance; 
+            return voter.voteMap.call(createIndexHash(user, pollID, "prevID"));
+        })
+        .then((prevID) => {
+            assert.equal(prevID, pollID, "prevID not equal to pollID -> node deletion failed");
+            return voter.voteMap.call(createIndexHash(user, pollID, "nextID"));
+        })
+        .then((nextID) => {
+            assert.equal(nextID, pollID, "nextID not equal to pollID -> node deletion failed");
+        });
+}                
 
 function increaseTime(seconds) {
   return new Promise((resolve, reject) => {
@@ -81,7 +101,7 @@ contract('Voting (Reveal)', function(accounts) {
 
     return PLCRVoting.deployed()
     .then(function(instance) {
-        return instance.loadTokens(10, {from: accounts[1]})
+        return instance.loadTokens(50, {from: accounts[1]})
         .then(() => 
             {
                 startPolls(1, function (pollIds) {
@@ -92,17 +112,39 @@ contract('Voting (Reveal)', function(accounts) {
                       increaseTime(11)
                         .then(() => instance.revealVote(pollId, 100, 1, {from: accounts[1]}))
                         .then(() => pollComparison(accounts[1], pollId, expected))
+                        .then(() => checkDeletion(accounts[1], pollId));
                     });
                 });
             }
         );
     });
   });
+
   it("single reveal for no commits to single poll", function() {
+      var expected = {
+        votesFor: 0,
+        votesAgainst: 0
+      };
+
     return PLCRVoting.deployed()
     .then(function(instance) {
-    });
+        return instance.loadTokens(50, {from: accounts[1]})
+        .then(() =>
+            {
+                startPolls(1, function (pollIds) { 
+                    var pollId = pollIds[0];
+                    increaseTime(11).then(() => 
+                    {
+                        return instance.revealVote(pollId, 100, 1, {from: accounts[1]})
+                            .then(() => pollComparison(accounts[1], pollId, expected))
+                    });
+                });
+            }
+        );
+    }
+    );
   });
+
   it("single reveal different vote selection for single commit to single poll", function() {
     return PLCRVoting.deployed()
     .then(function(instance) {
