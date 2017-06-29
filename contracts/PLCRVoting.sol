@@ -73,7 +73,6 @@ contract PLCRVoting {
 
 		// Node is valid
 		if (isValid) {
-			uint hashAsInt = uint(hashOfVoteAndSalt);
 			// Update a previous commit
 			if (isUpdatingExistingNode) {
 				/*
@@ -130,9 +129,6 @@ contract PLCRVoting {
 		uint salt, uint voteOption) 
 		revealPeriodActive(pollID) returns (bool) {
 
-		/*
-			TODO: Cem-- implement 'hasBeenRevealed'
-		*/
 		require(!hasBeenRevealed(pollID));
 
 		bytes32 currHash = sha3(voteOption, salt);
@@ -151,13 +147,14 @@ contract PLCRVoting {
                         deleteNode(pollID);
 			
                         return true;
-		}
+                }
 		return false;
 	}
 
         function hasBeenRevealed(uint pollID) returns (bool) {
-            // TODO: Implement or get from Cem
-            return false;
+            var prevID = getPreviousID(pollID);
+            return prevID == getNextID(pollID)
+                && prevID == pollID;
         }
 
 	function getPreviousID(uint pollID) returns (uint) {
