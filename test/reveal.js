@@ -112,14 +112,19 @@ contract('Voting (Reveal)', function(accounts) {
                       increaseTime(11)
                         .then(() => instance.revealVote(pollId, 100, 1, {from: accounts[1]}))
                         .then(() => pollComparison(accounts[1], pollId, expected))
-                        .then(() => checkDeletion(accounts[1], pollId));
+                        .then(() => checkDeletion(accounts[1], pollId))
+                        .then(() =>
+                        {
+                            return instance.hasBeenRevealed.call(pollId, {from: accounts[1]});
+                        })
+                        .then((result) => { 
+                            assert.equal(true, result, "node should have been revealed");
+                        });
                     });
                 });
-            }
-        );
+            });
+        });
     });
-  });
-
   it("single reveal for no commits to single poll", function() {
       var expected = {
         votesFor: 0,
@@ -133,11 +138,17 @@ contract('Voting (Reveal)', function(accounts) {
             {
                 startPolls(1, function (pollIds) { 
                     var pollId = pollIds[0];
-                    increaseTime(11).then(() => 
+                    increaseTime(11)
+                    .then(() => 
                     {
                         return instance.revealVote(pollId, 100, 1, {from: accounts[1]})
                             .then(() => pollComparison(accounts[1], pollId, expected))
-                    });
+                    })
+                    .then(() =>
+                    {
+                        return instance.hasBeenRevealed.call(pollId, {from: accounts[1]});
+                    })
+                    .then((result) => assert.equal(false, result, "node should not have been revealed"));
                 });
             }
         );
