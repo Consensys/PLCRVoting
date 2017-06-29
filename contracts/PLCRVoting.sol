@@ -154,7 +154,7 @@ contract PLCRVoting {
 
         function hasBeenRevealed(uint pollID) returns (bool) {
             // TODO: Implement or get from Cem
-            return true;
+            return false;
         }
 
 	function getPreviousID(uint pollID) returns (uint) {
