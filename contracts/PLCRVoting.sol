@@ -31,6 +31,9 @@ contract PLCRVoting {
 	function PLCRVoting(address tokenAddr, address[] _trusted) {
 		token = HumanStandardToken(tokenAddr);
                 trusted = _trusted;
+
+                commitDuration = 10;
+                revealDuration = 10;
 	}
 
 	function commitVote(uint pollID, 
@@ -292,7 +295,7 @@ contract PLCRVoting {
 
 		pollMap[pollNonce] = Poll({
 			commitEndDate: block.timestamp + commitDuration,
-			revealEndDate: block.timestamp + revealDuration,
+			revealEndDate: block.timestamp + commitDuration + revealDuration,
 			voteQuotaSnap: voteQuota,
 			votesFor: 0,
 			votesAgainst: 0,
