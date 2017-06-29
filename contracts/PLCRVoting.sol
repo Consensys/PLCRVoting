@@ -20,6 +20,8 @@ contract PLCRVoting {
 	uint revealDuration;	/// length of reveal period
 	uint voteQuota;			/// type of majority necessary for winning poll
 	address[] trusted;		/// list of trusted addresses
+        
+        uint constant VOTE_OPTION_FOR = 1; /// vote option indicating a vote for the proposal
 
         uint pollNonce;
         event PollCreated(uint pollId);
@@ -122,7 +124,7 @@ contract PLCRVoting {
         }
 
 	function revealVote(uint pollID, 
-		uint salt, bool voteOption) 
+		uint salt, uint voteOption) 
 		revealPeriodActive(pollID) returns (bool) {
 
 		/*
@@ -136,7 +138,7 @@ contract PLCRVoting {
 		// same as the commit hash
 		if (currHash == getCommitHash(pollID)) {
 			// Record the vote
-			if (voteOption) {
+			if (voteOption == VOTE_OPTION_FOR) {
 				pollMap[pollID].votesFor++;
 			} else {
 				pollMap[pollID].votesAgainst++;
