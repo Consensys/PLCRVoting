@@ -36,6 +36,10 @@ contract PLCRVoting {
 		uint prevPollID) 
 		returns (bool) {
 		require(hasEnoughTokens(numTokens));
+
+		// TODO: require(commitPeriodActive(pollID))
+		// NEEDS TO BE DONE
+
 		// Make sure user is not trying to manually commit
 		// a vote corresponding the zero node
 		require(pollID != 0);
