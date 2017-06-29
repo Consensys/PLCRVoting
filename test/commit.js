@@ -302,7 +302,7 @@ contract('Voting', function(accounts) {
     });
   }
 
-  it("single commit to 5 polls (commit periods active)", function() {
+  it("single commit (user6) to 5 polls (commit periods active)", function() {
         var hash = createVoteHash(0, 79);
         var promise;
         startPolls(5, function (pollIds) {
@@ -346,22 +346,20 @@ contract('Voting', function(accounts) {
             });
         });
   });
-  it("single commit to a single poll (commit period inactive)", function() {
-	return PLCRVoting.deployed()
-	.then(function(instance) {
 
-	});
-  });
-  it("single commit to 3 polls (2 commit periods inactive)", function() {
-	return PLCRVoting.deployed()
-	.then(function(instance) {
-
-	});
-  });
   it("single commit, exceeded number of spendable tokens for address", function() {
-	return PLCRVoting.deployed()
-	.then(function(instance) {
+	// Should throw invalid opcode
 
-	});
+    let voter;
+    return PLCRVoting.deployed()
+	.then((instance) => {
+        voter = instance;
+        return voter.startPoll("proposal", 50)
+    })
+    .then((result) => {
+        var pollId = result.logs[0].args.pollId.toString();
+        return voter.commitVote(pollId, createVoteHash(1, 20), 
+            10001, 0);
+    }).catch((err) => console.log("TODO: WHAT DO I PUT HERE"));
   });
 });
