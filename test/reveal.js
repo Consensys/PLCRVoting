@@ -92,7 +92,7 @@ contract('Voting (Reveal)', function(accounts) {
 
  
     
-  it.only("single reveal for single commit to single poll", function() {
+  it("single reveal for single commit to single poll", function() {
 
       var expected = {
         votesFor: 1,
@@ -133,39 +133,72 @@ contract('Voting (Reveal)', function(accounts) {
 
     return PLCRVoting.deployed()
     .then(function(instance) {
-        return instance.loadTokens(50, {from: accounts[1]})
-        .then(() =>
-            {
-                startPolls(1, function (pollIds) { 
+        return instance.loadTokens(10, {from: accounts[2]})
+        .then(() => {
+            startPolls(1, function (pollIds) {
                     var pollId = pollIds[0];
-                    increaseTime(11)
-                    .then(() => 
-                    {
-                        return instance.revealVote(pollId, 100, 1, {from: accounts[1]})
-                            .then(() => pollComparison(accounts[1], pollId, expected))
-                    })
-                    .then(() =>
-                    {
-                        return instance.hasBeenRevealed.call(pollId, {from: accounts[1]});
-                    })
-                    .then((result) => assert.equal(false, result, "node should not have been revealed"));
+                    var hash = createVoteHash(1, 100);
+                    instance.commitVote(pollId, hash, 10, 0, {from: accounts[2]})
+                    .then(() => {
+                      increaseTime(11)
+                        .then(() => instance.revealVote(pollId, 100, 0, {from: accounts[2]}))
+                        .then(() => pollComparison(accounts[2], pollId, expected))
+                        .then(() =>
+                        {
+                            return instance.hasBeenRevealed.call(pollId, {from: accounts[2]});
+                        })
+                        .then((result) => { 
+                            assert.equal(false, result, "node should not have been revealed");
+                        });
+                    });
                 });
-            }
-        );
-    }
-    );
+            });
+        });
   });
 
-  it("single reveal different vote selection for single commit to single poll", function() {
+  it("single reveal for no commit to single poll", function() {
+
+      var expected = {
+        votesFor: 0,
+        votesAgainst: 0
+      };
+
     return PLCRVoting.deployed()
     .then(function(instance) {
-    })
-  });
+        return instance.loadTokens(50, {from: accounts[1]})
+        .then(() => 
+            {
+                startPolls(1, function (pollIds) {
+                    var pollId = pollIds[0];
+                    var hash = createVoteHash(1, 100);
+                      increaseTime(11)
+                        .then(() => instance.revealVote(pollId, 100, 0, {from: accounts[1]}))
+                        .then(() => pollComparison(accounts[1], pollId, expected))
+                        .then(() => checkDeletion(accounts[1], pollId))
+                        .then(() =>
+                        {
+                            return instance.hasBeenRevealed.call(pollId, {from: accounts[1]});
+                        })
+                        .then((result) => { 
+                            assert.equal(false, result, "node should have been revealed");
+                        });
+                });
+            });
+        });
+    });
+
+
   it("three reveals for three commits (different senders) to single poll", function() {
     return PLCRVoting.deployed()
     .then(function(instance) {
     })
   });
+  it("three reveals for three commits (same sender) to three different polls", function() {
+    return PLCRVoting.deployed()
+    .then(function(instance) {
+    })
+  });
+
   it("single reveal after reveal expiration date", function() {
     return PLCRVoting.deployed()
     .then(function(instance) {
