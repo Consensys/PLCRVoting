@@ -58,29 +58,34 @@ contract PLCRVoting {
 			// node can be used for validation
 			prevPollID = getPreviousID(pollID);
 
-			// Check to see if the previous poll ID was not set,
-			// which would imply that poll ID can not be valid
-			if (prevPollID == 0) {
+			// Check to see if the commit hash was not previously set,
+			// which would imply that no commit to this 
+                        // poll was previously made
+			if (getCommitHash(pollID) == 0) {
 				return false;
 			}
 
 			isUpdatingExistingNode = true;
-		} 
+		} else if (getCommitHash(pollID) != 0) {
+                    isUpdatingExistingNode = true;
+                } 
 
 		// Determine if the new node can be inserted/updated
 		// at the given spot (i.e. the node right after prevPollID)
-		bool isValid = validateNode(prevPollID, numTokens);
+		bool isValid = validateNode(prevPollID,pollID, numTokens);
 
 		// Node is valid
 		if (isValid) {
 			// Update a previous commit
 			if (isUpdatingExistingNode) {
-				/*
+				
+                                /*
 					TODO: Update the <node at poll ID>:
 						update numTokens attribute
 						update commitHash attribute
 				*/
-			} else {
+                               deleteNode(pollID);
+                        }
 				/*
 					TODO: insert the <node at poll ID> after
 					the node at <prevPollID>:
@@ -97,7 +102,6 @@ contract PLCRVoting {
 						the zero node 
 						//UPDATE: ASPYN SAYS NOTHING NEEDS TO HAPPEN HERE AND THIS BLOCK OF CODE COULD BE DELETED
 					*/
-				}	
 			}
 		}
 
@@ -105,7 +109,7 @@ contract PLCRVoting {
 		return false;
 	}
 
-	function validateNode(uint prevPollID, uint256 numTokens) returns (bool) {
+	function validateNode(uint prevPollID, uint pollID, uint256 numTokens) returns (bool) {
 		if (prevPollID == 0 
 			&& getNextID(prevPollID) == 0) {
 			// Only the zero node exists
@@ -117,12 +121,21 @@ contract PLCRVoting {
 		// less tokens than the current node
 		if (prevNodeTokens <= numTokens) {
 			uint256 nextNodeID = getNextID(prevPollID);
+
+                        // If the next is the current node, then we need to look at
+                        // the node after the current node (since next == current node
+                        // indicates an update validation is occurring)
+                        if (nextNodeID == pollID) {
+                            nextNodeID = getNextID(pollID);
+                        }
 			uint256 nextNodeTokens = getNumTokens(nextNodeID);
 			if (nextNodeID == 0 
 				|| numTokens <= nextNodeTokens) {
 				return true;
-			} 
+			}
 		}
+
+                return false;
         }
 
 	function revealVote(uint pollID, 
