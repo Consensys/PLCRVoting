@@ -93,7 +93,6 @@ contract('Voting (Reveal)', function(accounts) {
  
     
   it("single reveal for single commit to single poll", function() {
-
       var expected = {
         votesFor: 1,
         votesAgainst: 0
@@ -189,9 +188,60 @@ contract('Voting (Reveal)', function(accounts) {
 
 
   it("three reveals for three commits (different senders) to single poll", function() {
-    return PLCRVoting.deployed()
-    .then(function(instance) {
-    })
+      var expected1 = {
+            votesFor: 1,
+            votesAgainst: 0
+          };
+      var expected2 = {
+            votesFor: 1,
+            votesAgainst: 1
+      };
+      var expected3 = {
+            votesFor: 2,
+            votesAgainst: 1
+      };
+
+        return PLCRVoting.deployed()
+        .then(function(instance) {
+            return instance.loadTokens(20, {from: accounts[2]})
+            .then(() => instance.loadTokens(20, {from: accounts[3]}))
+            .then(() => instance.loadTokens(20, {from: accounts[4]}))
+            .then(() =>
+                {
+                    startPolls(1, function (pollIds) {
+                        var pollId = pollIds[0];
+                        var hash1 = createVoteHash(1, 100);
+                        var hash2 = createVoteHash(0, 50);
+                        var hash3 = createVoteHash(1, 10);
+                        instance.commitVote(pollId, hash1, 10, 0, {from: accounts[2]})
+                        .then(() => instance.commitVote(pollId, hash2, 11, 0, {from: accounts[3]}))
+                        .then(() => instance.commitVote(pollId, hash3, 12, 0, {from: accounts[4]}))
+                        .then(() => {
+                          increaseTime(11)
+                            .then(() => instance.revealVote(pollId, 100, 1, {from: accounts[2]}))
+                            .then(() => pollComparison(accounts[2], pollId, expected1))
+                            .then(() => checkDeletion(accounts[2], pollId))
+                            .then(() => instance.hasBeenRevealed.call(pollId, {from: accounts[2]}))
+                            .then((result) => assert.equal(true, result, "acct[2] node should have been revealed"))
+                            .then(() => instance.hasBeenRevealed.call(pollId, {from: accounts[3]}))
+                            .then((result) => assert.equal(false, result, "acct[3] node should not have been revealed yet"))
+                             .then(() => instance.hasBeenRevealed.call(pollId, {from: accounts[4]}))
+                            .then((result) => assert.equal(false, result, "acct[4] node should not have been revealed yet"))
+                            
+                            .then(() => instance.revealVote(pollId, 50, 0, {from: accounts[3]}))
+                            .then(() => pollComparison(accounts[3], pollId, expected2))
+                            .then(() => checkDeletion(accounts[3], pollId))
+                            .then(() => instance.hasBeenRevealed.call(pollId, {from: accounts[3]}))
+                            .then((result) => assert.expected(true, result, "acct[3] node should have been revealed"))
+                            .then(() => instance.revealVote(pollId, 10, 1, {from: accounts[4]}))
+                            .then(() => pollComparison(accounts[4], pollId, expected3))
+                            .then(() => checkDeletion(accounts[4], pollId))
+                            .then(() => instance.hasBeenRevealed.call(pollId, {from: accounts[4]}));
+                        });
+                    });
+                });
+            });
+
   });
   it("three reveals for three commits (same sender) to three different polls", function() {
     return PLCRVoting.deployed()
