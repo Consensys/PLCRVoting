@@ -265,17 +265,74 @@ contract('Voting (Reveal)', function(accounts) {
                             .then(() => instance.revealVote(pollId, 10, 1, {from: accounts[4]}))
                             .then(() => pollComparison(accounts[4], pollId, expected3))
                             .then(() => checkDeletion(accounts[4], pollId))
-                            .then(() => instance.hasBeenRevealed.call(pollId, {from: accounts[4]}));
+                            .then(() => instance.hasBeenRevealed.call(pollId, {from: accounts[4]}))
+                            .then((result) => assert.expected(true, result, "acct[4] node should have been revealed"))
                         });
                     });
                 });
             });
 
   });
-  it("three reveals for three commits (same sender) to three different polls", function() {
-    return PLCRVoting.deployed()
-    .then(function(instance) {
-    })
+  it("three reveals for three commits (single sender) to three different polls", function() {
+      var expected1 = {
+            votesFor: 1,
+            votesAgainst: 0
+          };
+      var expected2 = {
+            votesFor: 0,
+            votesAgainst: 1
+      };
+      var expected3 = {
+            votesFor: 1,
+            votesAgainst: 0
+      };
+
+        return PLCRVoting.deployed()
+        .then(function(instance) {
+            return instance.loadTokens(20, {from: accounts[2]})
+            .then(() => instance.loadTokens(20, {from: accounts[3]}))
+            .then(() => instance.loadTokens(20, {from: accounts[4]}))
+            .then(() =>
+                {
+                    startPolls(3, function (pollIds) {
+                        var hash1 = createVoteHash(1, 100);
+                        var hash2 = createVoteHash(0, 50);
+                        var hash3 = createVoteHash(1, 10);
+                        instance.commitVote(pollIds[0], hash1, 10, 0, {from: accounts[2]})
+                        .then(() => instance.commitVote(pollIds[1], hash2, 11, 0, {from: accounts[2]}))
+                        .then(() => instance.commitVote(pollIds[2], hash3, 12, 0, {from: accounts[2]}))
+                        .then(() => {
+                          increaseTime(11)
+                            .then(() => instance.revealVote(pollIds[0], 100, 1, {from: accounts[2]}))
+                            .then(() => pollComparison(accounts[2], pollIds[0], expected1))
+                            .then(() => checkDeletion(accounts[2], pollId))
+                            .then(() => instance.hasBeenRevealed.call(pollIds[0], {from: accounts[2]}))
+                            .then((result) => assert.equal(true, result, "pollIds[0] node should have been revealed"))
+                            .then(() => instance.hasBeenRevealed.call(pollIds[1], {from: accounts[2]}))
+                            .then((result) => assert.equal(false, result, "pollIds[1] node should not have been revealed yet"))
+                             .then(() => instance.hasBeenRevealed.call(pollIds[2], {from: accounts[2]}))
+                            .then((result) => assert.equal(false, result, "pollIds[2] node should not have been revealed yet"))
+                            
+                            .then(() => instance.revealVote(pollIds[1], 50, 0, {from: accounts[2]}))
+                            .then(() => pollComparison(accounts[2], pollIds[1], expected2))
+                            .then(() => checkDeletion(accounts[2], pollIds[1]))
+                            .then(() => instance.hasBeenRevealed.call(pollIds[1], {from: accounts[2]}))
+                            .then((result) => assert.expected(true, result, "pollIds[1] node should have been revealed"))
+                            .then(() => instance.hasBeenRevealed.call(pollIds[0], {from: accounts[2]}))
+                            .then((result) => assert.expected(true, result, "pollIds[0] node should have been revealed"))
+                            .then(() => instance.hasBeenRevealed.call(pollIds[2], {from: accounts[2]}))
+                            .then((result) => assert.expected(false, result, "pollIds[1] node should not have been revealed"))
+                            .then(() => instance.revealVote(pollIds[2], 10, 1, {from: accounts[2]}))
+                            .then(() => pollComparison(accounts[2], pollIds[2], expected3))
+                            .then(() => checkDeletion(accounts[2], pollIds[2]))
+                            .then(() => instance.hasBeenRevealed.call(pollIds[2], {from: accounts[2]}))
+                            .then((result) => assert.expected(true, result, "pollIds[2] node should have been revealed"))
+                        });
+                    });
+                });
+            });
+
+
   });
 
   it("single reveal after reveal expiration date", function() {
@@ -283,5 +340,4 @@ contract('Voting (Reveal)', function(accounts) {
     .then(function(instance) {
     })
   });
-
 });
