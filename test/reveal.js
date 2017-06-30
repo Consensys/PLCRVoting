@@ -100,7 +100,7 @@ contract('Voting (Reveal)', function(accounts) {
 
     return PLCRVoting.deployed()
     .then(function(instance) {
-        return instance.loadTokens(50, {from: accounts[1]})
+        return instance.loadTokens(30, {from: accounts[1]})
         .then(() => 
             {
                 startPolls(1, function (pollIds) {
@@ -124,6 +124,35 @@ contract('Voting (Reveal)', function(accounts) {
             });
         });
     });
+  it("double reveal attempt (by single sender) for single poll", function() {
+      var expected = {
+        votesFor: 1,
+        votesAgainst: 0
+      };
+
+    return PLCRVoting.deployed()
+    .then(function(instance) {
+        return instance.loadTokens(10, {from: accounts[1]})
+        .then(() => 
+            {
+                startPolls(1, function (pollIds) {
+                    var pollId = pollIds[0];
+                    var hash = createVoteHash(1, 100);
+                    instance.commitVote(pollId, hash, 10, 0, {from: accounts[1]})
+                    .then(() => {
+                      increaseTime(11)
+                        .then(() => instance.revealVote(pollId, 100, 1, {from: accounts[1]}))
+                        .then(() => pollComparison(accounts[1], pollId, expected))
+                        .then(() => checkDeletion(accounts[1], pollId))
+                        .then(() => instance.hasBeenRevealed.call(pollId, {from: accounts[1]}))
+                        .then((result) => assert.equal(true, result, "node should have been revealed"))
+                        .then(() => instance.revealVote(pollId, 100, 1, {from: accounts[1]}))
+                        .then(() => pollComparison(accounts[1], pollId, expected)) // Make sure results of poll have not changed after calling reveal twice
+                    });
+                });
+            });
+        });
+  });
   it("single reveal different vote than committed vote to single poll", function() {
       var expected = {
         votesFor: 0,
@@ -254,9 +283,5 @@ contract('Voting (Reveal)', function(accounts) {
     .then(function(instance) {
     })
   });
-  it("double reveal attempt (by single sender) for single poll", function() {
-    return PLCRVoting.deployed()
-    .then(function(instance) {
-    })
-  });
+
 });
