@@ -7,7 +7,7 @@ var EthQuery = require('ethjs-query');
 var ethQuery = new EthQuery(new HttpProvider('http://localhost:8545'));
 var fs = require("fs");
 
-contract('Utilities', function(accounts) {
+contract('Utilities Testing', function(accounts) {
     // Check for non-existence of the single poll
     // and then the existence of the poll and then that the poll
     // is in commit phase
