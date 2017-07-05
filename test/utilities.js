@@ -66,7 +66,7 @@ contract('Utilities Testing', function(accounts) {
     // getBlockTimestamp is also a base 10 string
     // getPoll also returns everything as base10 string
     
-    it("check proposal string", function() {
+    it("should check proposal string", function() {
         const propStr = "first poll";
         let contract;
         return getVoteContract()
@@ -77,7 +77,7 @@ contract('Utilities Testing', function(accounts) {
         .then((pollArr) => assert.equal(pollArr[5], propStr, "poll created incorrectly"));
     });
 
-    it("check commit end date", function() {
+    it("should check commit end date", function() {
         let contract;
         let pollID;
         let commitEndDate;
@@ -96,7 +96,7 @@ contract('Utilities Testing', function(accounts) {
         .then(() => assert.equal(commitEndDate, timestamp.add(commitDuration).toString(10), "poll commit end date wrong"));
     });
 
-    it("check reveal end date", function() {
+    it("should check reveal end date", function() {
         let contract;
         let pollID;
         let revealEndDate;
@@ -119,7 +119,7 @@ contract('Utilities Testing', function(accounts) {
     });
 
 
-    it("start three polls", function() {
+    it("should start three polls", function() {
         // Check for existence of the three polls and that they 
         // are in commit phase   
         let contract;
@@ -137,7 +137,7 @@ contract('Utilities Testing', function(accounts) {
     });
 
 
-    it("check if commit period correctly active", function() {
+    it("should check if commit period correctly active", function() {
         // Check commit period active, reveal period inactive, poll not ended
         let pollIDinstance;
         return launchPoll("commit period test")
@@ -150,7 +150,7 @@ contract('Utilities Testing', function(accounts) {
     });
 
 
-    it("check if reveal period correctly active", function() {
+    it("should check if reveal period correctly active", function() {
         // Check commit period inactive, reveal period active
         let pollID;
         let contract;
@@ -180,7 +180,7 @@ contract('Utilities Testing', function(accounts) {
     });
     */
 
-    it("trusted users are correct", function() {
+    it("should trusted users are correct", function() {
         // Check if the trusted users are correct
         return PLCRVoting.deployed()
         .then((vote) => {
@@ -195,7 +195,7 @@ contract('Utilities Testing', function(accounts) {
         });
     });
 
-    it("valid poll IDs when in commit period", function() {
+    it("should valid poll IDs when in commit period", function() {
         // Check if the started polls in the commit period are valid,
         let pollID;
         let contract;
@@ -206,7 +206,7 @@ contract('Utilities Testing', function(accounts) {
         .then((result) => assert.equal(result, true, "Poll isn't valid in commit period"));
     });
 
-    it("valid poll IDs when in reveal period", function() {
+    it("should valid poll IDs when in reveal period", function() {
         // Check if the started polls in the reveal period are valid,
         let pollID;
         let contract;
@@ -222,7 +222,7 @@ contract('Utilities Testing', function(accounts) {
         .then((result) => assert.equal(result, true, "Poll isn't valid in reveal period"));
     });
 
-    it("valid poll IDs when in ended period", function() {
+    it("should valid poll IDs when in ended period", function() {
         // Check if the started polls that have ended are valid,
         let pollID;
         let contract;
