@@ -107,25 +107,17 @@ contract('Voting (Reveal)', function(accounts) {
     .then((_instance) => instance = _instance)
     .then(() => instance.loadTokens(10, {from: accounts[1]}))
     .then(() => startPolls(1))
-    .then((pollIds) => {console.log("HIT ME2 " + pollIds); pollId = pollIds[0]})
+    .then((pollIds) => pollId = pollIds[0])
     .then(() => instance.commitVote(pollId, hash, 10, 0, {from: accounts[1]}))
     .then(() => getBlockTimestamp())
-    .then((res) => console.log("(Test 1) CURR " + res))
     .then(() => increaseTime(1000001))
     .then(() => getBlockTimestamp())
-    .then((res) => console.log("(Test 1) CURR2 " + res))
     .then(() => instance.revealVote(pollId, 100, 1, {from: accounts[1]}))
     .then(() => getBlockTimestamp())
-    .then((res) => console.log("(Test 1) CURR3 " + res))
     .then(() => pollComparison(accounts[1], pollId, expected))
     .then(() => checkDeletion(accounts[1], pollId))
-    .then(() =>
-    {
-        return instance.hasBeenRevealed.call(pollId, {from: accounts[1]});
-    })
-    .then((result) => { 
-        assert.equal(true, result, "node should have been revealed");
-    });
+    .then(() => instance.hasBeenRevealed.call(pollId, {from: accounts[1]}))
+    .then((result) => assert.equal(true, result, "node should have been revealed"));
 });
   it("double reveal attempt (by single sender) for single poll", function() {
       var expected = {
@@ -146,28 +138,13 @@ contract('Voting (Reveal)', function(accounts) {
     .then(() => instance.commitVote(pollId, hash, 10, 0, {from: user}))
     .then(() => increaseTime(1000001))
     .then(() => instance.revealPeriodActive.call(pollId))
-    .then((res) => console.log("(Test 2)REVEAL PERIOD ACTIVE STATE1: " + res))
-    .then(() => getBlockTimestamp())
-    .then((res) => console.log("(Test 2) CURR " + res))
     .then(() => instance.revealVote(pollId, 100, 1, {from: user}))
     .then(() => pollComparison(user, pollId, expected))
     .then(() => checkDeletion(user, pollId))
-    .then(() => getBlockTimestamp())
-    .then((res) => console.log("(Test 2) CURR " + res))
-    .then(() => instance.revealPeriodActive.call(pollId))
-    .then((res) => console.log("REVEAL PERIOD ACTIVE STATE1.5: " + res))
     .then(() => instance.hasBeenRevealed.call(pollId, {from: user}))
     .then((result) => assert.equal(true, result, "node should have been revealed"))
     .then(() => instance.revealVote(pollId, 100, 1, {from: user}))
     .catch((err) => console.log("(Test 2)" + err + "TODO: CHANGE TO CHECK FOR SPECIFIC ERROR."))
-    .then(() => getBlockTimestamp())
-    .then((res) => console.log("(Test 2) CURR " + res))
-    .then(() => instance.revealPeriodActive.call(pollId))
-    .then((res) => console.log("(Test 2)REVEAL PERIOD ACTIVE STATE2: " + res))
-    .then(() => instance.pollMap.call(pollId))
-    .then((res) => console.log("(Test 2)HERE WE ARE " + res.toString())) 
-    .then(() => getBlockTimestamp())
-    .then((res) => console.log("(Test 2) CURR " + res))
     .then(() => instance.hasBeenRevealed.call(pollId, {from: user}))
     .then((result) => assert.equal(true, result, "Why is node not revealed?"))
     .then(() => pollComparison(user, pollId, expected)) // Make sure results of poll have not changed after calling reveal twice
@@ -324,9 +301,25 @@ contract('Voting (Reveal)', function(accounts) {
         .then((result) => assert.equal(true, result, "pollIds[2] node should have been revealed"))
   });
 
-//   it("single reveal after reveal expiration date", function() {
-//     return PLCRVoting.deployed()
-//     .then(function(instance) {
-//     })
-//   });
+  it("single reveal after reveal expiration date", function() {
+      var expected = {
+        votesFor: 0,
+        votesAgainst: 0
+      };
+    let instance;
+    let pollId;
+    var hash = createVoteHash(1, 100);
+    return PLCRVoting.deployed()
+    .then((_instance) => instance = _instance)
+    .then(() => instance.loadTokens(10, {from: accounts[1]}))
+    .then(() => startPolls(1))
+    .then((pollIds) => pollId = pollIds[0])
+    .then(() => instance.commitVote(pollId, hash, 10, 0, {from: accounts[1]}))
+    .then(() => increaseTime(2000001))
+    .then(() => instance.revealVote(pollId, 100, 1, {from: accounts[1]}))
+    .catch((err) => console.log("THROWING AS IT SHOULD " + err))
+    .then(() => pollComparison(accounts[1], pollId, expected))
+    .then(() => instance.hasBeenRevealed.call(pollId, {from: accounts[1]}))
+    .then((result) => assert.equal(false, result, "node should not have been revealed"));
+});
 });
