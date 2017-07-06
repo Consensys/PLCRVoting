@@ -293,59 +293,6 @@ contract('Voting (commit)', function(accounts) {
         });
   });
 
-  function promiseChain(promise, funct) {
-    if (typeof(promise) === "undefined") {
-        promise = Promise.resolve('');
-    }
-    return promise.then(function () {
-        funct();
-    });
-  }
-
-  it("single commit (user6) to 5 polls (commit periods active)", function() {
-        var hash = createVoteHash(0, 79);
-        var promise;
-        startPolls(5, function (pollIds) {
-            VotingContract.deployed()
-            .then(function (instance) {
-                return instance.loadTokens(50, {from: user6})
-                .then(() => {
-                    for (var i = 0; i < pollIds.length; i++) {
-                        let curr = pollIds[i];
-                        let holder = {
-                            id: curr,
-                            tokens: curr,
-                            prev: curr-1,
-                            hash: hash
-                        };
-                        promise = promiseChain(promise, function () {
-                            return instance.commitVote(holder.id, holder.hash, 
-                                holder.tokens, holder.prev, {from: user6});
-                        });
-                    }
-                    promise = promiseChain(promise, function () {
-                        for (var i = 0; i < pollIds.length; i++) {
-                            let curr = pollIds[i];
-
-                            // Appropriately sets next to the next
-                            // element in pollIds or 0 if curr is the 
-                            // last element. Note: 0, not pollIds[0],
-                            // is correct because the last element in the
-                            // dll will point to 0
-                            let next = 
-                                (i + 1 < pollIds.length) ? pollIds[i + 1] : 0;
-                            
-                            voteMapComparisonTest(user6, curr, 
-                            {prevID: curr - 1,
-                             nextID: next,
-                             numTokens: curr,
-                             commitHash: hash});
-                        }
-                    });
-                });
-            });
-        });
-  });
 
   it("single commit, exceeded number of spendable tokens for address", function() {
 	// Should throw invalid opcode
