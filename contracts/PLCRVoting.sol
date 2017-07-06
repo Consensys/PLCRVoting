@@ -65,12 +65,13 @@ contract PLCRVoting {
         });
 
         PollCreated(pollNonce);
+        // NOTE: return the poll nonce, so that registry can store it
     }
 
     /// interface for users to purchase votingTokens by exchanging ERC20 token
     function loadTokens(uint numTokens) {
-        require(token.balanceOf(msg.sender) >= numTokens);
-        require(token.transferFrom(msg.sender, this, numTokens));
+//        require(token.balanceOf(msg.sender) >= numTokens); // NOTE: delete this, redundant
+        require(token.transferFrom(msg.sender, this, numTokens)); // NOTE: line by line comments
         voteTokenBalance[msg.sender] += numTokens;
     }
 
@@ -127,7 +128,7 @@ contract PLCRVoting {
      */
 
     // return max number of tokens locked for user
-    function getMaxTokens() returns (uint) {
+    function getMaxTokens() returns (uint) { // NOTE: max locked tokens
         return getAttribute(getLastNode(), "numTokens");
     }
 
