@@ -3,6 +3,14 @@ const abi = require("ethereumjs-abi");
 var HttpProvider = require('ethjs-provider-http');
 var EthRPC = require('ethjs-rpc');
 var ethRPC = new EthRPC(new HttpProvider('http://localhost:8545'));
+var EthQuery = require('ethjs-query');
+var ethQuery = new EthQuery(new HttpProvider('http://localhost:8545'));
+
+function getBlockTimestamp() {
+    return ethQuery.blockNumber()
+    .then((num) => ethQuery.getBlockByNumber(num,true))
+    .then((block) => block.timestamp.toString(10));
+}
 
 // returns the solidity-sha3 output for VoteMap indexing
 function createIndexHash(account, pollID, atr) {
@@ -89,29 +97,35 @@ contract('Voting (Reveal)', function(accounts) {
         votesFor: 1,
         votesAgainst: 0
       };
-
+    let instance;
     return PLCRVoting.deployed()
-    .then(function(instance) {
-        instance.loadTokens(10, {from: accounts[1]})
-        .then(() => 
-            {
-                startPolls(1, function (pollIds) {
-                    var pollId = pollIds[0];
-                    var hash = createVoteHash(1, 100);
-                    instance.commitVote(pollId, hash, 10, 0, {from: accounts[1]})
-                    .then(() => {
-                        increaseTime(11)
-                        .then(() => instance.revealVote(pollId, 100, 1, {from: accounts[1]}))
-                        .then(() => pollComparison(accounts[1], pollId, expected))
-                        .then(() => checkDeletion(accounts[1], pollId))
-                        .then(() =>
-                        {
-                            return instance.hasBeenRevealed.call(pollId, {from: accounts[1]});
-                        })
-                        .then((result) => { 
-                            assert.equal(true, result, "node should have been revealed");
-                        });
-                    });
+    .then((_instance) =>
+        {
+            instance = _instance;
+            instance.loadTokens(10, {from: accounts[1]})
+        })
+    .then(() => 
+        {
+            startPolls(1, function (pollIds) {
+                var pollId = pollIds[0];
+                var hash = createVoteHash(1, 100);
+                instance.commitVote(pollId, hash, 10, 0, {from: accounts[1]})
+                .then(() => getBlockTimestamp())
+                .then((res) => console.log("(Test 1) CURR " + res))
+                .then(() => increaseTime(1000001))
+                .then(() => getBlockTimestamp())
+                .then((res) => console.log("(Test 1) CURR2 " + res))
+                .then(() => instance.revealVote(pollId, 100, 1, {from: accounts[1]}))
+                .then(() => getBlockTimestamp())
+                .then((res) => console.log("(Test 1) CURR3 " + res))
+                .then(() => pollComparison(accounts[1], pollId, expected))
+                .then(() => checkDeletion(accounts[1], pollId))
+                .then(() =>
+                {
+                    return instance.hasBeenRevealed.call(pollId, {from: accounts[1]});
+                })
+                .then((result) => { 
+                    assert.equal(true, result, "node should have been revealed");
                 });
             });
         });
@@ -122,27 +136,48 @@ contract('Voting (Reveal)', function(accounts) {
         votesAgainst: 0
       };
 
+      let user = accounts[1];
+
+    let instance;
     return PLCRVoting.deployed()
-    .then(function(instance) {
-        return instance.loadTokens(10, {from: accounts[1]})
-        .then(() => 
-            {
-                startPolls(1, function (pollIds) {
-                    var pollId = pollIds[0];
-                    var hash = createVoteHash(1, 100);
-                    instance.commitVote(pollId, hash, 10, 0, {from: accounts[1]})
-                    .then(() => {
-                      increaseTime(11)
-                        .then(() => instance.revealVote(pollId, 100, 1, {from: accounts[1]}))
-                        .then(() => pollComparison(accounts[1], pollId, expected))
-                        .then(() => checkDeletion(accounts[1], pollId))
-                        .then(() => instance.hasBeenRevealed.call(pollId, {from: accounts[1]}))
-                        .then((result) => assert.equal(true, result, "node should have been revealed"))
-                        .then(() => instance.revealVote(pollId, 100, 1, {from: accounts[1]}))
-                        .catch((err) => console.log("DO SOMETHING EXCITING CAUSE WE PROPERLY THREW AN ERROR THAT WE WANTED TO INDUCE"))
-                        .then(() => pollComparison(accounts[1], pollId, expected)) // Make sure results of poll have not changed after calling reveal twice
-                    });
-                });
+    .then((_instance) => 
+        {
+            instance = _instance;
+            instance.loadTokens(10, {from: user})
+        })
+    .then(() => 
+        {
+            startPolls(1, function (pollIds) {
+                var pollId = pollIds[0];
+                var hash = createVoteHash(1, 100);
+                instance.commitVote(pollId, hash, 10, 0, {from: user})
+                .then(() => increaseTime(1000001))
+                .then(() => instance.revealPeriodActive.call(pollId))
+                .then((res) => console.log("(Test 2)REVEAL PERIOD ACTIVE STATE1: " + res))
+                .then(() => getBlockTimestamp())
+                .then((res) => console.log("(Test 2) CURR " + res))
+                .then(() => instance.revealVote(pollId, 100, 1, {from: user}))
+                .then(() => pollComparison(user, pollId, expected))
+                .then(() => checkDeletion(user, pollId))
+                .then(() => getBlockTimestamp())
+                .then((res) => console.log("(Test 2) CURR " + res))
+                .then(() => instance.revealPeriodActive.call(pollId))
+                .then((res) => console.log("REVEAL PERIOD ACTIVE STATE1.5: " + res))
+                .then(() => instance.hasBeenRevealed.call(pollId, {from: user}))
+                .then((result) => assert.equal(true, result, "node should have been revealed"))
+                .then(() => instance.revealVote(pollId, 100, 1, {from: user}))
+                .catch((err) => console.log("(Test 2)" + err + "TODO: CHANGE TO CHECK FOR SPECIFIC ERROR."))
+                .then(() => getBlockTimestamp())
+                .then((res) => console.log("(Test 2) CURR " + res))
+                .then(() => instance.revealPeriodActive.call(pollId))
+                .then((res) => console.log("(Test 2)REVEAL PERIOD ACTIVE STATE2: " + res))
+                .then(() => instance.pollMap.call(pollId))
+                .then((res) => console.log("(Test 2)HERE WE ARE " + res.toString())) 
+                .then(() => getBlockTimestamp())
+                .then((res) => console.log("(Test 2) CURR " + res))
+                .then(() => instance.hasBeenRevealed.call(pollId, {from: user}))
+                .then((result) => assert.equal(true, result, "Why is node not revealed?"))
+                .then(() => pollComparison(user, pollId, expected)) // Make sure results of poll have not changed after calling reveal twice
             });
         });
   });
@@ -161,7 +196,7 @@ contract('Voting (Reveal)', function(accounts) {
                     var hash = createVoteHash(1, 100);
                     instance.commitVote(pollId, hash, 10, 0, {from: accounts[2]})
                     .then(() => {
-                      increaseTime(11)
+                      increaseTime(5)
                         .then(() => instance.revealVote(pollId, 100, 0, {from: accounts[2]}))
                         .then(() => pollComparison(accounts[2], pollId, expected))
                         .then(() =>
