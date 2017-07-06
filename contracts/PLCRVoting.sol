@@ -92,17 +92,6 @@ contract PLCRVoting {
 
 				*/
 				insertToDll(pollID, prevPollID, numTokens, hashOfVoteAndSalt);
-
-			// Check if the zero node is the only node
-				// in the double-linked list
-				if (prevPollID == 0 
-					&& getNextID(prevPollID) == 0) {
-					/*
-						TODO: insert the >node at poll ID> after
-						the zero node 
-						//UPDATE: ASPYN SAYS NOTHING NEEDS TO HAPPEN HERE AND THIS BLOCK OF CODE COULD BE DELETED
-					*/
-			}
 		}
 
 		// Invalid prevPollID
