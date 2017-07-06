@@ -78,20 +78,13 @@ contract PLCRVoting {
 		if (isValid) {
 			// Update a previous commit
 			if (isUpdatingExistingNode) {
-				
-                                /*
-					TODO: Update the <node at poll ID>:
-						update numTokens attribute
-						update commitHash attribute
-				*/
-                               deleteNode(pollID);
+                            // Delete the current node as we will be re-inserting
+                            // that node with new attributes 
+                            deleteNode(pollID);
                         }
-				/*
-					TODO: insert the <node at poll ID> after
-					the node at <prevPollID>:
-
-				*/
-				insertToDll(pollID, prevPollID, numTokens, hashOfVoteAndSalt);
+			// Insert the <node at poll ID> after
+			// the node at <prevPollID>:
+                    	insertToDll(pollID, prevPollID, numTokens, hashOfVoteAndSalt);
 		}
 
 		// Invalid prevPollID
@@ -129,7 +122,7 @@ contract PLCRVoting {
 
 	function revealVote(uint pollID, 
 		uint salt, uint voteOption) 
-		/*revealPeriodActive(pollID)*/ returns (bool) {
+		revealPeriodActive(pollID) returns (bool) {
 
 		require(!hasBeenRevealed(pollID));
 
@@ -271,6 +264,7 @@ contract PLCRVoting {
 		require(
 			!isExpired(pollMap[pollID].revealEndDate)
 		);
+                require(isExpired(pollMap[pollID].commitEndDate));
 		_;
 	}
 
