@@ -29,7 +29,6 @@ contract('Voting (commit)', function(accounts) {
                 var holder = {};
                 holder.key = key;
                 if (holder.key !== "commitHash") {
-                    // console.log(result);
                     instance.voteMap.call(createIndexHash(user, pollID, key)).then(function(result) {
                         assert.equal(attrNameToExpectedValueMap[holder.key], result, "VoteMap had wrong value for " + holder.key);         
                     });
@@ -51,7 +50,6 @@ contract('Voting (commit)', function(accounts) {
                 promises.push(instance.startPoll("", 50)
                     .then((result) => {
                         ids.push(result.logs[0].args.pollId.toString());
-                        // console.log(ids);
                     }));
             }
             Promise.all(promises).then(() => callback(ids));

@@ -92,7 +92,7 @@ contract('Voting (Reveal)', function(accounts) {
 
     return PLCRVoting.deployed()
     .then(function(instance) {
-        return instance.loadTokens(30, {from: accounts[1]})
+        instance.loadTokens(10, {from: accounts[1]})
         .then(() => 
             {
                 startPolls(1, function (pollIds) {
@@ -100,7 +100,7 @@ contract('Voting (Reveal)', function(accounts) {
                     var hash = createVoteHash(1, 100);
                     instance.commitVote(pollId, hash, 10, 0, {from: accounts[1]})
                     .then(() => {
-                      increaseTime(11)
+                        increaseTime(11)
                         .then(() => instance.revealVote(pollId, 100, 1, {from: accounts[1]}))
                         .then(() => pollComparison(accounts[1], pollId, expected))
                         .then(() => checkDeletion(accounts[1], pollId))
