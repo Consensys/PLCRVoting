@@ -32,8 +32,8 @@ contract PLCRVoting {
 		token = HumanStandardToken(tokenAddr);
                 trusted = _trusted;
 
-                commitDuration = 10;
-                revealDuration = 10;
+                commitDuration = 1000000;
+                revealDuration = 1000000;
 	}
 
 	function commitVote(uint pollID, 
@@ -122,8 +122,9 @@ contract PLCRVoting {
 
 	function revealVote(uint pollID, 
 		uint salt, uint voteOption) 
-		revealPeriodActive(pollID) returns (bool) {
+		returns (bool) {
 
+		require(revealPeriodActive(pollID));
 		require(!hasBeenRevealed(pollID));
 
 		bytes32 currHash = sha3(voteOption, salt);
@@ -260,12 +261,9 @@ contract PLCRVoting {
 	}
 
 	/// true if the reveal period is active (i.e. reveal period expiration date not yet reached)
-	modifier revealPeriodActive(uint pollID) {
-		require(
-			!isExpired(pollMap[pollID].revealEndDate)
-		);
-                require(isExpired(pollMap[pollID].commitEndDate));
-		_;
+	function revealPeriodActive(uint pollID) returns (bool) {
+            return !isExpired(pollMap[pollID].revealEndDate) 
+                && isExpired(pollMap[pollID].commitEndDate);
 	}
 
 	/// true if the msg.sender (or tx.origin) is in the trusted list
