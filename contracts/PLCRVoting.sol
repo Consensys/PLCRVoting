@@ -41,9 +41,7 @@ contract PLCRVoting {
 		uint prevPollID) 
 		returns (bool) {
 		require(hasEnoughTokens(numTokens));
-
-		// TODO: require(commitPeriodActive(pollID))
-		// NEEDS TO BE DONE
+		require(commitPeriodActive(pollID));
 
 		// Make sure user is not trying to manually commit
 		// a vote corresponding the zero node
@@ -253,11 +251,8 @@ contract PLCRVoting {
 
 	/// MODIFIERS:
 	/// true if the commit period is active (i.e. commit period expiration date not yet reached)
-	modifier commitPeriodActive(uint pollID) {
-		//require(
-		//	!isExpired(pollMap[pollID].commitEndDate)
-		//);
-		_;
+	function commitPeriodActive(uint pollID) returns (bool) {
+	    	return !isExpired(pollMap[pollID].commitEndDate);
 	}
 
 	/// true if the reveal period is active (i.e. reveal period expiration date not yet reached)
