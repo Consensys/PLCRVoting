@@ -35,7 +35,7 @@ function increaseTime(seconds) {
 // regular expression to check for invalid opcode error
 const re = new RegExp("(invalid opcode)","i");
 
-contract('Voting (commit)', function(accounts) { 
+contract('Commit Testing', function(accounts) { 
 	const [owner, user1, user2, user3, user4, user5, user6] = accounts;
 	const tokenAmt = 10;
 

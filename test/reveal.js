@@ -76,7 +76,7 @@ function increaseTime(seconds) {
   });
 }
 
-contract('Voting (Reveal)', function(accounts) {
+contract('Reveal Testing', function(accounts) {
     function startPolls(numOfPolls) {
         var ids = [];
         var promises = [];
