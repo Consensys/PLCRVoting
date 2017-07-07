@@ -32,6 +32,9 @@ function increaseTime(seconds) {
   });
 }
 
+// regular expression to check for invalid opcode error
+const re = new RegExp("(invalid opcode)","i");
+
 contract('Voting (commit)', function(accounts) { 
 	const [owner, user1, user2, user3, user4, user5, user6] = accounts;
 	const tokenAmt = 10;
@@ -323,7 +326,7 @@ contract('Voting (commit)', function(accounts) {
             var pollId = result.logs[0].args.pollId.toString();
             return voter.commitVote(pollId, createVoteHash(1, 20), 
                 10001, 0);
-        }).catch((err) => console.log("TODO: WHAT DO I PUT HERE"));
+        }).catch((err) => assert.equal(re.test(err), true, "Expected error not found"));
     });
    
     it("single commit, past commit period expiration", function () {
@@ -341,7 +344,7 @@ contract('Voting (commit)', function(accounts) {
         .then((result) => pollId = (result.logs[0].args.pollId.toString()))
         .then(() => increaseTime(1000001))
         .then(() => voter.commitVote(pollId, hash, 10, 0, {from: user1}))
-        .catch((err) => console.log("ERROR OCCURRED CORRECTLY FOR EXPIRE " + err))
+        .catch((err) => assert.equal(re.test(err), true, "Expected error not found"))
         .then(() => 
             voteMapComparisonTest(user1, pollId, 
                 {prevID: 0,

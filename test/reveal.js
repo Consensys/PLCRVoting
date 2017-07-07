@@ -26,6 +26,9 @@ function createVoteHash(vote, salt) {
     return hash;                                   
 }
 
+// regular expression to check for invalid opcode error
+const re = new RegExp("(invalid opcode)","i");
+
 function pollComparison(user, pollID, expected) {
     let voter;
     return PLCRVoting.deployed()
@@ -145,7 +148,7 @@ contract('Voting (Reveal)', function(accounts) {
         .then(() => instance.hasBeenRevealed.call(pollId, {from: user}))
         .then((result) => assert.equal(true, result, "node should have been revealed"))
         .then(() => instance.revealVote(pollId, 100, 1, {from: user}))
-        .catch((err) => console.log("(Test 2)" + err + "TODO: CHANGE TO CHECK FOR SPECIFIC ERROR."))
+        .catch((err) => assert.equal(re.test(err), true, "Expected error not found"))
         .then(() => instance.hasBeenRevealed.call(pollId, {from: user}))
         .then((result) => assert.equal(true, result, "Why is node not revealed?"))
         .then(() => pollComparison(user, pollId, expected)) // Make sure results of poll have not changed after calling reveal twice
@@ -328,7 +331,7 @@ contract('Voting (Reveal)', function(accounts) {
         .then(() => instance.commitVote(pollId, hash, 10, 0, {from: user}))
         .then(() => increaseTime(2000001))
         .then(() => instance.revealVote(pollId, 100, 1, {from: user}))
-        .catch((err) => console.log("THROWING AS IT SHOULD " + err))
+        .catch((err) => assert.equal(re.test(err), true, "Expected error not found"))
         .then(() => pollComparison(user, pollId, expected))
         .then(() => instance.hasBeenRevealed.call(pollId, {from: user}))
         .then((result) => assert.equal(false, result, "node should not have been revealed"));
