@@ -333,7 +333,7 @@ contract('Utilities', function(accounts) {
             .then((quota) => assert.equal(quota, 75, "VoteQuota was updated incorrectly"));
     });
 
-    it.only("should check if non-revealed poll passes", () => {
+    it("should check if non-revealed poll passes", () => {
         let pollID;
         let contract;
         let commitDuration;
@@ -351,7 +351,7 @@ contract('Utilities', function(accounts) {
             .then((result) => assert.equal(result, true, "non-voted poll does not pass"));
     });
 
-    it.only("should check if poll with more revealed voting for proposal pass", () => {
+    it("should check if poll with more revealed voting for proposal pass", () => {
         let pollID;
         let contract;
         let commitDuration;
@@ -376,7 +376,7 @@ contract('Utilities', function(accounts) {
             .then((result) => assert.equal(result, true, "once voted for poll does not pass"));
     });
 
-    it.only("should check if poll with more revealed voting against proposal does not pass", () => {
+    it("should check if poll with more revealed voting against proposal does not pass", () => {
         let pollID;
         let contract;
         let commitDuration;
@@ -401,7 +401,7 @@ contract('Utilities', function(accounts) {
             .then((result) => assert.equal(result, false, "once voted against poll does pass"));
     });
 
-    it.only("should check if poll with multiple more revealed votes against proposal does pass", () => {
+    it("should check if poll with multiple more revealed votes for proposal does pass", () => {
         let pollID;
         let contract;
         let commitDuration;
@@ -429,14 +429,66 @@ contract('Utilities', function(accounts) {
             .then((dur) => revealDuration = dur)
 
             // load tokens for users
-            .then(() => contract.loadTokens(70, {from: accounts[4]}))
+            .then(() => contract.loadTokens(70, {from: accounts[1]}))
             .then(() => contract.loadTokens(20, {from: accounts[2]}))
             .then(() => contract.loadTokens(10, {from: accounts[3]}))
 
             // commitVote for multiple users
-            .then(() => contract.commitVote(pollID, voteHashUser1, 70, 0, {from:accounts[4]}))
+            .then(() => contract.commitVote(pollID, voteHashUser1, 70, 0, {from:accounts[1]}))
             .then(() => contract.commitVote(pollID, voteHashUser2, 20, 0, {from:accounts[2]}))
             .then(() => contract.commitVote(pollID, voteHashUser3, 10, 0, {from:accounts[3]}))
+
+            // get time to reveal period
+            .then(() => increaseTime(Number(commitDuration) + 1))
+
+            // reveal vote for multiple users
+            .then(() => contract.revealVote(pollID, saltUser1, voteOptionUser1, {from: accounts[1]}))
+            .then(() => contract.revealVote(pollID, saltUser2, voteOptionUser2, {from: accounts[2]}))
+            .then(() => contract.revealVote(pollID, saltUser3, voteOptionUser3, {from: accounts[3]}))
+
+            .then(() => increaseTime(Number(revealDuration) + 1))
+            .then(() => contract.isPassed.call(pollID))
+            .then((result) => assert.equal(result, true, "poll with more votes revealed for does not pass"));
+    });
+
+    it("should check if getNumCorrectVote returns number of correctly voted tokens", () => {
+        let pollID;
+        let contract;
+        let commitDuration;
+        let revealDuration;
+
+        let saltUser1 = 1;
+        let voteOptionUser1 = 1;
+        let voteHashUser1 = createVoteHash(voteOptionUser1, saltUser1);
+        
+        let saltUser2 = 2;
+        let voteOptionUser2 = 0;
+        let voteHashUser2 = createVoteHash(voteOptionUser2, saltUser2);
+
+        let saltUser3 = 3;
+        let voteOptionUser3 = 0;
+        let voteHashUser3 = createVoteHash(voteOptionUser3, saltUser3);
+
+        let correctVote = 30;
+
+        return launchPoll("getNumCorrectVote test") 
+            .then((id) => pollID = id)
+            .then(() => getVoteContract())
+            .then((instance) => contract = instance)
+            .then(() => contract.commitDuration.call())
+            .then((dur) => commitDuration = dur)
+            .then(() => contract.revealDuration.call())
+            .then((dur) => revealDuration = dur)
+
+            // load tokens for users
+            .then(() => contract.loadTokens(30, {from: accounts[4]}))
+            .then(() => contract.loadTokens(10, {from: accounts[2]}))
+            .then(() => contract.loadTokens(5, {from: accounts[3]}))
+
+            // commitVote for multiple users
+            .then(() => contract.commitVote(pollID, voteHashUser1, correctVote, 0, {from:accounts[4]}))
+            .then(() => contract.commitVote(pollID, voteHashUser2, 10, 0, {from:accounts[2]}))
+            .then(() => contract.commitVote(pollID, voteHashUser3, 5, 0, {from:accounts[3]}))
 
             // get time to reveal period
             .then(() => increaseTime(Number(commitDuration) + 1))
@@ -445,9 +497,9 @@ contract('Utilities', function(accounts) {
             .then(() => contract.revealVote(pollID, saltUser1, voteOptionUser1, {from: accounts[4]}))
             .then(() => contract.revealVote(pollID, saltUser2, voteOptionUser2, {from: accounts[2]}))
             .then(() => contract.revealVote(pollID, saltUser3, voteOptionUser3, {from: accounts[3]}))
-
             .then(() => increaseTime(Number(revealDuration) + 1))
-            .then(() => contract.isPassed.call(pollID))
-            .then((result) => assert.equal(result, false, "poll with more votes revealed for does not pass"));
+            .then(() => contract.getNumCorrectVote.call(pollID, saltUser1, {from: accounts[4]}))
+            .then((num) => assert.equal(Number(num), correctVote, "getNumCorrectVote returns wrong number"))
+        
     });
 });

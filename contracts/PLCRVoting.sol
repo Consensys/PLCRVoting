@@ -140,9 +140,9 @@ contract PLCRVoting {
         if (currHash == getCommitHash(pollID)) {
             // Record the vote
             if (voteOption == VOTE_OPTION_FOR) {
-                pollMap[pollID].votesFor++;
+                pollMap[pollID].votesFor += getNumTokens(pollID);
             } else {
-                pollMap[pollID].votesAgainst++;
+                pollMap[pollID].votesAgainst += getNumTokens(pollID);
             }
 
             deleteNode(pollID);
@@ -337,6 +337,20 @@ contract PLCRVoting {
             return pollMap[pollID].votesFor;
         } else {
             return pollMap[pollID].votesAgainst;
+        }
+    }
+
+    function getNumCorrectVote(uint pollID, uint salt) returns (uint) {
+        require(pollEnded(pollID));
+        uint winnerVote = isPassed(pollID) ? 1 : 0; 
+        bytes32 winnerHash = sha3(winnerVote, salt);
+        bytes32 commitHash = getCommitHash(pollID);
+
+        if (commitHash == winnerHash) {
+            uint numTokens = getAttribute(pollID, "numTokens");
+            return numTokens;
+        } else {
+            return 0;
         }
     }
     
