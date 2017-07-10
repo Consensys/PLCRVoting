@@ -87,7 +87,7 @@ contract('Reveal Testing', function(accounts) {
                 for (var i = 0; i < numOfPolls; i++) {
                     promises.push(instance.startPoll("", 50)
                         .then((result) => {
-                            ids.push(result.logs[0].args.pollId.toString());
+                            ids.push(result.logs[0].args.pollID.toString());
                         }));
                 }
                 Promise.all(promises).then(() => resolve(ids));

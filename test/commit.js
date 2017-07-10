@@ -70,7 +70,7 @@ contract('Commit Testing', function(accounts) {
             for (var i = 0; i < numOfPolls; i++) {
                 promises.push(instance.startPoll("", 50)
                     .then((result) => {
-                        ids.push(result.logs[0].args.pollId.toString());
+                        ids.push(result.logs[0].args.pollID.toString());
                     }));
             }
             Promise.all(promises).then(() => callback(ids));
@@ -220,6 +220,7 @@ contract('Commit Testing', function(accounts) {
             assert.equal(result, false, "should have been invalid start insert");
         });   
     });
+
     it("single commit (user1) to a single poll (commit period active)", function() {
         let voter;
         let pollId;
@@ -233,7 +234,7 @@ contract('Commit Testing', function(accounts) {
         .then(function () {
             return voter.startPoll("potato", 50);
         }).then(function (result) {
-            pollId = (result.logs[0].args.pollId.toString());
+            pollId = (result.logs[0].args.pollID.toString());
             return voter.commitVote(pollId, hash, 10, 0, {from: user1});
         }).then(() => 
             voteMapComparisonTest(user1, pollId, 
@@ -257,7 +258,7 @@ contract('Commit Testing', function(accounts) {
         .then(function () {
             return voter.startPoll("apple", 50);
         }).then(function (result) {
-            pollId = (result.logs[0].args.pollId.toString());
+            pollId = (result.logs[0].args.pollID.toString());
             return voter.commitVote(pollId, createVoteHash(0, 5), 10, 0, {from: user2});
         }).then(function () {
             return voter.commitVote(pollId, createVoteHash(1, 35), 2, 0, {from: user2});
@@ -286,7 +287,7 @@ contract('Commit Testing', function(accounts) {
         .then(() => voter.loadTokens(10, {from: user4}))
         .then(() => voter.loadTokens(10, {from: user5}))
         .then(() => voter.startPoll("orange", 50))
-        .then((result) => pollId = result.logs[0].args.pollId.toString())
+        .then((result) => pollId = result.logs[0].args.pollID.toString())
         .then(() => voter.commitVote(pollId, finalHash1, 9, 0, {from: user3}))
         .then(() =>
             voter.commitVote(pollId, finalHash2, 2, 0, {from: user4}))
@@ -323,7 +324,7 @@ contract('Commit Testing', function(accounts) {
             return voter.startPoll("proposal", 50)
         })
         .then((result) => {
-            var pollId = result.logs[0].args.pollId.toString();
+            var pollId = result.logs[0].args.pollID.toString();
             return voter.commitVote(pollId, createVoteHash(1, 20), 
                 10001, 0);
         }).catch((err) => assert.equal(re.test(err), true, "Expected error not found"));
@@ -341,7 +342,7 @@ contract('Commit Testing', function(accounts) {
             return voter.loadTokens(10, {from: user1})
         })
         .then(() => voter.startPoll("potato", 50))
-        .then((result) => pollId = (result.logs[0].args.pollId.toString()))
+        .then((result) => pollId = (result.logs[0].args.pollID.toString()))
         .then(() => increaseTime(1000001))
         .then(() => voter.commitVote(pollId, hash, 10, 0, {from: user1}))
         .catch((err) => assert.equal(re.test(err), true, "Expected error not found"))
