@@ -19,25 +19,24 @@ function createVoteHash(vote, salt) {
 }
 
 function increaseTime(seconds) {
-  return new Promise(function(resolve, reject){
-    web3.currentProvider.sendAsync(
-      {
-        jsonrpc: "2.0",
-        method: "evm_increaseTime",
-        params: [seconds],
-        id: 0
-      },
-      resolve
-    );
-  });
+    return new Promise(function(resolve, reject) {
+        web3.currentProvider.sendAsync(
+            {
+                jsonrpc: "2.0",
+                method: "evm_increaseTime",
+                params: [seconds],
+                id: 0
+            },
+        resolve);
+    });
 }
 
 // regular expression to check for invalid opcode error
 const re = new RegExp("(invalid opcode)","i");
 
 contract('Commit Testing', function(accounts) { 
-	const [owner, user1, user2, user3, user4, user5, user6] = accounts;
-	const tokenAmt = 10;
+    const [owner, user1, user2, user3, user4, user5, user6] = accounts;
+    const tokenAmt = 10;
 
     function voteMapComparisonTest(user, pollID, attrNameToExpectedValueMap) {
         var promises = [];
@@ -226,8 +225,8 @@ contract('Commit Testing', function(accounts) {
         let pollId;
         var hash = createVoteHash(0, 79);
 
-    	return VotingContract.deployed()
-    	.then(function(instance) {
+        return VotingContract.deployed()
+        .then(function(instance) {
             voter = instance;
             return voter.loadTokens(10, {from: user1})
         })
@@ -336,8 +335,8 @@ contract('Commit Testing', function(accounts) {
         let pollId;
         var hash = createVoteHash(0, 79);
 
-    	return VotingContract.deployed()
-    	.then(function(instance) {
+        return VotingContract.deployed()
+        .then(function(instance) {
             voter = instance;
             return voter.loadTokens(10, {from: user1})
         })
