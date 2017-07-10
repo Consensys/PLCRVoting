@@ -99,7 +99,7 @@ contract('Reveal Testing', function(accounts) {
     
     it("single reveal for single commit to single poll", function() {
         var expected = {
-            votesFor: 1,
+            votesFor: 10,
             votesAgainst: 0
         };
 
@@ -126,7 +126,7 @@ contract('Reveal Testing', function(accounts) {
 
     it("double reveal attempt (by single sender) for single poll", function() {
         var expected = {
-            votesFor: 1,
+            votesFor: 10,
             votesAgainst: 0
         };
 
@@ -203,16 +203,16 @@ contract('Reveal Testing', function(accounts) {
 
     it("three reveals for three commits (different senders) to single poll", function() {
         var expected1 = {
-            votesFor: 1,
+            votesFor: 10,
             votesAgainst: 0
           };
         var expected2 = {
-            votesFor: 1,
-            votesAgainst: 1
+            votesFor: 10,
+            votesAgainst: 11
         };
         var expected3 = {
-            votesFor: 2,
-            votesAgainst: 1
+            votesFor: 22,
+            votesAgainst: 11
         };
 
         let pollId;
@@ -258,15 +258,15 @@ contract('Reveal Testing', function(accounts) {
 
     it("three reveals for three commits (single sender) to three different polls", function() {
         var expected1 = {
-            votesFor: 1,
+            votesFor: 50,
             votesAgainst: 0
           };
         var expected2 = {
             votesFor: 0,
-            votesAgainst: 1
+            votesAgainst: 51
         };
         var expected3 = {
-            votesFor: 1,
+            votesFor: 72,
             votesAgainst: 0
         };
 
