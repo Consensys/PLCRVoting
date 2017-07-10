@@ -1,4 +1,5 @@
 var BN = require('bn.js');
+const abi = require("ethereumjs-abi");
 var PLCRVoting = artifacts.require("./PLCRVoting.sol");
 var HttpProvider = require('ethjs-provider-http');
 var EthRPC = require('ethjs-rpc');
@@ -61,6 +62,14 @@ contract('Utilities', function(accounts) {
             .then((num) => ethQuery.getBlockByNumber(num,true))
             .then((block) => block.timestamp.toString(10));
     }
+
+    // returns the solidity-sha3 output for vote hashing
+    function createVoteHash(vote, salt) {
+        let hash = "0x" + abi.soliditySHA3([ "uint", "uint" ],
+        [ vote, salt ]).toString('hex'); 
+        return hash;                                   
+    }
+
     /*
     function increaseTime(seconds) {
         return new Promise(function(resolve, reject){
@@ -322,5 +331,123 @@ contract('Utilities', function(accounts) {
             .then(() => assert.ok(false, "VoteQuota was updated"))
             .catch((err) => vote.voteQuota.call())
             .then((quota) => assert.equal(quota, 75, "VoteQuota was updated incorrectly"));
+    });
+
+    it.only("should check if non-revealed poll passes", () => {
+        let pollID;
+        let contract;
+        let commitDuration;
+        let revealDuration;
+        return launchPoll("reveal period test") 
+            .then((id) => pollID = id)
+            .then(() => getVoteContract())
+            .then((instance) => contract = instance)
+            .then(() => contract.commitDuration.call())
+            .then((dur) => commitDuration = dur)
+            .then(() => contract.revealDuration.call())
+            .then((dur) => revealDuration = dur)
+            .then(() => increaseTime(Number(commitDuration) + Number(revealDuration) + 1))
+            .then(() => contract.isPassed.call(pollID))
+            .then((result) => assert.equal(result, true, "non-voted poll does not pass"));
+    });
+
+    it.only("should check if poll with more revealed voting for proposal pass", () => {
+        let pollID;
+        let contract;
+        let commitDuration;
+        let revealDuration;
+        let salt = 1;
+        let voteOption = 1;
+        let voteHash = createVoteHash(voteOption, salt);
+        return launchPoll("reveal period test") 
+            .then((id) => pollID = id)
+            .then(() => getVoteContract())
+            .then((instance) => contract = instance)
+            .then(() => contract.commitDuration.call())
+            .then((dur) => commitDuration = dur)
+            .then(() => contract.revealDuration.call())
+            .then((dur) => revealDuration = dur)
+            .then(() => contract.loadTokens(10, {from: accounts[1]}))
+            .then(() => contract.commitVote(pollID, voteHash, 10, 0, {from:accounts[1]}))
+            .then(() => increaseTime(Number(commitDuration) + 1))
+            .then(() => contract.revealVote(pollID, salt, voteOption, {from: accounts[1]}))
+            .then(() => increaseTime(Number(revealDuration) + 1))
+            .then(() => contract.isPassed.call(pollID))
+            .then((result) => assert.equal(result, true, "once voted for poll does not pass"));
+    });
+
+    it.only("should check if poll with more revealed voting against proposal does not pass", () => {
+        let pollID;
+        let contract;
+        let commitDuration;
+        let revealDuration;
+        let salt = 1;
+        let voteOption = 0;
+        let voteHash = createVoteHash(voteOption, salt);
+        return launchPoll("reveal period test") 
+            .then((id) => pollID = id)
+            .then(() => getVoteContract())
+            .then((instance) => contract = instance)
+            .then(() => contract.commitDuration.call())
+            .then((dur) => commitDuration = dur)
+            .then(() => contract.revealDuration.call())
+            .then((dur) => revealDuration = dur)
+            .then(() => contract.loadTokens(10, {from: accounts[1]}))
+            .then(() => contract.commitVote(pollID, voteHash, 10, 0, {from:accounts[1]}))
+            .then(() => increaseTime(Number(commitDuration) + 1))
+            .then(() => contract.revealVote(pollID, salt, voteOption, {from: accounts[1]}))
+            .then(() => increaseTime(Number(revealDuration) + 1))
+            .then(() => contract.isPassed.call(pollID))
+            .then((result) => assert.equal(result, false, "once voted against poll does pass"));
+    });
+
+    it.only("should check if poll with multiple more revealed votes against proposal does pass", () => {
+        let pollID;
+        let contract;
+        let commitDuration;
+        let revealDuration;
+
+        let saltUser1 = 1;
+        let voteOptionUser1 = 1;
+        let voteHashUser1 = createVoteHash(voteOptionUser1, saltUser1);
+        
+        let saltUser2 = 2;
+        let voteOptionUser2 = 0;
+        let voteHashUser2 = createVoteHash(voteOptionUser2, saltUser2);
+
+        let saltUser3 = 3;
+        let voteOptionUser3 = 0;
+        let voteHashUser3 = createVoteHash(voteOptionUser3, saltUser3);
+
+        return launchPoll("reveal period test") 
+            .then((id) => pollID = id)
+            .then(() => getVoteContract())
+            .then((instance) => contract = instance)
+            .then(() => contract.commitDuration.call())
+            .then((dur) => commitDuration = dur)
+            .then(() => contract.revealDuration.call())
+            .then((dur) => revealDuration = dur)
+
+            // load tokens for users
+            .then(() => contract.loadTokens(70, {from: accounts[4]}))
+            .then(() => contract.loadTokens(20, {from: accounts[2]}))
+            .then(() => contract.loadTokens(10, {from: accounts[3]}))
+
+            // commitVote for multiple users
+            .then(() => contract.commitVote(pollID, voteHashUser1, 70, 0, {from:accounts[4]}))
+            .then(() => contract.commitVote(pollID, voteHashUser2, 20, 0, {from:accounts[2]}))
+            .then(() => contract.commitVote(pollID, voteHashUser3, 10, 0, {from:accounts[3]}))
+
+            // get time to reveal period
+            .then(() => increaseTime(Number(commitDuration) + 1))
+
+            // reveal vote for multiple users
+            .then(() => contract.revealVote(pollID, saltUser1, voteOptionUser1, {from: accounts[4]}))
+            .then(() => contract.revealVote(pollID, saltUser2, voteOptionUser2, {from: accounts[2]}))
+            .then(() => contract.revealVote(pollID, saltUser3, voteOptionUser3, {from: accounts[3]}))
+
+            .then(() => increaseTime(Number(revealDuration) + 1))
+            .then(() => contract.isPassed.call(pollID))
+            .then((result) => assert.equal(result, false, "poll with more votes revealed for does not pass"));
     });
 });
