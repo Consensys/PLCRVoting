@@ -247,6 +247,7 @@ contract PLCRVoting {
 
     ///CORE FUNCTIONS:
     function startPoll(string proposalStr, uint voteQuota, uint commitDuration, uint revealDuration) returns (uint pollID) {
+        require(isOwner(msg.sender));
         pollNonce = pollNonce + 1;
 
         pollMap[pollNonce] = Poll({

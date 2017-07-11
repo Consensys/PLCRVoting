@@ -11,6 +11,9 @@ var fs = require("fs");
 const commitDuration = '1000000';
 const revealDuration = '1000000';
 
+// regular expression to check for invalid opcode error
+const re = new RegExp("(invalid opcode)","i");
+
 function increaseTime(seconds) {
     return new Promise((resolve, reject) => { 
         return ethRPC.sendAsync({
@@ -92,6 +95,12 @@ contract('Utilities Testing', function(accounts) {
     // commitDuration is a base 10 string
     // getBlockTimestamp is also a base 10 string
     // getPoll also returns everything as base10 string
+
+    it("check if a non-owner can start a poll", () => {
+        return getVoteContract()
+            .then((instance) => instance.startPoll('', 50, commitDuration, revealDuration, {from: accounts[1]}))
+            .catch((err) => assert.equal(re.test(err), true, "Expected error not found"));
+    });
 
     it("check proposal string from start poll event", function() {
         const propStr = "first poll";
