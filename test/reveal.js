@@ -6,6 +6,11 @@ var ethRPC = new EthRPC(new HttpProvider('http://localhost:8545'));
 var EthQuery = require('ethjs-query');
 var ethQuery = new EthQuery(new HttpProvider('http://localhost:8545'));
 
+const commitDuration = '1000000';
+const revealDuration = '1000000';
+
+
+
 function getBlockTimestamp() {
     return ethQuery.blockNumber()
     .then((num) => ethQuery.getBlockByNumber(num,true))
@@ -85,7 +90,7 @@ contract('Reveal Testing', function(accounts) {
             PLCRVoting.deployed()
             .then(function (instance) {
                 for (var i = 0; i < numOfPolls; i++) {
-                    promises.push(instance.startPoll("", 50)
+                    promises.push(instance.startPoll("", 50, commitDuration, revealDuration)
                         .then((result) => {
                             ids.push(result.logs[0].args.pollID.toString());
                         }));

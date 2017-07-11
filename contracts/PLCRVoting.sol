@@ -27,13 +27,6 @@ contract PLCRVoting {
     // sha3(userAddress, pollID, "commitHash") => byte32 commitHash
     mapping(bytes32 => uint) public voteMap;    
 
-    uint public commitDuration;    /// length of commit period
-    uint public revealDuration;    /// length of reveal period
-    uint public voteQuota;         /// type of majority necessary for winning poll
-
-    uint constant INITIAL_COMMIT_DURATION = 1000000;
-    uint constant INITIAL_REVEAL_DURATION = 1000000;
-    uint constant INITIAL_VOTE_QUOTA = 50;
     uint constant INITIAL_POLL_NONCE = 0;
        
     uint constant VOTE_OPTION_FOR = 1; /// vote option indicating a vote for the proposal
@@ -48,9 +41,6 @@ contract PLCRVoting {
         }
 
         pollNonce = INITIAL_POLL_NONCE;
-        commitDuration = INITIAL_COMMIT_DURATION;
-        revealDuration = INITIAL_REVEAL_DURATION;
-        voteQuota = INITIAL_VOTE_QUOTA;
     }
 
     function commitVote(uint pollID, bytes32 hashOfVoteAndSalt, uint numTokens, uint prevPollID) returns (bool) {
@@ -273,7 +263,7 @@ contract PLCRVoting {
     }
 
     ///CORE FUNCTIONS:
-    function startPoll(string proposalStr, uint voteQuota) {
+    function startPoll(string proposalStr, uint voteQuota, uint commitDuration, uint revealDuration) {
         pollNonce = pollNonce + 1;
 
         pollMap[pollNonce] = Poll({
@@ -309,23 +299,6 @@ contract PLCRVoting {
     /// it has finished does not matter)
     function validPollID(uint pollID) returns (bool) {
         return pollMap[pollID].commitEndDate > 0;
-    }
-
-    /// sets the commit duration
-    function setCommitDuration(uint _commitDuration) {
-        require(isTrusted(msg.sender));
-        commitDuration = _commitDuration;
-    }
-
-    /// sets the reveal duration
-    function setRevealDuration(uint _revealDuration) {
-        require(isTrusted(msg.sender));
-        revealDuration = _revealDuration;
-    }
-
-    function setVoteQuota(uint _voteQuota) {
-        require(isTrusted(msg.sender));
-        voteQuota = _voteQuota;
     }
 
     function pollEnded(uint pollID) returns (bool) {

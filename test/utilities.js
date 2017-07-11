@@ -8,6 +8,9 @@ var EthQuery = require('ethjs-query');
 var ethQuery = new EthQuery(new HttpProvider('http://localhost:8545'));
 var fs = require("fs");
 
+const commitDuration = '1000000';
+const revealDuration = '1000000';
+
 function increaseTime(seconds) {
     return new Promise((resolve, reject) => { 
         return ethRPC.sendAsync({
@@ -48,7 +51,7 @@ contract('Utilities Testing', function(accounts) {
 
     function launchPoll(proposal) {
         return getVoteContract()
-            .then((vote) => vote.startPoll(proposal, 50))
+            .then((vote) => vote.startPoll(proposal, 50, commitDuration, revealDuration))
             .then((result) => result.logs[0].args.pollID.toString());
     }
 
@@ -95,7 +98,7 @@ contract('Utilities Testing', function(accounts) {
         let contract;
         return getVoteContract()
             .then((instance) => contract = instance)
-            .then(() => contract.startPoll(propStr, 50))
+            .then(() => contract.startPoll(propStr, 50, commitDuration, revealDuration))
             .then((result) => result.logs[0].args.pollID.toString())
             .then((pollID) => getPoll(pollID))
             .then((pollArr) => assert.equal(pollArr[0], propStr, "poll created incorrectly"))
@@ -106,7 +109,7 @@ contract('Utilities Testing', function(accounts) {
         let contract;
         return getVoteContract()
             .then((instance) => contract = instance)
-            .then(() => contract.startPoll(propStr, 50))
+            .then(() => contract.startPoll(propStr, 50, commitDuration, revealDuration))
             .then((result) => result.logs[0].args.pollID.toString())
             .then((pollID) => contract.getProposalString.call(pollID))
             .then((result) => assert.equal(result, propStr, "getProposalString function incorrect"))
@@ -117,41 +120,32 @@ contract('Utilities Testing', function(accounts) {
         let contract;
         let pollID;
         let commitEndDate;
-        let commitDuration;
         let timestamp;
         return getVoteContract()
             .then((instance) => contract = instance)
-            .then(() => contract.commitDuration.call())
-            .then((num) => commitDuration = new BN(String(num), 10))
             .then(() => launchPoll('commit poll'))
             .then((num) => pollID = num)
             .then(() => getBlockTimestamp())
             .then((time) => timestamp = new BN(time, 10))
             .then(() => getPoll(pollID))
             .then((poll) => commitEndDate = poll[1])
-            .then(() => assert.equal(commitEndDate, timestamp.add(commitDuration).toString(10), "poll commit end date wrong"));
+            .then(() => assert.equal(commitEndDate, timestamp.add((new BN(commitDuration,10))).toString(10), "poll commit end date wrong"));
     });
 
     it("check reveal end date", function() {
         let contract;
         let pollID;
         let revealEndDate;
-        let commitDuration;
-        let revealDuration;
         let timestamp;
         return getVoteContract()
             .then((instance) => contract = instance)
-            .then(() => contract.commitDuration.call())
-            .then((dur) => commitDuration = new BN(String(dur), 10))
-            .then(() => contract.revealDuration.call())
-            .then((dur) => revealDuration = new BN(String(dur), 10))
             .then(() => launchPoll('reveal poll'))
             .then((num) => pollID = num)
             .then(() => getBlockTimestamp())
             .then((time) => timestamp = new BN(time, 10))
             .then(() => getPoll(pollID))
             .then((poll) => revealEndDate = poll[2])
-            .then(() => assert.equal(revealEndDate, timestamp.add(commitDuration).add(revealDuration).toString(10), "poll reveal end date wrong")); 
+            .then(() => assert.equal(revealEndDate, timestamp.add((new BN(commitDuration,10))).add((new BN(revealDuration,10))).toString(10), "poll reveal end date wrong")); 
     });
 
 
@@ -194,8 +188,7 @@ contract('Utilities Testing', function(accounts) {
             .then((id) => pollID = id)
             .then(() => getVoteContract())
             .then((instance) => contract = instance)
-            .then(() => contract.commitDuration.call())
-            .then((dur) => increaseTime(Number(dur)+1))
+            .then((dur) => increaseTime(Number(commitDuration)+1))
             .then(() => contract.pollMap.call(pollID))
             .then(() => contract.revealPeriodActive.call(pollID))
             .then((result) => assert.equal(result, true, "Poll wasn't in reveal"));
@@ -252,8 +245,7 @@ contract('Utilities Testing', function(accounts) {
             .then((id) => pollID = id)
             .then(() => getVoteContract())
             .then((instance) => contract = instance)
-            .then(() => contract.commitDuration.call())
-            .then((dur) => increaseTime(Number(dur)+1))
+            .then((dur) => increaseTime(Number(commitDuration)+1))
             .then(() => contract.revealPeriodActive.call(pollID))
             .then((result) => assert.equal(result, true, "Poll wasn't in reveal"))
             .then(() => contract.validPollID.call(pollID))
@@ -264,100 +256,22 @@ contract('Utilities Testing', function(accounts) {
         // Check if the started polls that have ended are valid,
         let pollID;
         let contract;
-        let commitDuration;
-        let revealDuration;
         return launchPoll("reveal period test") 
             .then((id) => pollID = id)
             .then(() => getVoteContract())
             .then((instance) => contract = instance)
-            .then(() => contract.commitDuration.call())
-            .then((dur) => commitDuration = dur)
-            .then(() => contract.revealDuration.call())
-            .then((dur) => revealDuration = dur)
-            .then(() => increaseTime(Number(commitDuration) + Number(revealDuration)))
+            .then(() => increaseTime(Number(commitDuration) + Number(revealDuration) + 1))
             .then(() => contract.validPollID.call(pollID))
             .then((result) => assert.equal(result, true, "Poll isn't valid in reveal period"));
-    });
-
-    it("should allow trusted user1 to update commit duration to 1000s", () => {
-        // Check if setting the commit duration updates said variable
-        let vote;
-
-        return getVoteContract()
-            .then((voteInstance) => vote = voteInstance)
-            .then(() => vote.setCommitDuration(1000, {from: user1}))
-            .then(() => vote.commitDuration.call())
-            .then((duration) => assert.equal(duration, 1000, "Commit duration was not updated correctly"));
-    });
-
-    it("should not allow untrusted user7 to set commit duration to 420s", () => {
-        let vote;
-
-        return getVoteContract()
-            .then((voteInstance) => vote = voteInstance)
-            .then(() => vote.setCommitDuration(420, {from: user7}))
-            .then(() => assert.ok(false, "Commit duration was updated"))
-            .catch((err) => vote.commitDuration.call())
-            .then((duration) => assert.equal(duration, 1000, "Commit duration was updated incorrectly"));
-    });
-
-    it("should allow trusted user2 to update reveal duration to 2000s", () => {
-        // Check if setting the commit duration updates said variable
-        let vote;
-
-        return getVoteContract()
-            .then((voteInstance) => vote = voteInstance)
-            .then(() => vote.setRevealDuration(2000, {from: user2}))
-            .then(() => vote.revealDuration.call())
-            .then((duration) => assert.equal(duration, 2000, "Reveal duration was not updated correctly"));
-    });
-
-    it("should not allow untrusted user8 to set commit duration to 420s", () => {
-        let vote;
-
-        return getVoteContract()
-            .then((voteInstance) => vote = voteInstance)
-            .then(() => vote.setRevealDuration(420, {from: user8}))
-            .then(() => assert.ok(false, "Reveal duration was updated"))
-            .catch((err) => vote.revealDuration.call())
-            .then((duration) => assert.equal(duration, 2000, "Reveal duration was updated incorrectly"));
-    });
-
-    it("should allow trusted user3 to update voteQuota pct to 75", () => {
-        // Check if setting the commit duration updates said variable
-        let vote;
-
-        return getVoteContract()
-            .then((voteInstance) => vote = voteInstance)
-            .then(() => vote.setVoteQuota(75, {from: user3}))
-            .then(() => vote.voteQuota.call())
-            .then((quota) => assert.equal(quota, 75, "VoteQuota was not updated correctly"));
-    });
-
-    it("should not allow untrusted user9 to update voteQuota pct to 42", () => {
-        let vote;
-
-        return getVoteContract()
-            .then((voteInstance) => vote = voteInstance)
-            .then(() => vote.setVoteQuota(42, {from: user9}))
-            .then(() => assert.ok(false, "VoteQuota was updated"))
-            .catch((err) => vote.voteQuota.call())
-            .then((quota) => assert.equal(quota, 75, "VoteQuota was updated incorrectly"));
     });
 
     it("should check if non-revealed poll passes", () => {
         let pollID;
         let contract;
-        let commitDuration;
-        let revealDuration;
         return launchPoll("reveal period test") 
             .then((id) => pollID = id)
             .then(() => getVoteContract())
             .then((instance) => contract = instance)
-            .then(() => contract.commitDuration.call())
-            .then((dur) => commitDuration = dur)
-            .then(() => contract.revealDuration.call())
-            .then((dur) => revealDuration = dur)
             .then(() => increaseTime(Number(commitDuration) + Number(revealDuration) + 1))
             .then(() => contract.isPassed.call(pollID))
             .then((result) => assert.equal(result, true, "non-voted poll does not pass"));
@@ -366,8 +280,6 @@ contract('Utilities Testing', function(accounts) {
     it("should check if poll with more revealed voting for proposal pass", () => {
         let pollID;
         let contract;
-        let commitDuration;
-        let revealDuration;
         let salt = 1;
         let voteOption = 1;
         let voteHash = createVoteHash(voteOption, salt);
@@ -375,10 +287,6 @@ contract('Utilities Testing', function(accounts) {
             .then((id) => pollID = id)
             .then(() => getVoteContract())
             .then((instance) => contract = instance)
-            .then(() => contract.commitDuration.call())
-            .then((dur) => commitDuration = dur)
-            .then(() => contract.revealDuration.call())
-            .then((dur) => revealDuration = dur)
             .then(() => contract.loadTokens(10, {from: accounts[1]}))
             .then(() => contract.commitVote(pollID, voteHash, 10, 0, {from:accounts[1]}))
             .then(() => increaseTime(Number(commitDuration) + 1))
@@ -391,8 +299,6 @@ contract('Utilities Testing', function(accounts) {
     it("should check if poll with more revealed voting against proposal does not pass", () => {
         let pollID;
         let contract;
-        let commitDuration;
-        let revealDuration;
         let salt = 1;
         let voteOption = 0;
         let voteHash = createVoteHash(voteOption, salt);
@@ -400,10 +306,6 @@ contract('Utilities Testing', function(accounts) {
             .then((id) => pollID = id)
             .then(() => getVoteContract())
             .then((instance) => contract = instance)
-            .then(() => contract.commitDuration.call())
-            .then((dur) => commitDuration = dur)
-            .then(() => contract.revealDuration.call())
-            .then((dur) => revealDuration = dur)
             .then(() => contract.loadTokens(10, {from: accounts[1]}))
             .then(() => contract.commitVote(pollID, voteHash, 10, 0, {from:accounts[1]}))
             .then(() => increaseTime(Number(commitDuration) + 1))
@@ -416,8 +318,6 @@ contract('Utilities Testing', function(accounts) {
     it("should check if poll with multiple more revealed votes for proposal does pass", () => {
         let pollID;
         let contract;
-        let commitDuration;
-        let revealDuration;
 
         let saltUser1 = 1;
         let voteOptionUser1 = 1;
@@ -435,10 +335,6 @@ contract('Utilities Testing', function(accounts) {
             .then((id) => pollID = id)
             .then(() => getVoteContract())
             .then((instance) => contract = instance)
-            .then(() => contract.commitDuration.call())
-            .then((dur) => commitDuration = dur)
-            .then(() => contract.revealDuration.call())
-            .then((dur) => revealDuration = dur)
 
             // load tokens for users
             .then(() => contract.loadTokens(70, {from: accounts[1]}))
@@ -466,8 +362,6 @@ contract('Utilities Testing', function(accounts) {
     it("should check if getNumCorrectVote returns number of correctly voted tokens", () => {
         let pollID;
         let contract;
-        let commitDuration;
-        let revealDuration;
 
         let saltUser1 = 1;
         let voteOptionUser1 = 1;
@@ -487,10 +381,6 @@ contract('Utilities Testing', function(accounts) {
             .then((id) => pollID = id)
             .then(() => getVoteContract())
             .then((instance) => contract = instance)
-            .then(() => contract.commitDuration.call())
-            .then((dur) => commitDuration = dur)
-            .then(() => contract.revealDuration.call())
-            .then((dur) => revealDuration = dur)
 
             // load tokens for users
             .then(() => contract.loadTokens(30, {from: accounts[4]}))
