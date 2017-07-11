@@ -249,7 +249,7 @@ contract PLCRVoting {
 
     /// true if the reveal period is active (i.e. reveal period expiration date not yet reached)
     function revealPeriodActive(uint pollID) returns (bool) {
-         return (!isExpired(pollMap[pollID].revealEndDate)) && isExpired(pollMap[pollID].commitEndDate);
+         return !isExpired(pollMap[pollID].revealEndDate) && !commitPeriodActive(pollID);
     }
 
     /*
