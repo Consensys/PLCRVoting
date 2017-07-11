@@ -84,9 +84,9 @@ contract PLCRVoting {
                 // that node with new attributes 
                 deleteNode(pollID);
             }
-                // Insert the <node at poll ID> after
-                // the node at <prevPollID>:
-                insertToDll(pollID, prevPollID, numTokens, hashOfVoteAndSalt);
+            // Insert the <node at poll ID> after
+            // the node at <prevPollID>:
+            insertToDll(pollID, prevPollID, numTokens, hashOfVoteAndSalt);
         }
         // Invalid prevPollID
         return false;
