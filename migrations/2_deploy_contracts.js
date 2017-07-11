@@ -44,9 +44,7 @@ module.exports = (deployer, network, accounts) => {
 		tokenConf.decimalUnits,
 		tokenConf.tokenSymbol
 	)
-	.then(() => deployer.deploy(VotingContract, HumanStandardToken.address, 
-		[accounts[0], accounts[1], accounts[2], 
-		accounts[3], accounts[4], accounts[5], accounts[6]]))
+	.then(() => deployer.deploy(VotingContract, HumanStandardToken.address))
 	.then(() => distributeAndAllow(
 		owner, users[0], VotingContract.address, tokenConf.userAmounts[0]
 	))

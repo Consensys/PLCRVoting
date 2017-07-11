@@ -6,6 +6,7 @@ contract PLCRVoting {
     mapping(address => uint) public voteTokenBalance;
 
     HumanStandardToken public token;
+
     struct Poll {
         string proposal;        /// proposal to be voted for/against
         uint commitEndDate;     /// expiration date of commit period for poll
@@ -32,14 +33,11 @@ contract PLCRVoting {
     uint constant VOTE_OPTION_FOR = 1; /// vote option indicating a vote for the proposal
     bytes32 constant ZERO_NODE_COMMIT_HASH = 0xabc;
 
-    mapping(address => bool) trustedMap; //maps addresses to trusted value
+    address owner;
 
-    function PLCRVoting(address tokenAddr, address[] trusted) {
+    function PLCRVoting(address tokenAddr) {
         token = HumanStandardToken(tokenAddr);
-        for (uint idx = 0; idx < trusted.length; idx++) {
-            trustedMap[trusted[idx]] = true;
-        }
-
+        owner = msg.sender;
         pollNonce = INITIAL_POLL_NONCE;
     }
 
@@ -250,24 +248,9 @@ contract PLCRVoting {
          return !isExpired(pollMap[pollID].revealEndDate) && !commitPeriodActive(pollID);
     }
 
-    /*
-    /// true if the msg.sender (or tx.origin) is in the trusted list
-    modifier isTrusted(address user) {
-        bool flag = false;
-        for (uint idx = 0; idx < trusted.length; idx++) {
-            if (user == trusted[idx]) {
-                flag = true;
-                break;
-            }
-        }
-        require(flag);
-        _;
-    }
-    */
-
-    /// true if the msg.sender (or tx.origin) is in the trusted list
-    function isTrusted(address user) returns (bool) {
-        return trustedMap[user];
+    /// true if the user is the owner 
+    function isOwner(address user) returns (bool) {
+        return user == owner;
     }
 
     ///CORE FUNCTIONS:
