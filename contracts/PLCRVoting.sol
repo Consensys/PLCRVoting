@@ -154,11 +154,11 @@ contract PLCRVoting {
         return prevID == getNextID(pollID) && prevID == pollID;
     }
 
-    function getPreviousID(uint pollID) returns (uint pollID) {
+    function getPreviousID(uint pollID) returns (uint prevPollID) {
         return getAttribute(pollID, "prevID");
     }
 
-    function getNextID(uint pollID) returns (uint pollID) {
+    function getNextID(uint pollID) returns (uint nextPollID) {
         return getAttribute(pollID, "nextID");
     }
 
