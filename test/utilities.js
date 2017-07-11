@@ -90,7 +90,7 @@ contract('Utilities', function(accounts) {
     // getBlockTimestamp is also a base 10 string
     // getPoll also returns everything as base10 string
 
-    it("check proposal string", function() {
+    it("check proposal string from start poll event", function() {
         const propStr = "first poll";
         let contract;
         return getVoteContract()
@@ -98,7 +98,19 @@ contract('Utilities', function(accounts) {
             .then(() => contract.startPoll(propStr, 50))
             .then((result) => result.logs[0].args.pollID.toString())
             .then((pollID) => getPoll(pollID))
-            .then((pollArr) => assert.equal(pollArr[0], propStr, "poll created incorrectly"));
+            .then((pollArr) => assert.equal(pollArr[0], propStr, "poll created incorrectly"))
+    });
+
+    it("check getProposalString function", function() {
+        const propStr = "my poll";
+        let contract;
+        return getVoteContract()
+            .then((instance) => contract = instance)
+            .then(() => contract.startPoll(propStr, 50))
+            .then((result) => result.logs[0].args.pollID.toString())
+            .then((pollID) => contract.getProposalString.call(pollID))
+            .then((result) => assert.equal(result, propStr, "getProposalString function incorrect"))
+    
     });
 
     it("check commit end date", function() {
