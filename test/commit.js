@@ -1,4 +1,3 @@
-const VotingContract = artifacts.require("./PLCRVoting.sol");
 const PLCRVoting = artifacts.require("./PLCRVoting.sol");
 const HumanStandardToken = artifacts.require("./HumanStandardToken.sol");
 const abi = require("ethereumjs-abi");
@@ -44,7 +43,7 @@ contract('Commit Testing', function(accounts) {
     function voteMapComparisonTest(user, pollID, attrNameToExpectedValueMap) {
         var promises = [];
         return new Promise(function(resolve, reject) {
-                VotingContract.deployed()
+                PLCRVoting.deployed()
                 .then(function(instance) {
                 Object.keys(attrNameToExpectedValueMap).forEach(function (key) {
                     var holder = {};
@@ -67,7 +66,7 @@ contract('Commit Testing', function(accounts) {
     function startPolls(numOfPolls, callback) {
         var ids = [];
         var promises = [];
-        VotingContract.deployed()
+        PLCRVoting.deployed()
         .then(function (instance) {
             for (var i = 0; i < numOfPolls; i++) {
                 promises.push(instance.startPoll("", 50, commitDuration, revealDuration)
@@ -228,7 +227,7 @@ contract('Commit Testing', function(accounts) {
         let pollId;
         var hash = createVoteHash(0, 79);
 
-        return VotingContract.deployed()
+        return PLCRVoting.deployed()
         .then(function(instance) {
             voter = instance;
             return voter.loadTokens(10, {from: user1})
@@ -252,7 +251,7 @@ contract('Commit Testing', function(accounts) {
         let pollId;
         var finalHash = createVoteHash(0, 80);
 
-        return VotingContract.deployed()
+        return PLCRVoting.deployed()
         .then(function(instance) {
             voter = instance;
             return voter.loadTokens(20, {from: user2})
@@ -281,7 +280,7 @@ contract('Commit Testing', function(accounts) {
         var finalHash2 = createVoteHash(0, 81);
         var finalHash3 = createVoteHash(1, 31);
 
-        return VotingContract.deployed()
+        return PLCRVoting.deployed()
         .then(function(instance) {
             voter = instance;
             return voter.loadTokens(10, {from: user3})
@@ -338,7 +337,7 @@ contract('Commit Testing', function(accounts) {
         let pollId;
         var hash = createVoteHash(0, 79);
 
-        return VotingContract.deployed()
+        return PLCRVoting.deployed()
         .then(function(instance) {
             voter = instance;
             return voter.loadTokens(10, {from: user1})

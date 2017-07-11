@@ -1,4 +1,4 @@
-const VotingContract = artifacts.require("./PLCRVoting.sol");
+const PLCRVoting = artifacts.require("./PLCRVoting.sol");
 const HumanStandardToken = artifacts.require("./HumanStandardToken.sol");
 
 contract('Token Testing', (accounts) => {
@@ -6,7 +6,7 @@ contract('Token Testing', (accounts) => {
     const tokenAmt = 10;
 
     function getVoteContract() {
-	return VotingContract.deployed();
+	return PLCRVoting.deployed();
     }
 
     function getERC20Token() {
