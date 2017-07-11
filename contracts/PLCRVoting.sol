@@ -367,4 +367,8 @@ contract PLCRVoting {
     function setAttribute(uint pollID, string attrName, uint attrVal) { 
         voteMap[sha3(msg.sender, pollID, attrName)] = attrVal;  
     }
+
+    function getProposalString(uint pollID) returns (string) {
+         return pollMap[pollID].proposal;
+    }
 }
