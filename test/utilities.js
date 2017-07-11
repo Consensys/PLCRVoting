@@ -392,7 +392,7 @@ contract('Utilities Testing', function(accounts) {
             .then(() => contract.revealVote(pollID, saltUser2, voteOptionUser2, {from: accounts[2]}))
             .then(() => contract.revealVote(pollID, saltUser3, voteOptionUser3, {from: accounts[3]}))
             .then(() => increaseTime(Number(revealDuration) + 1))
-            .then(() => contract.getNumCorrectVote.call(pollID, saltUser1, {from: accounts[4]}))
+            .then(() => contract.getNumPassingTokens.call(pollID, saltUser1, {from: accounts[4]}))
             .then((num) => assert.equal(Number(num), correctVote, "getNumCorrectVote returns wrong number"))
         
     });
