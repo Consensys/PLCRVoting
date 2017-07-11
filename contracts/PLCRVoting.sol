@@ -299,7 +299,7 @@ contract PLCRVoting {
         }
     }
 
-    function getNumCorrectVote(uint pollID, uint salt) returns (uint correctVotes) {
+    function getNumPassingTokens(uint pollID, uint salt) returns (uint correctVotes) {
         require(pollEnded(pollID));
         uint winnerVote = isPassed(pollID) ? 1 : 0; 
         bytes32 winnerHash = sha3(winnerVote, salt);
