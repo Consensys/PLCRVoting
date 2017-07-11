@@ -44,7 +44,10 @@ contract PLCRVoting {
     }
 
     function commitVote(uint pollID, bytes32 hashOfVoteAndSalt, uint numTokens, uint prevPollID) returns (bool) {
+        // Make sure the user has enough tokens to commit
         require(hasEnoughTokens(numTokens));
+
+        // Make sure the commit period is active
         require(commitPeriodActive(pollID));
 
         // Make sure user is not trying to manually commit
@@ -120,7 +123,11 @@ contract PLCRVoting {
     }
 
     function revealVote(uint pollID, uint salt, uint voteOption) returns (bool) {
+        
+        // Make sure the reveal period is active
         require(revealPeriodActive(pollID));
+
+        // Make sure the vote has not yet been revealed
         require(!hasBeenRevealed(pollID));
 
         bytes32 currHash = sha3(voteOption, salt);
@@ -135,7 +142,8 @@ contract PLCRVoting {
             } else {
                 pollMap[pollID].votesAgainst += numTokens;
             }
-
+            
+            // Remove the node referring to this vote as we no longer need it
             deleteNode(pollID);
             return true;
         }
