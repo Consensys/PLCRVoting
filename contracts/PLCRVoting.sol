@@ -102,17 +102,17 @@ contract PLCRVoting {
         return false;
     }
 
-    function validateNode(uint prevPollID, uint pollID, uint256 numTokens) returns (bool) {
+    function validateNode(uint prevPollID, uint pollID, uint numTokens) returns (bool) {
         if (prevPollID == 0 && getNextID(prevPollID) == 0) {
             // Only the zero node exists
             return true;
         }
 
-        uint256 prevNodeTokens = getNumTokens(prevPollID);
+        uint prevNodeTokens = getNumTokens(prevPollID);
         // Check if the potential previous node has
         // less tokens than the current node
         if (prevNodeTokens <= numTokens) {
-            uint256 nextNodeID = getNextID(prevPollID);
+            uint nextNodeID = getNextID(prevPollID);
 
             // If the next is the current node, then we need to look at
             // the node after the current node (since next == current node
@@ -120,7 +120,7 @@ contract PLCRVoting {
             if (nextNodeID == pollID) {
                 nextNodeID = getNextID(pollID);
             }
-            uint256 nextNodeTokens = getNumTokens(nextNodeID);
+            uint nextNodeTokens = getNumTokens(nextNodeID);
             if (nextNodeID == 0 || numTokens <= nextNodeTokens) {
                 return true;
             }
@@ -158,15 +158,15 @@ contract PLCRVoting {
     }
 
     function getPreviousID(uint pollID) returns (uint) {
-        return uint(getAttribute(pollID, "prevID"));
+        return getAttribute(pollID, "prevID");
     }
 
     function getNextID(uint pollID) returns (uint) {
-        return uint(getAttribute(pollID, "nextID"));
+        return getAttribute(pollID, "nextID");
     }
 
-    function getNumTokens(uint pollID) returns (uint256) {
-        return uint(getAttribute(pollID, "numTokens"));
+    function getNumTokens(uint pollID) returns (uint) {
+        return getAttribute(pollID, "numTokens");
     }
 
     /// interface for users to purchase votingTokens by exchanging ERC20 token
@@ -186,7 +186,7 @@ contract PLCRVoting {
     
     // insert to double-linked-list given that the prevID is valid
     function insertToDll(uint pollID, uint prevID, uint numTokens, bytes32 commitHash) {
-        uint nextID = uint(getAttribute(prevID, "nextID"));
+        uint nextID = getAttribute(prevID, "nextID");
 
         // make nextNode.prev point to newNode
         setAttribute(nextID, "prevID", pollID);
@@ -207,8 +207,8 @@ contract PLCRVoting {
     // setting its prev and next to its own pollID
     function deleteNode(uint pollID){
         // get next and prev node pollIDs
-        uint prevID = uint(getAttribute(pollID, "prevID"));
-        uint nextID = uint(getAttribute(pollID, "nextID"));
+        uint prevID = getAttribute(pollID, "prevID");
+        uint nextID = getAttribute(pollID, "nextID");
 
         // remove node from list
         setAttribute(prevID, "nextID", nextID);
@@ -220,7 +220,7 @@ contract PLCRVoting {
     }
 
     // return the pollID of the last node in a dll
-    function getLastNode() returns (uint){
+    function getLastNode() returns (uint) {
         return getAttribute(0, "prevID");
     }
 
