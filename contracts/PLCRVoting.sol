@@ -43,7 +43,7 @@ contract PLCRVoting {
         pollNonce = INITIAL_POLL_NONCE;
     }
 
-    function commitVote(uint pollID, bytes32 hashOfVoteAndSalt, uint numTokens, uint prevPollID) returns (bool) {
+    function commitVote(uint pollID, bytes32 hashOfVoteAndSalt, uint numTokens, uint prevPollID) returns (bool successful) {
         // Make sure the user has enough tokens to commit
         require(hasEnoughTokens(numTokens));
 
@@ -95,7 +95,7 @@ contract PLCRVoting {
         return false;
     }
 
-    function validateNode(uint prevPollID, uint pollID, uint numTokens) returns (bool) {
+    function validateNode(uint prevPollID, uint pollID, uint numTokens) returns (bool valid) {
         if (prevPollID == 0 && getNextID(prevPollID) == 0) {
             // Only the zero node exists
             return true;
@@ -122,7 +122,7 @@ contract PLCRVoting {
         return false;
     }
 
-    function revealVote(uint pollID, uint salt, uint voteOption) returns (bool) {
+    function revealVote(uint pollID, uint salt, uint voteOption) returns (bool successful) {
         
         // Make sure the reveal period is active
         require(revealPeriodActive(pollID));
@@ -150,20 +150,20 @@ contract PLCRVoting {
         return false;
     }
 
-    function hasBeenRevealed(uint pollID) returns (bool) {
+    function hasBeenRevealed(uint pollID) returns (bool revealed) {
         uint prevID = getPreviousID(pollID);
         return prevID == getNextID(pollID) && prevID == pollID;
     }
 
-    function getPreviousID(uint pollID) returns (uint) {
+    function getPreviousID(uint pollID) returns (uint pollID) {
         return getAttribute(pollID, "prevID");
     }
 
-    function getNextID(uint pollID) returns (uint) {
+    function getNextID(uint pollID) returns (uint pollID) {
         return getAttribute(pollID, "nextID");
     }
 
-    function getNumTokens(uint pollID) returns (uint) {
+    function getNumTokens(uint pollID) returns (uint numTokens) {
         return getAttribute(pollID, "numTokens");
     }
 
@@ -203,7 +203,7 @@ contract PLCRVoting {
 
     // delete node from double-linked-list by removing pointers to the node, and 
     // setting its prev and next to its own pollID
-    function deleteNode(uint pollID){
+    function deleteNode(uint pollID) {
         // get next and prev node pollIDs
         uint prevID = getAttribute(pollID, "prevID");
         uint nextID = getAttribute(pollID, "nextID");
@@ -218,7 +218,7 @@ contract PLCRVoting {
     }
 
     // return the pollID of the last node in a dll
-    function getLastNode() returns (uint) {
+    function getLastNode() returns (uint pollID) {
         return getAttribute(0, "prevID");
     }
 
@@ -227,11 +227,11 @@ contract PLCRVoting {
      */
 
     // return max number of tokens locked for user
-    function getMaxTokens() returns (uint) {
+    function getMaxTokens() returns (uint numTokens) {
         return getAttribute(getLastNode(), "numTokens");
     }
     // return any attribute that is not commitHash
-    function hasEnoughTokens(uint numTokens) returns (bool) {
+    function hasEnoughTokens(uint numTokens) returns (bool hasEnough) {
         return voteTokenBalance[msg.sender] >= numTokens;
     }
     /*
@@ -241,12 +241,12 @@ contract PLCRVoting {
 
     /// MODIFIERS:
     /// true if the commit period is active (i.e. commit period expiration date not yet reached)
-    function commitPeriodActive(uint pollID) returns (bool) {
+    function commitPeriodActive(uint pollID) returns (bool active) {
         return !isExpired(pollMap[pollID].commitEndDate);
     }
 
     /// true if the reveal period is active (i.e. reveal period expiration date not yet reached)
-    function revealPeriodActive(uint pollID) returns (bool) {
+    function revealPeriodActive(uint pollID) returns (bool active) {
          return !isExpired(pollMap[pollID].revealEndDate) && !commitPeriodActive(pollID);
     }
 
@@ -271,7 +271,7 @@ contract PLCRVoting {
     }
 
     ///CORE FUNCTIONS:
-    function startPoll(string proposalStr, uint voteQuota, uint commitDuration, uint revealDuration) returns (uint) {
+    function startPoll(string proposalStr, uint voteQuota, uint commitDuration, uint revealDuration) returns (uint pollID) {
         pollNonce = pollNonce + 1;
 
         pollMap[pollNonce] = Poll({
@@ -292,29 +292,29 @@ contract PLCRVoting {
      */
  
     /// check if votesFor / (totalVotes) >= (voteQuota / 100) 
-    function isPassed(uint pollID) returns (bool) {
+    function isPassed(uint pollID) returns (bool passed) {
         Poll poll = pollMap[pollID];
         require(isExpired(poll.revealEndDate));
         return ((100 - poll.voteQuotaSnap) * poll.votesFor) >= (poll.voteQuotaSnap * poll.votesAgainst);
     }
 
     /// determines if current timestamp is past termination timestamp 
-    function isExpired(uint terminationDate) returns (bool) {
+    function isExpired(uint terminationDate) returns (bool expired) {
         return (block.timestamp > terminationDate);
     }
 
     /// true if the poll ID corresponds to a valid poll; false otherwise
     /// a valid poll can be defined as any poll that has been started (whether
     /// it has finished does not matter)
-    function validPollID(uint pollID) returns (bool) {
+    function validPollID(uint pollID) returns (bool valid) {
         return pollMap[pollID].commitEndDate > 0;
     }
 
-    function pollEnded(uint pollID) returns (bool) {
+    function pollEnded(uint pollID) returns (bool ended) {
         return isExpired(pollMap[pollID].revealEndDate);
     }
 
-    function getTotalNumberOfTokensForWinningOption(uint pollID) returns (uint) {
+    function getTotalNumberOfTokensForWinningOption(uint pollID) returns (uint numTokens) {
         require(pollEnded(pollID));
         if (isPassed(pollID)) {
             return pollMap[pollID].votesFor;
@@ -323,7 +323,7 @@ contract PLCRVoting {
         }
     }
 
-    function getNumCorrectVote(uint pollID, uint salt) returns (uint) {
+    function getNumCorrectVote(uint pollID, uint salt) returns (uint correctVotes) {
         require(pollEnded(pollID));
         uint winnerVote = isPassed(pollID) ? 1 : 0; 
         bytes32 winnerHash = sha3(winnerVote, salt);
@@ -338,11 +338,11 @@ contract PLCRVoting {
     }
     
     // get any attribute that is not commitHash 
-    function getAttribute(uint pollID, string attrName) returns (uint) {    
+    function getAttribute(uint pollID, string attrName) returns (uint attribute) {    
         return voteMap[sha3(tx.origin, pollID, attrName)]; 
     }
     
-    function getCommitHash(uint pollID) returns (bytes32) { 
+    function getCommitHash(uint pollID) returns (bytes32 commitHash) { 
         return bytes32(voteMap[sha3(tx.origin, pollID, 'commitHash')]);    
     }
     
@@ -350,7 +350,7 @@ contract PLCRVoting {
         voteMap[sha3(tx.origin, pollID, attrName)] = attrVal;  
     }
 
-    function getProposalString(uint pollID) returns (string) {
+    function getProposalString(uint pollID) returns (string proposal) {
          return pollMap[pollID].proposal;
     }
 }
