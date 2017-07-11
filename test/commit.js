@@ -4,6 +4,9 @@ const HumanStandardToken = artifacts.require("./HumanStandardToken.sol");
 const abi = require("ethereumjs-abi");
 const BN = require("bn.js");
 
+const commitDuration = '1000000';
+const revealDuration = '1000000';
+
 // returns the solidity-sha3 output for VoteMap indexing
 function createIndexHash(account, pollID, atr) {
     let hash = "0x" + abi.soliditySHA3([ "address", "uint", "string" ],
@@ -67,7 +70,7 @@ contract('Commit Testing', function(accounts) {
         VotingContract.deployed()
         .then(function (instance) {
             for (var i = 0; i < numOfPolls; i++) {
-                promises.push(instance.startPoll("", 50)
+                promises.push(instance.startPoll("", 50, commitDuration, revealDuration)
                     .then((result) => {
                         ids.push(result.logs[0].args.pollID.toString());
                     }));
@@ -231,7 +234,7 @@ contract('Commit Testing', function(accounts) {
             return voter.loadTokens(10, {from: user1})
         })
         .then(function () {
-            return voter.startPoll("potato", 50);
+            return voter.startPoll("potato", 50, commitDuration, revealDuration);
         }).then(function (result) {
             pollId = (result.logs[0].args.pollID.toString());
             return voter.commitVote(pollId, hash, 10, 0, {from: user1});
@@ -255,7 +258,7 @@ contract('Commit Testing', function(accounts) {
             return voter.loadTokens(20, {from: user2})
         })
         .then(function () {
-            return voter.startPoll("apple", 50);
+            return voter.startPoll("apple", 50, commitDuration, revealDuration);
         }).then(function (result) {
             pollId = (result.logs[0].args.pollID.toString());
             return voter.commitVote(pollId, createVoteHash(0, 5), 10, 0, {from: user2});
@@ -285,7 +288,7 @@ contract('Commit Testing', function(accounts) {
         })
         .then(() => voter.loadTokens(10, {from: user4}))
         .then(() => voter.loadTokens(10, {from: user5}))
-        .then(() => voter.startPoll("orange", 50))
+        .then(() => voter.startPoll("orange", 50, commitDuration, revealDuration))
         .then((result) => pollId = result.logs[0].args.pollID.toString())
         .then(() => voter.commitVote(pollId, finalHash1, 9, 0, {from: user3}))
         .then(() =>
@@ -320,7 +323,7 @@ contract('Commit Testing', function(accounts) {
         return PLCRVoting.deployed()
         .then((instance) => {
             voter = instance;
-            return voter.startPoll("proposal", 50)
+            return voter.startPoll("proposal", 50, commitDuration, revealDuration)
         })
         .then((result) => {
             var pollId = result.logs[0].args.pollID.toString();
@@ -340,7 +343,7 @@ contract('Commit Testing', function(accounts) {
             voter = instance;
             return voter.loadTokens(10, {from: user1})
         })
-        .then(() => voter.startPoll("potato", 50))
+        .then(() => voter.startPoll("potato", 50, commitDuration, revealDuration))
         .then((result) => pollId = (result.logs[0].args.pollID.toString()))
         .then(() => increaseTime(1000001))
         .then(() => voter.commitVote(pollId, hash, 10, 0, {from: user1}))
