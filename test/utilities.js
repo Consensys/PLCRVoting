@@ -209,23 +209,6 @@ contract('Utilities Testing', function(accounts) {
     });
     */
 
-
-    it("trusted users are correct", function() {
-        // Check if the trusted users are correct
-        return PLCRVoting.deployed()
-            .then((vote) => {
-                accounts.forEach((account) => {
-                    var isTrustedAccount = trustedAccounts.includes(account);
-
-                    return vote.isTrusted.call(account)
-                        .then((trustVal) => assert.equal(
-                            trustVal, isTrustedAccount, "Trusted map was incorrect"
-                        ));
-                });
-            });
-    });
-
-
     it("valid poll IDs when in commit period", function() {
         // Check if the started polls in the commit period are valid,
         let pollID;
