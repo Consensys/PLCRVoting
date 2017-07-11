@@ -284,6 +284,7 @@ contract PLCRVoting {
         });
 
         PollCreated(pollNonce);
+        return pollNonce;
     }
 
     /*
