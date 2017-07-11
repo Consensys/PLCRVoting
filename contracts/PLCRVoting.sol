@@ -139,10 +139,11 @@ contract PLCRVoting {
         // same as the commit hash
         if (currHash == getCommitHash(pollID)) {
             // Record the vote
+            uint numTokens = getNumTokens(pollID);
             if (voteOption == VOTE_OPTION_FOR) {
-                pollMap[pollID].votesFor += getNumTokens(pollID);
+                pollMap[pollID].votesFor += numTokens;
             } else {
-                pollMap[pollID].votesAgainst += getNumTokens(pollID);
+                pollMap[pollID].votesAgainst += numTokens;
             }
 
             deleteNode(pollID);
