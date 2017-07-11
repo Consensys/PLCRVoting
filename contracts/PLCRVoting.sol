@@ -271,7 +271,7 @@ contract PLCRVoting {
     }
 
     ///CORE FUNCTIONS:
-    function startPoll(string proposalStr, uint voteQuota, uint commitDuration, uint revealDuration) {
+    function startPoll(string proposalStr, uint voteQuota, uint commitDuration, uint revealDuration) returns (uint) {
         pollNonce = pollNonce + 1;
 
         pollMap[pollNonce] = Poll({
