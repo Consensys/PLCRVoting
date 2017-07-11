@@ -55,17 +55,17 @@ contract PLCRVoting {
         // as opposed to an insert
         bool isUpdatingExistingNode = false;
         if (pollID == prevPollID) {
-            // Making an update --> the previous node
-            // has already been set, and so that
-            // node can be used for validation
-            prevPollID = getPreviousID(pollID);
-
             // Check to see if the commit hash was not previously set,
             // which would imply that no commit to this 
             // poll was previously made
             if (getCommitHash(pollID) == 0) {
-            return false;
+                return false;
             }
+            
+            // Making an update --> the previous node
+            // has already been set, and so that
+            // node can be used for validation
+            prevPollID = getPreviousID(pollID);
 
             isUpdatingExistingNode = true;
         } else if (getCommitHash(pollID) != 0) {
