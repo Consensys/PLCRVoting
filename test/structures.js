@@ -1,24 +1,8 @@
-const abi = require('ethereumjs-abi');
-const BN = require('bn.js');
+require('./testHelpers.js')();
+
 const PLCRVoting = artifacts.require("./PLCRVoting.sol");
 
 contract('Data Structure Testing', (accounts) => {
-  /*
-   * Utility Functions
-   */
-
-  // returns the solidity-sha3 output for VoteMap indexing
-  function createIndexHash(account, pollID, atr) {
-    let hash = "0x" + abi.soliditySHA3(
-          [ "address", "uint", "string" ],
-          [ new BN(account.slice(2), 16), pollID, atr ]
-    ).toString('hex'); 
-    return hash;
-  }
-
-  /*
-   * Tests
-   */
 
   it("should check getAttribute is 0 when voteMap empty", () => {
     return PLCRVoting.deployed()

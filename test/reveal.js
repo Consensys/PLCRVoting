@@ -1,35 +1,8 @@
-var PLCRVoting = artifacts.require("./PLCRVoting.sol");
-const abi = require("ethereumjs-abi");
-var HttpProvider = require('ethjs-provider-http');
-var EthRPC = require('ethjs-rpc');
-var ethRPC = new EthRPC(new HttpProvider('http://localhost:8545'));
-var EthQuery = require('ethjs-query');
-var ethQuery = new EthQuery(new HttpProvider('http://localhost:8545'));
+require('./testHelpers.js')();
 
+var PLCRVoting = artifacts.require("./PLCRVoting.sol");
 const commitDuration = '1000000';
 const revealDuration = '1000000';
-
-
-
-function getBlockTimestamp() {
-    return ethQuery.blockNumber()
-    .then((num) => ethQuery.getBlockByNumber(num,true))
-    .then((block) => block.timestamp.toString(10));
-}
-
-// returns the solidity-sha3 output for VoteMap indexing
-function createIndexHash(account, pollID, atr) {
-    let hash = "0x" + abi.soliditySHA3([ "address", "uint", "string" ],
-    [ account, pollID, atr ]).toString('hex'); 
-    return hash;                                   
-}
-
-// returns the solidity-sha3 output for vote hashing
-function createVoteHash(vote, salt) {
-    let hash = "0x" + abi.soliditySHA3([ "uint", "uint" ],
-    [ vote, salt ]).toString('hex'); 
-    return hash;                                   
-}
 
 // regular expression to check for invalid opcode error
 const re = new RegExp("(invalid opcode)","i");

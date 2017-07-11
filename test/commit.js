@@ -1,37 +1,10 @@
+require('./testHelpers.js')();
+
 const PLCRVoting = artifacts.require("./PLCRVoting.sol");
 const HumanStandardToken = artifacts.require("./HumanStandardToken.sol");
-const abi = require("ethereumjs-abi");
-const BN = require("bn.js");
 
 const commitDuration = '1000000';
 const revealDuration = '1000000';
-
-// returns the solidity-sha3 output for VoteMap indexing
-function createIndexHash(account, pollID, atr) {
-    let hash = "0x" + abi.soliditySHA3([ "address", "uint", "string" ],
-    [ account, pollID, atr ]).toString('hex'); 
-    return hash;                                   
-}
-
-// returns the solidity-sha3 output for vote hashing
-function createVoteHash(vote, salt) {
-    let hash = "0x" + abi.soliditySHA3([ "uint", "uint" ],
-    [ vote, salt ]).toString('hex'); 
-    return hash;                                   
-}
-
-function increaseTime(seconds) {
-    return new Promise(function(resolve, reject) {
-        web3.currentProvider.sendAsync(
-            {
-                jsonrpc: "2.0",
-                method: "evm_increaseTime",
-                params: [seconds],
-                id: 0
-            },
-        resolve);
-    });
-}
 
 // regular expression to check for invalid opcode error
 const re = new RegExp("(invalid opcode)","i");

@@ -1,11 +1,6 @@
+require('./testHelpers.js')();
+
 var BN = require('bn.js');
-const abi = require("ethereumjs-abi");
-var PLCRVoting = artifacts.require("./PLCRVoting.sol");
-var HttpProvider = require('ethjs-provider-http');
-var EthRPC = require('ethjs-rpc');
-var ethRPC = new EthRPC(new HttpProvider('http://localhost:8545'));
-var EthQuery = require('ethjs-query');
-var ethQuery = new EthQuery(new HttpProvider('http://localhost:8545'));
 var fs = require("fs");
 
 const commitDuration = '1000000';
@@ -13,29 +8,6 @@ const revealDuration = '1000000';
 
 // regular expression to check for invalid opcode error
 const re = new RegExp("(invalid opcode)","i");
-
-function increaseTime(seconds) {
-    return new Promise((resolve, reject) => { 
-        return ethRPC.sendAsync({
-            method: 'evm_increaseTime',
-            params: [seconds]
-        }, (err) => {
-            if (err) reject(err)
-            resolve()
-        })
-    })
-        .then(() => {
-            return new Promise((resolve, reject) => { 
-                return ethRPC.sendAsync({
-                    method: 'evm_mine',
-                    params: []
-                }, (err) => {
-                    if (err) reject(err)
-                    resolve()
-                })
-            })
-        })
-}
 
 contract('Utilities Testing', function(accounts) {
     // Check for non-existence of the single poll
@@ -47,54 +19,6 @@ contract('Utilities Testing', function(accounts) {
 
     var trustedAccounts = [];
     utilConf.trustedAccounts.forEach((idx) => trustedAccounts.push(accounts[idx]));
-
-    function getVoteContract() {
-        return PLCRVoting.deployed();
-    }
-
-    function launchPoll(proposal) {
-        return getVoteContract()
-            .then((vote) => vote.startPoll(proposal, 50, commitDuration, revealDuration))
-            .then((result) => result.logs[0].args.pollID.toString());
-    }
-
-    function getPoll(pollID) {
-        return getVoteContract()
-            .then((instance) => instance.pollMap.call(pollID));
-    }
-
-    function getBlockTimestamp() {
-        return ethQuery.blockNumber()
-            .then((num) => ethQuery.getBlockByNumber(num,true))
-            .then((block) => block.timestamp.toString(10));
-    }
-
-    // returns the solidity-sha3 output for vote hashing
-    function createVoteHash(vote, salt) {
-        let hash = "0x" + abi.soliditySHA3([ "uint", "uint" ],
-        [ vote, salt ]).toString('hex'); 
-        return hash;                                   
-    }
-
-    /*
-    function increaseTime(seconds) {
-        return new Promise(function(resolve, reject){
-            web3.currentProvider.sendAsync(
-                {
-                    jsonrpc: "2.0",
-                    method: "evm_increaseTime",
-                    params: [seconds],
-                    id: 0
-                },
-                resolve()
-            );
-        });
-    }
-    */
-
-    // commitDuration is a base 10 string
-    // getBlockTimestamp is also a base 10 string
-    // getPoll also returns everything as base10 string
 
     it("check if a non-owner can start a poll", () => {
         return getVoteContract()
@@ -132,7 +56,7 @@ contract('Utilities Testing', function(accounts) {
         let timestamp;
         return getVoteContract()
             .then((instance) => contract = instance)
-            .then(() => launchPoll('commit poll'))
+            .then(() => launchPoll('commit poll', commitDuration, revealDuration))
             .then((num) => pollID = num)
             .then(() => getBlockTimestamp())
             .then((time) => timestamp = new BN(time, 10))
@@ -148,7 +72,7 @@ contract('Utilities Testing', function(accounts) {
         let timestamp;
         return getVoteContract()
             .then((instance) => contract = instance)
-            .then(() => launchPoll('reveal poll'))
+            .then(() => launchPoll('reveal poll', commitDuration, revealDuration))
             .then((num) => pollID = num)
             .then(() => getBlockTimestamp())
             .then((time) => timestamp = new BN(time, 10))
@@ -164,13 +88,13 @@ contract('Utilities Testing', function(accounts) {
         let contract;
         const propStr = "poll";
 
-        return launchPoll(1+propStr)
+        return launchPoll(1+propStr, commitDuration, revealDuration)
             .then((pollID) => getPoll(pollID))
             .then((pollArr) => assert.equal(pollArr[0], 1+propStr, "poll created incorrectly"))
-            .then(() => launchPoll(2+propStr))
+            .then(() => launchPoll(2+propStr, commitDuration, revealDuration))
             .then((pollID) => getPoll(pollID))
             .then((pollArr) => assert.equal(pollArr[0], 2+propStr, "poll created incorrectly"))
-            .then(() => launchPoll(3+propStr))
+            .then(() => launchPoll(3+propStr, commitDuration, revealDuration))
             .then((pollID) => getPoll(pollID))
             .then((pollArr) => assert.equal(pollArr[0], 3+propStr, "poll created incorrectly"));
     });
@@ -179,7 +103,7 @@ contract('Utilities Testing', function(accounts) {
     it("check if commit period correctly active", function() {
         // Check commit period active, reveal period inactive, poll not ended
         let pollIDinstance;
-        return launchPoll("commit period test")
+        return launchPoll("commit period test", commitDuration, revealDuration)
             .then((pollID) => {
                 pollIDinstance = pollID; 
                 return getVoteContract();
@@ -193,7 +117,7 @@ contract('Utilities Testing', function(accounts) {
         // Check commit period inactive, reveal period active
         let pollID;
         let contract;
-        return launchPoll("reveal period test") 
+        return launchPoll("reveal period test", commitDuration, revealDuration) 
             .then((id) => pollID = id)
             .then(() => getVoteContract())
             .then((instance) => contract = instance)
@@ -222,7 +146,7 @@ contract('Utilities Testing', function(accounts) {
         // Check if the started polls in the commit period are valid,
         let pollID;
         let contract;
-        return launchPoll("valid poll ID test in commit") 
+        return launchPoll("valid poll ID test in commit", commitDuration, revealDuration) 
             .then((id) => pollID = id)
             .then(() => getVoteContract())
             .then((instance) => instance.validPollID.call(pollID))
@@ -233,7 +157,7 @@ contract('Utilities Testing', function(accounts) {
         // Check if the started polls in the reveal period are valid,
         let pollID;
         let contract;
-        return launchPoll("reveal period test") 
+        return launchPoll("reveal period test", commitDuration, revealDuration) 
             .then((id) => pollID = id)
             .then(() => getVoteContract())
             .then((instance) => contract = instance)
@@ -248,7 +172,7 @@ contract('Utilities Testing', function(accounts) {
         // Check if the started polls that have ended are valid,
         let pollID;
         let contract;
-        return launchPoll("reveal period test") 
+        return launchPoll("reveal period test", commitDuration, revealDuration) 
             .then((id) => pollID = id)
             .then(() => getVoteContract())
             .then((instance) => contract = instance)
@@ -260,7 +184,7 @@ contract('Utilities Testing', function(accounts) {
     it("should check if non-revealed poll passes", () => {
         let pollID;
         let contract;
-        return launchPoll("reveal period test") 
+        return launchPoll("reveal period test", commitDuration, revealDuration) 
             .then((id) => pollID = id)
             .then(() => getVoteContract())
             .then((instance) => contract = instance)
@@ -275,7 +199,7 @@ contract('Utilities Testing', function(accounts) {
         let salt = 1;
         let voteOption = 1;
         let voteHash = createVoteHash(voteOption, salt);
-        return launchPoll("reveal period test") 
+        return launchPoll("reveal period test", commitDuration, revealDuration) 
             .then((id) => pollID = id)
             .then(() => getVoteContract())
             .then((instance) => contract = instance)
@@ -294,7 +218,7 @@ contract('Utilities Testing', function(accounts) {
         let salt = 1;
         let voteOption = 0;
         let voteHash = createVoteHash(voteOption, salt);
-        return launchPoll("reveal period test") 
+        return launchPoll("reveal period test", commitDuration, revealDuration) 
             .then((id) => pollID = id)
             .then(() => getVoteContract())
             .then((instance) => contract = instance)
@@ -323,7 +247,7 @@ contract('Utilities Testing', function(accounts) {
         let voteOptionUser3 = 0;
         let voteHashUser3 = createVoteHash(voteOptionUser3, saltUser3);
 
-        return launchPoll("reveal period test") 
+        return launchPoll("reveal period test", commitDuration, revealDuration) 
             .then((id) => pollID = id)
             .then(() => getVoteContract())
             .then((instance) => contract = instance)
@@ -369,7 +293,7 @@ contract('Utilities Testing', function(accounts) {
 
         let correctVote = 30;
 
-        return launchPoll("getNumCorrectVote test") 
+        return launchPoll("getNumCorrectVote test", commitDuration, revealDuration) 
             .then((id) => pollID = id)
             .then(() => getVoteContract())
             .then((instance) => contract = instance)
