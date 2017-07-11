@@ -30,7 +30,6 @@ contract PLCRVoting {
     uint constant INITIAL_POLL_NONCE = 0;
        
     uint constant VOTE_OPTION_FOR = 1; /// vote option indicating a vote for the proposal
-    bytes32 constant ZERO_NODE_COMMIT_HASH = 0xabc;
 
     mapping(address => bool) trustedMap; //maps addresses to trusted value
 
@@ -222,10 +221,6 @@ contract PLCRVoting {
         return getAttribute(0, "prevID");
     }
 
-    /*
-     *    Helper Functions
-     */
-
     // return max number of tokens locked for user
     function getMaxTokens() returns (uint numTokens) {
         return getAttribute(getLastNode(), "numTokens");
@@ -234,9 +229,6 @@ contract PLCRVoting {
     function hasEnoughTokens(uint numTokens) returns (bool hasEnough) {
         return voteTokenBalance[msg.sender] >= numTokens;
     }
-    /*
-     *    Helper Functions
-     */
  
 
     /// MODIFIERS:
@@ -249,21 +241,6 @@ contract PLCRVoting {
     function revealPeriodActive(uint pollID) returns (bool active) {
          return !isExpired(pollMap[pollID].revealEndDate) && !commitPeriodActive(pollID);
     }
-
-    /*
-    /// true if the msg.sender (or tx.origin) is in the trusted list
-    modifier isTrusted(address user) {
-        bool flag = false;
-        for (uint idx = 0; idx < trusted.length; idx++) {
-            if (user == trusted[idx]) {
-                flag = true;
-                break;
-            }
-        }
-        require(flag);
-        _;
-    }
-    */
 
     /// true if the msg.sender (or tx.origin) is in the trusted list
     function isTrusted(address user) returns (bool) {
