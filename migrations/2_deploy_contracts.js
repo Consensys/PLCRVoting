@@ -30,6 +30,14 @@ function distributeAndAllow(origin, actor, spender, amount) {
 	.then(() => approve(spender, actor, amount));
 }
 
+async function multipleDistributeAndAllow(owner, userArray, spender, amountsArray, numUsers){
+        let newUserArray = userArray.slice(0, numUsers); 
+
+        return await Promise.all(newUserArray.map(async (user, index) => {
+            await distributeAndAllow(owner, user, spender, amountsArray[index])
+        }));
+}
+
 module.exports = (deployer, network, accounts) => {
 	const owner = accounts[0];
 	const users = accounts.slice(1, 10);
@@ -45,25 +53,5 @@ module.exports = (deployer, network, accounts) => {
 		tokenConf.tokenSymbol
 	)
 	.then(() => deployer.deploy(VotingContract, HumanStandardToken.address))
-	.then(() => distributeAndAllow(
-		owner, users[0], VotingContract.address, tokenConf.userAmounts[0]
-	))
-	.then(() => distributeAndAllow(
-		owner, users[1], VotingContract.address, tokenConf.userAmounts[1]
-	))
-	.then(() => distributeAndAllow(
-		owner, users[2], VotingContract.address, tokenConf.userAmounts[2]
-	))
-	.then(() => distributeAndAllow(
-		owner, users[3], VotingContract.address, tokenConf.userAmounts[3]
-	))
-	.then(() => distributeAndAllow(
-		owner, users[4], VotingContract.address, tokenConf.userAmounts[4]
-	))
-	.then(() => distributeAndAllow(
-		owner, users[5], VotingContract.address, tokenConf.userAmounts[5]
-	))
-	.then(() => distributeAndAllow(
-		owner, users[6], VotingContract.address, tokenConf.userAmounts[6]
-	));
+        .then(() => multipleDistributeAndAllow(owner, users, VotingContract.address, tokenConf.userAmounts, 7));
 };
