@@ -5,8 +5,6 @@ contract PLCRVoting {
     /// maps user's address to voteToken balance
     mapping(address => uint) public voteTokenBalance;
 
-    HumanStandardToken public token;
-
     struct Poll {
         string proposal;        /// proposal to be voted for/against
         uint commitEndDate;     /// expiration date of commit period for poll
@@ -27,18 +25,45 @@ contract PLCRVoting {
     // sha3(userAddress, pollID, "numTokens") => byte32 numTokens
     // sha3(userAddress, pollID, "commitHash") => byte32 commitHash
     mapping(bytes32 => uint) public voteMap;    
-
-    uint constant INITIAL_POLL_NONCE = 0;
        
     uint constant VOTE_OPTION_FOR = 1; /// vote option indicating a vote for the proposal
 
+    // ============
+    // CONSTRUCTOR:
+    // ============
+
+    uint constant INITIAL_POLL_NONCE = 0;
     address owner;
+    HumanStandardToken public token;
 
     function PLCRVoting(address tokenAddr) {
         token = HumanStandardToken(tokenAddr);
         owner = msg.sender;
         pollNonce = INITIAL_POLL_NONCE;
     }
+
+    // ================
+    // TOKEN INTERFACE:
+    // ================
+
+    /// interface for users to purchase votingTokens by exchanging ERC20 token
+    function loadTokens(uint numTokens) {
+        require(token.balanceOf(msg.sender) >= numTokens);
+        require(token.transferFrom(msg.sender, this, numTokens));
+        voteTokenBalance[msg.sender] += numTokens;
+    }
+
+    /// interface for users to withdraw votingTokens and exchange for ERC20 token
+    function withdrawTokens(uint numTokens) {
+        uint availableTokens = voteTokenBalance[msg.sender] - getMaxTokens();
+        require(availableTokens >= numTokens);
+        require(token.transfer(msg.sender, numTokens));
+        voteTokenBalance[msg.sender] -= numTokens;
+    }
+
+    // =================
+    // VOTING INTERFACE:
+    // =================
 
     function commitVote(uint pollID, bytes32 hashOfVoteAndSalt, uint numTokens, uint prevPollID) returns (bool successful) {
         // Make sure the user has enough tokens to commit
@@ -92,33 +117,6 @@ contract PLCRVoting {
         return false;
     }
 
-    function validateNode(uint prevPollID, uint pollID, uint numTokens) returns (bool valid) {
-        if (prevPollID == 0 && getNextID(prevPollID) == 0) {
-            // Only the zero node exists
-            return true;
-        }
-
-        uint prevNodeTokens = getNumTokens(prevPollID);
-        // Check if the potential previous node has
-        // less tokens than the current node
-        if (prevNodeTokens <= numTokens) {
-            uint nextNodeID = getNextID(prevPollID);
-
-            // If the next is the current node, then we need to look at
-            // the node after the current node (since next == current node
-            // indicates an update validation is occurring)
-            if (nextNodeID == pollID) {
-                nextNodeID = getNextID(pollID);
-            }
-            uint nextNodeTokens = getNumTokens(nextNodeID);
-            if (nextNodeID == 0 || numTokens <= nextNodeTokens) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     function revealVote(uint pollID, uint salt, uint voteOption) returns (bool successful) {
         
         // Make sure the reveal period is active
@@ -147,38 +145,111 @@ contract PLCRVoting {
         return false;
     }
 
+    function getNumPassingTokens(uint pollID, uint salt) returns (uint correctVotes) {
+        require(pollEnded(pollID));
+        uint winnerVote = isPassed(pollID) ? 1 : 0; 
+        bytes32 winnerHash = sha3(winnerVote, salt);
+        bytes32 commitHash = getCommitHash(pollID);
+
+        if (commitHash == winnerHash) {
+            uint numTokens = getAttribute(pollID, "numTokens");
+            return numTokens;
+        } else {
+            return 0;
+        }
+    }
+
+    // ==================
+    // POLLING INTERFACE:
+    // ================== 
+
+    ///CORE FUNCTIONS:
+    function startPoll(string proposalStr, uint voteQuota, uint commitDuration, uint revealDuration) returns (uint pollID) {
+        require(isOwner(msg.sender));
+        pollNonce = pollNonce + 1;
+
+        pollMap[pollNonce] = Poll({
+            proposal: proposalStr,
+            commitEndDate: block.timestamp + commitDuration,
+            revealEndDate: block.timestamp + commitDuration + revealDuration,
+            voteQuotaSnap: voteQuota,
+            votesFor: 0,
+            votesAgainst: 0
+        });
+
+        PollCreated(pollNonce);
+        return pollNonce;
+    }
+ 
+    /// check if votesFor / (totalVotes) >= (voteQuota / 100) 
+    function isPassed(uint pollID) returns (bool passed) {
+        require(pollEnded(pollID));
+
+        Poll poll = pollMap[pollID];
+        return ((100 - poll.voteQuotaSnap) * poll.votesFor) >= (poll.voteQuotaSnap * poll.votesAgainst);
+    }
+
+    // ----------------
+    // POLLING HELPERS:
+    // ----------------
+
+    function getTotalNumberOfTokensForWinningOption(uint pollID) returns (uint numTokens) {
+        require(pollEnded(pollID));
+
+        if (isPassed(pollID)) {
+            return pollMap[pollID].votesFor;
+        } else {
+            return pollMap[pollID].votesAgainst;
+        }
+    }
+
+    function pollEnded(uint pollID) returns (bool ended) {
+        return isExpired(pollMap[pollID].revealEndDate);
+    }
+
+    /// true if the commit period is active (i.e. commit period expiration date not yet reached)
+    function commitPeriodActive(uint pollID) returns (bool active) {
+        return !isExpired(pollMap[pollID].commitEndDate);
+    }
+
+    /// true if the reveal period is active (i.e. reveal period expiration date not yet reached)
+    function revealPeriodActive(uint pollID) returns (bool active) {
+         return !isExpired(pollMap[pollID].revealEndDate) && !commitPeriodActive(pollID);
+    }
+
     function hasBeenRevealed(uint pollID) returns (bool revealed) {
         uint prevID = getPreviousID(pollID);
         return prevID == getNextID(pollID) && prevID == pollID;
     }
 
-    function getPreviousID(uint pollID) returns (uint prevPollID) {
-        return getAttribute(pollID, "prevID");
+    /// true if the poll ID corresponds to a valid poll; false otherwise
+    /// a valid poll can be defined as any poll that has been started (whether
+    /// it has finished does not matter)
+    function validPollID(uint pollID) returns (bool valid) {
+        return pollMap[pollID].commitEndDate > 0;
     }
 
-    function getNextID(uint pollID) returns (uint nextPollID) {
-        return getAttribute(pollID, "nextID");
+    function getProposalString(uint pollID) returns (string proposal) {
+         return pollMap[pollID].proposal;
     }
 
-    function getNumTokens(uint pollID) returns (uint numTokens) {
-        return getAttribute(pollID, "numTokens");
+    // ---------------------------
+    // DOUBLE-LINKED-LIST HELPERS:
+    // ---------------------------
+
+    // get any attribute that is not commitHash 
+    function getAttribute(uint pollID, string attrName) returns (uint attribute) {    
+        return voteMap[sha3(tx.origin, pollID, attrName)]; 
     }
 
-    /// interface for users to purchase votingTokens by exchanging ERC20 token
-    function loadTokens(uint numTokens) {
-        require(token.balanceOf(msg.sender) >= numTokens);
-        require(token.transferFrom(msg.sender, this, numTokens));
-        voteTokenBalance[msg.sender] += numTokens;
+    function getCommitHash(uint pollID) returns (bytes32 commitHash) { 
+        return bytes32(voteMap[sha3(tx.origin, pollID, 'commitHash')]);    
     }
 
-    /// interface for users to withdraw votingTokens and exchange for ERC20 token
-    function withdrawTokens(uint numTokens) {
-        uint availableTokens = voteTokenBalance[msg.sender] - getMaxTokens();
-        require(availableTokens >= numTokens);
-        require(token.transfer(msg.sender, numTokens));
-        voteTokenBalance[msg.sender] -= numTokens;
+    function setAttribute(uint pollID, string attrName, uint attrVal) { 
+        voteMap[sha3(tx.origin, pollID, attrName)] = attrVal;  
     }
-    
+
     // insert to double-linked-list given that the prevID is valid
     function insertToDll(uint pollID, uint prevID, uint numTokens, bytes32 commitHash) {
         uint nextID = getAttribute(prevID, "nextID");
@@ -214,6 +285,45 @@ contract PLCRVoting {
         setAttribute(pollID, "prevID", pollID); 
     }
 
+    function validateNode(uint prevPollID, uint pollID, uint numTokens) returns (bool valid) {
+        if (prevPollID == 0 && getNextID(prevPollID) == 0) {
+            // Only the zero node exists
+            return true;
+        }
+
+        uint prevNodeTokens = getNumTokens(prevPollID);
+        // Check if the potential previous node has
+        // less tokens than the current node
+        if (prevNodeTokens <= numTokens) {
+            uint nextNodeID = getNextID(prevPollID);
+
+            // If the next is the current node, then we need to look at
+            // the node after the current node (since next == current node
+            // indicates an update validation is occurring)
+            if (nextNodeID == pollID) {
+                nextNodeID = getNextID(pollID);
+            }
+            uint nextNodeTokens = getNumTokens(nextNodeID);
+            if (nextNodeID == 0 || numTokens <= nextNodeTokens) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function getPreviousID(uint pollID) returns (uint prevPollID) {
+        return getAttribute(pollID, "prevID");
+    }
+
+    function getNextID(uint pollID) returns (uint nextPollID) {
+        return getAttribute(pollID, "nextID");
+    }
+
+    function getNumTokens(uint pollID) returns (uint numTokens) {
+        return getAttribute(pollID, "numTokens");
+    }
+
     // return the pollID of the last node in a dll
     function getLastNode() returns (uint pollID) {
         return getAttribute(0, "prevID");
@@ -223,110 +333,23 @@ contract PLCRVoting {
     function getMaxTokens() returns (uint numTokens) {
         return getAttribute(getLastNode(), "numTokens");
     }
+    
     // return any attribute that is not commitHash
     function hasEnoughTokens(uint numTokens) returns (bool hasEnough) {
         return voteTokenBalance[msg.sender] >= numTokens;
     }
  
+    // ----------------
+    // GENERAL HELPERS:
+    // ----------------
 
-    /// MODIFIERS:
-    /// true if the commit period is active (i.e. commit period expiration date not yet reached)
-    function commitPeriodActive(uint pollID) returns (bool active) {
-        return !isExpired(pollMap[pollID].commitEndDate);
-    }
-
-    /// true if the reveal period is active (i.e. reveal period expiration date not yet reached)
-    function revealPeriodActive(uint pollID) returns (bool active) {
-         return !isExpired(pollMap[pollID].revealEndDate) && !commitPeriodActive(pollID);
-    }
-
-   /// true if the user is the owner 
+    /// true if the user is the owner 
     function isOwner(address user) returns (bool) {
         return user == owner;
-    }
-
-    ///CORE FUNCTIONS:
-    function startPoll(string proposalStr, uint voteQuota, uint commitDuration, uint revealDuration) returns (uint pollID) {
-        require(isOwner(msg.sender));
-        pollNonce = pollNonce + 1;
-
-        pollMap[pollNonce] = Poll({
-            proposal: proposalStr,
-            commitEndDate: block.timestamp + commitDuration,
-            revealEndDate: block.timestamp + commitDuration + revealDuration,
-            voteQuotaSnap: voteQuota,
-            votesFor: 0,
-            votesAgainst: 0
-        });
-
-        PollCreated(pollNonce);
-        return pollNonce;
-    }
-
-    /*
-     * Helper Functions
-     */
- 
-    /// check if votesFor / (totalVotes) >= (voteQuota / 100) 
-    function isPassed(uint pollID) returns (bool passed) {
-        Poll poll = pollMap[pollID];
-        require(isExpired(poll.revealEndDate));
-        return ((100 - poll.voteQuotaSnap) * poll.votesFor) >= (poll.voteQuotaSnap * poll.votesAgainst);
     }
 
     /// determines if current timestamp is past termination timestamp 
     function isExpired(uint terminationDate) returns (bool expired) {
         return (block.timestamp > terminationDate);
-    }
-
-    /// true if the poll ID corresponds to a valid poll; false otherwise
-    /// a valid poll can be defined as any poll that has been started (whether
-    /// it has finished does not matter)
-    function validPollID(uint pollID) returns (bool valid) {
-        return pollMap[pollID].commitEndDate > 0;
-    }
-
-    function pollEnded(uint pollID) returns (bool ended) {
-        return isExpired(pollMap[pollID].revealEndDate);
-    }
-
-    function getTotalNumberOfTokensForWinningOption(uint pollID) returns (uint numTokens) {
-        require(pollEnded(pollID));
-        if (isPassed(pollID)) {
-            return pollMap[pollID].votesFor;
-        } else {
-            return pollMap[pollID].votesAgainst;
-        }
-    }
-
-    function getNumPassingTokens(uint pollID, uint salt) returns (uint correctVotes) {
-        require(pollEnded(pollID));
-        uint winnerVote = isPassed(pollID) ? 1 : 0; 
-        bytes32 winnerHash = sha3(winnerVote, salt);
-        bytes32 commitHash = getCommitHash(pollID);
-
-        if (commitHash == winnerHash) {
-            uint numTokens = getAttribute(pollID, "numTokens");
-            return numTokens;
-        } else {
-            return 0;
-        }
-    }
-    
-    // get any attribute that is not commitHash 
-    function getAttribute(uint pollID, string attrName) returns (uint attribute) {    
-        return voteMap[sha3(tx.origin, pollID, attrName)]; 
-    }
-    
-    function getCommitHash(uint pollID) returns (bytes32 commitHash) { 
-        return bytes32(voteMap[sha3(tx.origin, pollID, 'commitHash')]);    
-    }
-    
-    function setAttribute(uint pollID, string attrName, uint attrVal) { 
-        voteMap[sha3(tx.origin, pollID, attrName)] = attrVal;  
-    }
-
-    function getProposalString(uint pollID) returns (string proposal) {
-         return pollMap[pollID].proposal;
     }
 }
