@@ -3,12 +3,11 @@ require('./testHelpers.js')();
 const PLCRVoting = artifacts.require("./PLCRVoting.sol");
 const HumanStandardToken = artifacts.require("./HumanStandardToken.sol");
 
-const commitDuration = '1000000';
-const revealDuration = '1000000';
+const commitDuration = 1000000;
+const revealDuration = 1000000;
 
 // regular expression to check for invalid opcode error
 const re = new RegExp("(invalid opcode)","i");
-
 contract('Commit Testing', function(accounts) { 
     const [owner, user1, user2, user3, user4, user5, user6] = accounts;
     const tokenAmt = 10;
@@ -590,7 +589,7 @@ contract('Commit Testing', function(accounts) {
         }).catch((err) => assert.equal(re.test(err), true, "Expected error not found"));
     });
   
-    it.only("should attempt single commit past commit period expiration", function () {
+    it("should attempt single commit past commit period expiration", function () {
         // Should throw invalid opcode
         let voter;
         let pollId;
@@ -603,12 +602,11 @@ contract('Commit Testing', function(accounts) {
         })
         .then(() => voter.startPoll("potato", 50, commitDuration, revealDuration))
         .then((result) => pollId = (result.logs[0].args.pollID.toString()))
-        .then(() => increaseTime(commitDuration + 100))
+        .then(() => increaseTime(commitDuration + 1))
         .then(() => voter.commitVote(pollId, hash, 10, 0, {from: user1}))
-        .catch((err) => {
-            console.log("HIT ME");
+        .catch((err) => 
             assert.equal(re.test(err), true, "Expected error not found")
-        })
+        )
         .then(() => 
             voteMapComparisonTest(user1, pollId, 
                 {prevID: 0,
