@@ -43,7 +43,6 @@ contract PLCRVoting {
     /**
     @dev Initializes voteQuota, commitDuration, revealDuration, and pollNonce in addition to token contract and trusted mapping
     @param tokenAddr The address where the ERC20 token contract is deployed
-    @param trusted A list of supplied (contract) addresses that have "trusted" access to admin functions
     */
     function PLCRVoting(address tokenAddr) {
         token = HumanStandardToken(tokenAddr);
@@ -452,7 +451,7 @@ contract PLCRVoting {
     @param user Address to check owner against
     @return owner Boolean indicating if user matches owner
     */
-    function isOwner(address user) returns (bool owner) {
+    function isOwner(address user) returns (bool wasOwner) {
         return user == owner;
     }
 

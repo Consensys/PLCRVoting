@@ -37,6 +37,7 @@ contract('Utilities Testing', function(accounts) {
             .then((pollArr) => assert.equal(pollArr[0], propStr, "poll created incorrectly"))
     });
 
+/*
     it("should check getProposalString function", function() {
         const propStr = "my poll";
         let contract;
@@ -48,6 +49,7 @@ contract('Utilities Testing', function(accounts) {
             .then((result) => assert.equal(result, propStr, "getProposalString function incorrect"))
     
     });
+*/
 
     it("should check commit end date", function() {
         let contract;
@@ -142,6 +144,7 @@ contract('Utilities Testing', function(accounts) {
     });
     */
 
+/*
     it("should have valid poll IDs when in commit period", function() {
         // Check if the started polls in the commit period are valid,
         let pollID;
@@ -180,7 +183,7 @@ contract('Utilities Testing', function(accounts) {
             .then(() => contract.validPollID.call(pollID))
             .then((result) => assert.equal(result, true, "Poll isn't valid in reveal period"));
     });
-
+*/
     it("should non-revealed poll pass", () => {
         let pollID;
         let contract;
