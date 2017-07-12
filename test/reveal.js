@@ -87,7 +87,7 @@ contract('Reveal Testing', function(accounts) {
         var hash = createVoteHash(1, 100);
         return PLCRVoting.deployed()
         .then((_instance) => instance = _instance)
-        .then(() => instance.loadTokens(10, {from: user}))
+        .then(() => instance.requestVotingRights(10, {from: user}))
         .then(() => startPolls(1))
         .then((pollIds) => pollId = pollIds[0])
         .then(() => instance.commitVote(pollId, hash, 10, 0, {from: user}))
@@ -114,7 +114,7 @@ contract('Reveal Testing', function(accounts) {
         var hash = createVoteHash(1, 100);
         return PLCRVoting.deployed()
         .then((_instance) => instance = _instance)
-        .then(() => instance.loadTokens(10, {from: user}))
+        .then(() => instance.requestVotingRights(10, {from: user}))
         .then(() => startPolls(1))
         .then((pollIds) => pollId = pollIds[0])
         .then(() => instance.commitVote(pollId, hash, 10, 0, {from: user}))
@@ -144,7 +144,7 @@ contract('Reveal Testing', function(accounts) {
         let instance;
         return PLCRVoting.deployed()
         .then((_instance) => instance = _instance)
-        .then(() => instance.loadTokens(10, {from: user}))
+        .then(() => instance.requestVotingRights(10, {from: user}))
         .then(() => startPolls(1))
         .then((pollIds) => pollId = pollIds[0])
         .then(() => instance.commitVote(pollId, hash, 10, 0, {from: user}))
@@ -169,7 +169,7 @@ contract('Reveal Testing', function(accounts) {
 
         return PLCRVoting.deployed() 
         .then((_instance) => instance = _instance)
-        .then(() => instance.loadTokens(50, {from: user}))
+        .then(() => instance.requestVotingRights(50, {from: user}))
         .then(() => startPolls(1))
         .then((pollIds) => pollId = pollIds[0])
         .then(() => increaseTime(1000001))
@@ -204,9 +204,9 @@ contract('Reveal Testing', function(accounts) {
 
         return PLCRVoting.deployed() 
         .then((_instance) => instance = _instance)
-        .then(() => instance.loadTokens(20, {from: accounts[2]}))
-        .then(() => instance.loadTokens(20, {from: accounts[3]}))
-        .then(() => instance.loadTokens(20, {from: accounts[4]}))
+        .then(() => instance.requestVotingRights(20, {from: accounts[2]}))
+        .then(() => instance.requestVotingRights(20, {from: accounts[3]}))
+        .then(() => instance.requestVotingRights(20, {from: accounts[4]}))
         .then(() => startPolls(1))
         .then((pollIds) => pollId = pollIds[0])
         .then(() => instance.commitVote(pollId, hash1, 10, 0, {from: userA}))
@@ -257,7 +257,7 @@ contract('Reveal Testing', function(accounts) {
           
         return PLCRVoting.deployed()
         .then((_instance) => instance = _instance)
-        .then(() => instance.loadTokens(100, {from: user}))
+        .then(() => instance.requestVotingRights(100, {from: user}))
         .then(() => startPolls(3))
         .then((_pollIds) => pollIds = _pollIds)
         .then(() => instance.commitVote(pollIds[0], hash1, 50, 0, {from: user}))
@@ -303,7 +303,7 @@ contract('Reveal Testing', function(accounts) {
         let user = accounts[1];
         return PLCRVoting.deployed()
         .then((_instance) => instance = _instance)
-        .then(() => instance.loadTokens(10, {from: user}))
+        .then(() => instance.requestVotingRights(10, {from: user}))
         .then(() => startPolls(1))
         .then((pollIds) => pollId = pollIds[0])
         .then(() => instance.commitVote(pollId, hash, 10, 0, {from: user}))

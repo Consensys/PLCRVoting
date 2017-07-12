@@ -193,7 +193,7 @@ contract('Data Structure Testing', (accounts) => {
     .then(() => voting.setAttribute('25', 'commitHash', '0xca817d209103a160ddcfed5d97912c7e207da04a8a9960c64875cecec0bfb0de', {from:accounts[8]}))
 
     // use the function being tested
-    .then(() => voting.deleteNode(pollID, {from:accounts[8]}))
+    .then(() => voting.deleteFromDll(pollID, {from:accounts[8]}))
 
     // get attributes to check
     .then(() => voting.getAttribute.call('0', 'nextID', {from:accounts[8]}))

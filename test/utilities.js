@@ -206,7 +206,7 @@ contract('Utilities Testing', function(accounts) {
             .then((id) => pollID = id)
             .then(() => getVoteContract())
             .then((instance) => contract = instance)
-            .then(() => contract.loadTokens(10, {from: accounts[1]}))
+            .then(() => contract.requestVotingRights(10, {from: accounts[1]}))
             .then(() => contract.commitVote(pollID, voteHash, 10, 0, {from:accounts[1]}))
             .then(() => increaseTime(Number(commitDuration) + 1))
             .then(() => contract.revealVote(pollID, salt, voteOption, {from: accounts[1]}))
@@ -225,7 +225,7 @@ contract('Utilities Testing', function(accounts) {
             .then((id) => pollID = id)
             .then(() => getVoteContract())
             .then((instance) => contract = instance)
-            .then(() => contract.loadTokens(10, {from: accounts[1]}))
+            .then(() => contract.requestVotingRights(10, {from: accounts[1]}))
             .then(() => contract.commitVote(pollID, voteHash, 10, 0, {from:accounts[1]}))
             .then(() => increaseTime(Number(commitDuration) + 1))
             .then(() => contract.revealVote(pollID, salt, voteOption, {from: accounts[1]}))
@@ -256,9 +256,9 @@ contract('Utilities Testing', function(accounts) {
             .then((instance) => contract = instance)
 
             // load tokens for users
-            .then(() => contract.loadTokens(70, {from: accounts[1]}))
-            .then(() => contract.loadTokens(20, {from: accounts[2]}))
-            .then(() => contract.loadTokens(10, {from: accounts[3]}))
+            .then(() => contract.requestVotingRights(70, {from: accounts[1]}))
+            .then(() => contract.requestVotingRights(20, {from: accounts[2]}))
+            .then(() => contract.requestVotingRights(10, {from: accounts[3]}))
 
             // commitVote for multiple users
             .then(() => contract.commitVote(pollID, voteHashUser1, 70, 0, {from:accounts[1]}))
@@ -302,9 +302,9 @@ contract('Utilities Testing', function(accounts) {
             .then((instance) => contract = instance)
 
             // load tokens for users
-            .then(() => contract.loadTokens(30, {from: accounts[4]}))
-            .then(() => contract.loadTokens(10, {from: accounts[2]}))
-            .then(() => contract.loadTokens(5, {from: accounts[3]}))
+            .then(() => contract.requestVotingRights(30, {from: accounts[4]}))
+            .then(() => contract.requestVotingRights(10, {from: accounts[2]}))
+            .then(() => contract.requestVotingRights(5, {from: accounts[3]}))
 
             // commitVote for multiple users
             .then(() => contract.commitVote(pollID, voteHashUser1, correctVote, 0, {from:accounts[4]}))

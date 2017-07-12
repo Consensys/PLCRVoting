@@ -124,7 +124,7 @@ contract('Commit Testing', function(accounts) {
             promiseList.push(voter.insertToDll(3, 2, 6, "0xbcd"));
             promiseList.push(voter.insertToDll(4, 3, 8, "0xabc"));
         promiseList.push(voter.insertToDll(5, 4, 9, "0xbcd"));
-            promiseList.push(voter.deleteNode(4));
+            promiseList.push(voter.deleteFromDll(4));
         });
         Promise.all(promiseList).then(function() {
             return voter.validateNode.call(3, 32, 7);
@@ -164,9 +164,9 @@ contract('Commit Testing', function(accounts) {
         promiseList.push(voter.insertToDll(2, 1, 6, "0xbcd"));
             promiseList.push(voter.insertToDll(3, 2, 6, "0xbcd"));
             promiseList.push(voter.insertToDll(4, 3, 8, "0xabc"));
-            promiseList.push(voter.deleteNode(2));
+            promiseList.push(voter.deleteFromDll(2));
         promiseList.push(voter.insertToDll(5, 4, 9, "0xbcd"));
-            promiseList.push(voter.deleteNode(4));
+            promiseList.push(voter.deleteFromDll(4));
         });
         Promise.all(promiseList).then(function() {
             return voter.validateNode.call(3, 32, 7);
@@ -204,7 +204,7 @@ contract('Commit Testing', function(accounts) {
         return PLCRVoting.deployed()
         .then(function(instance) {
             voter = instance;
-            return voter.loadTokens(10, {from: user1})
+            return voter.requestVotingRights(10, {from: user1})
         })
         .then(function () {
             return voter.startPoll("potato", 50, commitDuration, revealDuration);
@@ -228,7 +228,7 @@ contract('Commit Testing', function(accounts) {
         return PLCRVoting.deployed()
         .then(function(instance) {
             voter = instance;
-            return voter.loadTokens(20, {from: user2})
+            return voter.requestVotingRights(20, {from: user2})
         })
         .then(function () {
             return voter.startPoll("apple", 50, commitDuration, revealDuration);
@@ -257,10 +257,10 @@ contract('Commit Testing', function(accounts) {
         return PLCRVoting.deployed()
         .then(function(instance) {
             voter = instance;
-            return voter.loadTokens(10, {from: user3})
+            return voter.requestVotingRights(10, {from: user3})
         })
-        .then(() => voter.loadTokens(10, {from: user4}))
-        .then(() => voter.loadTokens(10, {from: user5}))
+        .then(() => voter.requestVotingRights(10, {from: user4}))
+        .then(() => voter.requestVotingRights(10, {from: user5}))
         .then(() => voter.startPoll("orange", 50, commitDuration, revealDuration))
         .then((result) => pollId = result.logs[0].args.pollID.toString())
         .then(() => voter.commitVote(pollId, finalHash1, 9, 0, {from: user3}))
@@ -314,7 +314,7 @@ contract('Commit Testing', function(accounts) {
         return PLCRVoting.deployed()
         .then(function(instance) {
             voter = instance;
-            return voter.loadTokens(10, {from: user1})
+            return voter.requestVotingRights(10, {from: user1})
         })
         .then(() => voter.startPoll("potato", 50, commitDuration, revealDuration))
         .then((result) => pollId = (result.logs[0].args.pollID.toString()))

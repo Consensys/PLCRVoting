@@ -59,7 +59,7 @@ contract PLCRVoting {
     @dev Assumes that msg.sender has approved voting contract to spend on their behalf
     @param numTokens The number of votingTokens desired in exchange for ERC20 tokens
     */
-    function loadTokens(uint numTokens) {
+    function requestVotingRights(uint numTokens) {
         require(token.balanceOf(msg.sender) >= numTokens);
         require(token.transferFrom(msg.sender, this, numTokens));
         voteTokenBalance[msg.sender] += numTokens;
@@ -69,7 +69,7 @@ contract PLCRVoting {
     @notice Withdraw numTokens ERC20 tokens from the voting contract, revoking these voting rights
     @param numTokens The number of ERC20 tokens desired in exchange for voting rights
     */
-    function withdrawTokens(uint numTokens) {
+    function withdrawVotingRights(uint numTokens) {
         uint availableTokens = voteTokenBalance[msg.sender] - getMaxTokens();
         require(availableTokens >= numTokens);
         require(token.transfer(msg.sender, numTokens));
@@ -129,7 +129,7 @@ contract PLCRVoting {
             if (isUpdatingExistingNode) {
                 // Delete the current node as we will be re-inserting
                 // that node with new attributes 
-                deleteNode(pollID);
+                deleteFromDll(pollID);
             }
             // Insert the <node at poll ID> after
             // the node at <prevPollID>:
@@ -167,7 +167,7 @@ contract PLCRVoting {
             }
             
             // Remove the node referring to this vote as we no longer need it
-            deleteNode(pollID);
+            deleteFromDll(pollID);
             return true;
         }
         return false;
@@ -343,7 +343,7 @@ contract PLCRVoting {
     @dev Deletes poll from poll-linked-list by removing adjacent pointers and pointing to itself
     @param pollID Integer identifier associated with target poll
     */
-    function deleteNode(uint pollID) {
+    function deleteFromDll(uint pollID) {
         // get next and prev node pollIDs
         uint prevID = getAttribute(pollID, "prevID");
         uint nextID = getAttribute(pollID, "nextID");

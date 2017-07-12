@@ -9,7 +9,7 @@ contract('Token Testing', (accounts) => {
 
 	return getVoteContract()
 	    .then((voteInstance) => vote = voteInstance)
-	    .then(() => vote.loadTokens(100, {from: user1}))
+	    .then(() => vote.requestVotingRights(100, {from: user1}))
 	    .then(() => vote.voteTokenBalance.call(user1))
 	    .then((voteBalance) => assert.equal(voteBalance, 100, "voteToken balance not updated"))
 	    .then(() => getERC20Token())
@@ -22,7 +22,7 @@ contract('Token Testing', (accounts) => {
 
 	return getVoteContract()
 	    .then((voteInstance) => vote = voteInstance)
-	    .then(() => vote.loadTokens(300, {from: user2}))
+	    .then(() => vote.requestVotingRights(300, {from: user2}))
 	    .then(() => assert.ok(false, "exchange was successful"))
 	    .catch((err) => vote.voteTokenBalance.call(user2))
 	    .then((voteBalance) => assert.equal(voteBalance, 0, "voteToken balance updated"))
@@ -36,7 +36,7 @@ contract('Token Testing', (accounts) => {
 
 	return getVoteContract()
 	    .then((voteInstance) => vote = voteInstance)
-	    .then(() => vote.withdrawTokens(100, {from :user1}))
+	    .then(() => vote.withdrawVotingRights(100, {from :user1}))
 	    .then(() => vote.voteTokenBalance.call(user1))
 	    .then((voteBalance) => assert.equal(voteBalance, 0, "voteToken balance not updated"))
 	    .then(() => getERC20Token())
@@ -49,7 +49,7 @@ contract('Token Testing', (accounts) => {
 
 	return getVoteContract()
 	    .then((voteInstance) => vote = voteInstance)
-	    .then(() => vote.withdrawTokens(300, {from: user2}))
+	    .then(() => vote.withdrawVotingRights(300, {from: user2}))
 	    .then(() => assert.ok(false, "exchange was successful"))
 	    .catch((err) => vote.voteTokenBalance.call(user2))
 	    .then((voteBalance) => assert.equal(voteBalance, 0, "voteToken balance updated"))
