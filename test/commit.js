@@ -51,7 +51,7 @@ contract('Commit Testing', function(accounts) {
         });
     }
 
-    it("validate node, empty double linked-list", function() {
+    it("should validate node given empty double linked-list", function() {
         return PLCRVoting.deployed()
         .then(function(instance) {
             return instance.validateNode.call(0, 1, 100); 
@@ -61,7 +61,7 @@ contract('Commit Testing', function(accounts) {
         });
     });
       
-    it("validate node, single element double linked-list", function() {
+    it("should validate node given single element double linked-list", function() {
       let voter;
       return PLCRVoting.deployed()
     .then(function(instance) {
@@ -74,7 +74,7 @@ contract('Commit Testing', function(accounts) {
             assert.equal(result, true, "should have been valid");
         });
     });
-    it("validate node, 5 elements double linked-list", function() {
+    it("should validate node given 5 elements double linked-list", function() {
         let voter;
         let promiseList = [];
         return PLCRVoting.deployed()
@@ -113,7 +113,7 @@ contract('Commit Testing', function(accounts) {
             assert.equal(result, false, "should have been invalid start insert");
         });
     });
-    it("validate node, single node deleted from 5 elements double linked-list", function() {
+    it("should validate node given single node deleted from 5 elements double linked-list", function() {
         let voter;
         let promiseList = [];
         return PLCRVoting.deployed()
@@ -153,7 +153,8 @@ contract('Commit Testing', function(accounts) {
             assert.equal(result, false, "should have been invalid start insert");
         });
     });
-    it("validate node, multiple nodes deleted from 5 elements double linked-list", function() {
+
+    it("should validate node given multiple nodes deleted from 5 elements double linked-list", function() {
         let voter;
         let promiseList = [];
         return PLCRVoting.deployed()
@@ -195,7 +196,7 @@ contract('Commit Testing', function(accounts) {
         });   
     });
 
-    it("single commit (user1) to a single poll (commit period active)", function() {
+    it("should single commit (by user1) to a single poll (commit period active)", function() {
         let voter;
         let pollId;
         var hash = createVoteHash(0, 79);
@@ -219,7 +220,7 @@ contract('Commit Testing', function(accounts) {
         );
     });
     
-    it("three commits (single user2) to a single poll (commit period active)", function() {
+    it("should three commits (by single user2) to a single poll (commit period active)", function() {
         let voter;
         let pollId;
         var finalHash = createVoteHash(0, 80);
@@ -246,7 +247,7 @@ contract('Commit Testing', function(accounts) {
                  commitHash: finalHash})
         )
     });
-    it("multiple commits (different users) to a single poll (commit period active)", function() {
+    it("should multiple commits (different users) to a single poll (commit period active)", function() {
         let voter;
         let pollId;
         var finalHash1 = createVoteHash(0, 80);
@@ -288,7 +289,7 @@ contract('Commit Testing', function(accounts) {
     });
 
 
-    it("single commit, exceeded number of spendable tokens for address", function() {
+    it("should attempt single commit that exceeds number of spendable tokens for address", function() {
         // Should throw invalid opcode
 
         let voter;
@@ -304,7 +305,7 @@ contract('Commit Testing', function(accounts) {
         }).catch((err) => assert.equal(re.test(err), true, "Expected error not found"));
     });
    
-    it("single commit, past commit period expiration", function () {
+    it("should attempt single commit past commit period expiration", function () {
         // Should throw invalid opcode
         let voter;
         let pollId;
