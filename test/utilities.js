@@ -20,13 +20,13 @@ contract('Utilities Testing', function(accounts) {
     var trustedAccounts = [];
     utilConf.trustedAccounts.forEach((idx) => trustedAccounts.push(accounts[idx]));
 
-    it("check if a non-owner can start a poll", () => {
+    it("should check if a non-owner can start a poll", () => {
         return getVoteContract()
             .then((instance) => instance.startPoll('', 50, commitDuration, revealDuration, {from: accounts[1]}))
             .catch((err) => assert.equal(re.test(err), true, "Expected error not found"));
     });
 
-    it("check proposal string from start poll event", function() {
+    it("should check proposal string from start poll event", function() {
         const propStr = "first poll";
         let contract;
         return getVoteContract()
@@ -37,7 +37,7 @@ contract('Utilities Testing', function(accounts) {
             .then((pollArr) => assert.equal(pollArr[0], propStr, "poll created incorrectly"))
     });
 
-    it("check getProposalString function", function() {
+    it("should check getProposalString function", function() {
         const propStr = "my poll";
         let contract;
         return getVoteContract()
@@ -49,7 +49,7 @@ contract('Utilities Testing', function(accounts) {
     
     });
 
-    it("check commit end date", function() {
+    it("should check commit end date", function() {
         let contract;
         let pollID;
         let commitEndDate;
@@ -65,7 +65,7 @@ contract('Utilities Testing', function(accounts) {
             .then(() => assert.equal(commitEndDate, timestamp.add((new BN(commitDuration,10))).toString(10), "poll commit end date wrong"));
     });
 
-    it("check reveal end date", function() {
+    it("should check reveal end date", function() {
         let contract;
         let pollID;
         let revealEndDate;
@@ -82,7 +82,7 @@ contract('Utilities Testing', function(accounts) {
     });
 
 
-    it("start three polls", function() {
+    it("should start three polls", function() {
         // Check for existence of the three polls and that they 
         // are in commit phase   
         let contract;
@@ -100,7 +100,7 @@ contract('Utilities Testing', function(accounts) {
     });
 
 
-    it("check if commit period correctly active", function() {
+    it("should check if commit period correctly active", function() {
         // Check commit period active, reveal period inactive, poll not ended
         let pollIDinstance;
         return launchPoll("commit period test", commitDuration, revealDuration)
@@ -113,7 +113,7 @@ contract('Utilities Testing', function(accounts) {
     });
 
 
-    it("check if reveal period correctly active", function() {
+    it("should check if reveal period correctly active", function() {
         // Check commit period inactive, reveal period active
         let pollID;
         let contract;
@@ -129,7 +129,7 @@ contract('Utilities Testing', function(accounts) {
 
     /*
      ***Test this modifier through functionality***
-    it("check if poll ended", function() {
+    it("should check if poll ended", function() {
     // Check commit inactive, reveal inactive, poll ended
         let pollID;
         let contract;
@@ -142,7 +142,7 @@ contract('Utilities Testing', function(accounts) {
     });
     */
 
-    it("valid poll IDs when in commit period", function() {
+    it("should have valid poll IDs when in commit period", function() {
         // Check if the started polls in the commit period are valid,
         let pollID;
         let contract;
@@ -153,7 +153,7 @@ contract('Utilities Testing', function(accounts) {
             .then((result) => assert.equal(result, true, "Poll isn't valid in commit period"));
     });
 
-    it("valid poll IDs when in reveal period", function() {
+    it("should have valid poll IDs when in reveal period", function() {
         // Check if the started polls in the reveal period are valid,
         let pollID;
         let contract;
@@ -168,7 +168,7 @@ contract('Utilities Testing', function(accounts) {
             .then((result) => assert.equal(result, true, "Poll isn't valid in reveal period"));
     });
 
-    it("valid poll IDs when in ended period", function() {
+    it("should have valid poll IDs when in ended period", function() {
         // Check if the started polls that have ended are valid,
         let pollID;
         let contract;
@@ -181,7 +181,7 @@ contract('Utilities Testing', function(accounts) {
             .then((result) => assert.equal(result, true, "Poll isn't valid in reveal period"));
     });
 
-    it("should check if non-revealed poll passes", () => {
+    it("should non-revealed poll pass", () => {
         let pollID;
         let contract;
         return launchPoll("reveal period test", commitDuration, revealDuration) 
@@ -193,7 +193,7 @@ contract('Utilities Testing', function(accounts) {
             .then((result) => assert.equal(result, true, "non-voted poll does not pass"));
     });
 
-    it("should check if poll with more revealed voting for proposal pass", () => {
+    it("should poll with more revealed voting for proposal does pass", () => {
         let pollID;
         let contract;
         let salt = 1;
@@ -212,7 +212,7 @@ contract('Utilities Testing', function(accounts) {
             .then((result) => assert.equal(result, true, "once voted for poll does not pass"));
     });
 
-    it("should check if poll with more revealed voting against proposal does not pass", () => {
+    it("should poll with more revealed voting against proposal does not pass", () => {
         let pollID;
         let contract;
         let salt = 1;
@@ -275,7 +275,7 @@ contract('Utilities Testing', function(accounts) {
             .then((result) => assert.equal(result, true, "poll with more votes revealed for does not pass"));
     });
 
-    it("should check if getNumCorrectVote returns number of correctly voted tokens", () => {
+    it("should check if getNumPassingTokens returns correct number of passing tokens", () => {
         let pollID;
         let contract;
 
