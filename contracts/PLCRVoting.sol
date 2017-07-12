@@ -315,15 +315,15 @@ contract PLCRVoting {
     
     // get any attribute that is not commitHash 
     function getAttribute(uint pollID, string attrName) returns (uint attribute) {    
-        return voteMap[sha3(tx.origin, pollID, attrName)]; 
+        return voteMap[sha3(msg.sender, pollID, attrName)]; 
     }
     
     function getCommitHash(uint pollID) returns (bytes32 commitHash) { 
-        return bytes32(voteMap[sha3(tx.origin, pollID, 'commitHash')]);    
+        return bytes32(voteMap[sha3(msg.sender, pollID, 'commitHash')]);    
     }
     
     function setAttribute(uint pollID, string attrName, uint attrVal) { 
-        voteMap[sha3(tx.origin, pollID, attrName)] = attrVal;  
+        voteMap[sha3(msg.sender, pollID, attrName)] = attrVal;  
     }
 
     function getProposalString(uint pollID) returns (string proposal) {
