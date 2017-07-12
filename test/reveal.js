@@ -75,7 +75,7 @@ contract('Reveal Testing', function(accounts) {
 
  
     
-    it("single reveal for single commit to single poll", function() {
+    it("should single reveal for single commit to single poll", function() {
         var expected = {
             votesFor: 10,
             votesAgainst: 0
@@ -102,7 +102,7 @@ contract('Reveal Testing', function(accounts) {
         .then((result) => assert.equal(true, result, "node should have been revealed"));
     });
 
-    it("double reveal attempt (by single sender) for single poll", function() {
+    it("should attempt double reveal (by single sender) for single commit to single poll", function() {
         var expected = {
             votesFor: 10,
             votesAgainst: 0
@@ -132,7 +132,7 @@ contract('Reveal Testing', function(accounts) {
         .then(() => pollComparison(user, pollId, expected)) // Make sure results of poll have not changed after calling reveal twice
     });
 
-    it("single reveal different vote than committed vote to single poll", function() {
+    it("should attempt single reveal different vote than committed vote to single poll", function() {
         var expected = {
             votesFor: 0,
             votesAgainst: 0
@@ -155,7 +155,7 @@ contract('Reveal Testing', function(accounts) {
         .then((result) => assert.equal(false, result, "node should not have been revealed"));
     });
 
-    it("single reveal for no commit to single poll", function() {
+    it("should attempt single reveal for no commit to single poll", function() {
 
         var expected = {
             votesFor: 0,
@@ -179,7 +179,7 @@ contract('Reveal Testing', function(accounts) {
         .then((result) => assert.equal(false, result, "node should not have been revealed"));
     });
 
-    it("three reveals for three commits (different senders) to single poll", function() {
+    it("should do three reveals for three commits (different senders) to single poll", function() {
         var expected1 = {
             votesFor: 10,
             votesAgainst: 0
@@ -234,7 +234,7 @@ contract('Reveal Testing', function(accounts) {
         .then((result) => assert.equal(true, result, "userC node should have been revealed"))
     });
 
-    it("three reveals for three commits (single sender) to three different polls", function() {
+    it("should do three reveals for three commits (single sender) to three different polls", function() {
         var expected1 = {
             votesFor: 50,
             votesAgainst: 0
@@ -291,7 +291,7 @@ contract('Reveal Testing', function(accounts) {
         .then((result) => assert.equal(true, result, "pollIds[2] node should have been revealed"))
     });
 
-    it("single reveal after reveal expiration date", function() {
+    it("should attempt single reveal after reveal expiration date", function() {
         var expected = {
             votesFor: 0,
             votesAgainst: 0
