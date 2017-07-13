@@ -11,8 +11,8 @@ module.exports = function(accounts) {
     [owner, ...user] = accounts; 
     this.owner = owner;
     this.user = user;
-    this.commitDuration = '1000000'; 
-    this.revealDuration = '1000000';
+    this.commitDuration = 1000000; 
+    this.revealDuration = 1000000;
     this.tokenAmt = 10;
     this.trustedAccounts = JSON.parse(fs.readFileSync("./conf/testUtilities.json")).trustedAccounts;
 

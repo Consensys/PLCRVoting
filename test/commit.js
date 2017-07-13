@@ -1,14 +1,5 @@
 require('./testHelpers.js')();
 
-const PLCRVoting = artifacts.require("./PLCRVoting.sol");
-const HumanStandardToken = artifacts.require("./HumanStandardToken.sol");
-
-const commitDuration = 1000000;
-const revealDuration = 1000000;
-
-// regular expression to check for invalid opcode error
-const re = new RegExp("(invalid opcode)","i");
-
 contract('Commit Testing', function(accounts) { 
     require('./testConf')(accounts);
 
