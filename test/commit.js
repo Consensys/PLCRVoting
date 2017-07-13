@@ -423,8 +423,6 @@ contract('Commit Testing', function(accounts) {
 
         let tokensToLoad = 10;
 
-        let user1 = user[0];
-
         let commitInfo = {
             hash: hash,
             numTokens: 10,
@@ -441,15 +439,15 @@ contract('Commit Testing', function(accounts) {
         return PLCRVoting.deployed()
         .then(function(instance) {
             voter = instance;
-            return voter.requestVotingRights(tokensToLoad, {from: user1})
+            return voter.requestVotingRights(tokensToLoad, {from: user[0]})
         })
         .then(function () {
             return voter.startPoll("potato", 50, commitDuration, revealDuration);
         }).then(function (result) {
             pollId = (result.logs[0].args.pollID.toString());
-            return voter.commitVote(pollId, commitInfo.hash, commitInfo.numTokens, commitInfo.prevId, {from: user1});
+            return voter.commitVote(pollId, commitInfo.hash, commitInfo.numTokens, commitInfo.prevId, {from: user[0]});
         }).then(() => 
-            voteMapComparisonTest(user1, pollId, expectedVoteMapOutput));
+            voteMapComparisonTest(user[0], pollId, expectedVoteMapOutput));
     });
     
     it("should three commits (by single user[1]) to a single poll (commit period active)", function() {
@@ -457,7 +455,6 @@ contract('Commit Testing', function(accounts) {
         let pollId;
         var finalHash = createVoteHash(0, 80);
 
-        let user2 = user[1];
         let commitInfo1 = {
             prevId: 0,
             numTokens: 10,
@@ -483,19 +480,19 @@ contract('Commit Testing', function(accounts) {
         return PLCRVoting.deployed()
         .then(function(instance) {
             voter = instance;
-            return voter.requestVotingRights(20, {from: user2})
+            return voter.requestVotingRights(20, {from: user[1]})
         })
         .then(function () {
             return voter.startPoll("apple", 50, commitDuration, revealDuration);
         }).then(function (result) {
             pollId = (result.logs[0].args.pollID.toString());
-            return voter.commitVote(pollId, commitInfo1.hash, commitInfo1.numTokens, commitInfo1.prevId, {from: user2});
+            return voter.commitVote(pollId, commitInfo1.hash, commitInfo1.numTokens, commitInfo1.prevId, {from: user[1]});
         }).then(function () {
-            return voter.commitVote(pollId, commitInfo2.hash, commitInfo2.numTokens, commitInfo2.prevId, {from: user2});
+            return voter.commitVote(pollId, commitInfo2.hash, commitInfo2.numTokens, commitInfo2.prevId, {from: user[1]});
         }).then(function () {
-            return voter.commitVote(pollId, commitInfo3.hash, commitInfo3.numTokens, pollId, {from: user2});
+            return voter.commitVote(pollId, commitInfo3.hash, commitInfo3.numTokens, pollId, {from: user[1]});
         }).then(() =>
-            voteMapComparisonTest(user2, pollId, expectedVoteMapOutput)
+            voteMapComparisonTest(user[1], pollId, expectedVoteMapOutput)
         )
     });
     it("should multiple commits (different users) to a single poll (commit period active)", function() {
@@ -506,10 +503,6 @@ contract('Commit Testing', function(accounts) {
         var finalHash3 = createVoteHash(1, 31);
 
         let numTokensToLoad = 10;
-
-        let user3 = user[2];
-        let user4 = user[3];
-        let user5 = user[4];
 
         let commitInfo1 = {
             hash: finalHash1,
@@ -553,21 +546,21 @@ contract('Commit Testing', function(accounts) {
         return PLCRVoting.deployed()
         .then(function(instance) {
             voter = instance;
-            return voter.requestVotingRights(numTokensToLoad, {from: user3})
+            return voter.requestVotingRights(numTokensToLoad, {from: user[2]})
         })
-        .then(() => voter.requestVotingRights(numTokensToLoad, {from: user4}))
-        .then(() => voter.requestVotingRights(numTokensToLoad, {from: user5}))
+        .then(() => voter.requestVotingRights(numTokensToLoad, {from: user[3]}))
+        .then(() => voter.requestVotingRights(numTokensToLoad, {from: user[4]}))
         .then(() => voter.startPoll("orange", 50, commitDuration, revealDuration))
         .then((result) => pollId = result.logs[0].args.pollID.toString())
-        .then(() => voter.commitVote(pollId, commitInfo1.hash, commitInfo1.numTokens, commitInfo1.prevId, {from: user3}))
-        .then(() => voter.commitVote(pollId, commitInfo2.hash, commitInfo2.numTokens, commitInfo2.prevId, {from: user4}))
-        .then(() => voter.commitVote(pollId, commitInfo3.hash, commitInfo3.numTokens, commitInfo3.prevId, {from: user5}))
+        .then(() => voter.commitVote(pollId, commitInfo1.hash, commitInfo1.numTokens, commitInfo1.prevId, {from: user[2]}))
+        .then(() => voter.commitVote(pollId, commitInfo2.hash, commitInfo2.numTokens, commitInfo2.prevId, {from: user[3]}))
+        .then(() => voter.commitVote(pollId, commitInfo3.hash, commitInfo3.numTokens, commitInfo3.prevId, {from: user[4]}))
         .then(() => 
-            voteMapComparisonTest(user3, pollId, expectedVoteMapOutput1))
+            voteMapComparisonTest(user[2], pollId, expectedVoteMapOutput1))
         .then(() =>
-            voteMapComparisonTest(user4, pollId, expectedVoteMapOutput2))
+            voteMapComparisonTest(user[3], pollId, expectedVoteMapOutput2))
         .then(() =>
-            voteMapComparisonTest(user5, pollId, expectedVoteMapOutput3));
+            voteMapComparisonTest(user[4], pollId, expectedVoteMapOutput3));
     });
 
 
@@ -598,7 +591,6 @@ contract('Commit Testing', function(accounts) {
         // Should throw invalid opcode
         let voter;
         let pollId;
-        let user1 = user[0];
 
         let numTokensToLoad = 10;
         let commitInfo = {
@@ -615,17 +607,17 @@ contract('Commit Testing', function(accounts) {
         return PLCRVoting.deployed()
         .then(function(instance) {
             voter = instance;
-            return voter.requestVotingRights(numTokensToLoad, {from: user1})
+            return voter.requestVotingRights(numTokensToLoad, {from: user[0]})
         })
         .then(() => voter.startPoll("potato", 50, commitDuration, revealDuration))
         .then((result) => pollId = (result.logs[0].args.pollID.toString()))
         .then(() => increaseTime(commitDuration + 1))
-        .then(() => voter.commitVote(pollId, commitInfo.hash, commitInfo.numTokens, commitInfo.prevId, {from: user1}))
+        .then(() => voter.commitVote(pollId, commitInfo.hash, commitInfo.numTokens, commitInfo.prevId, {from: user[0]}))
         .catch((err) => 
             assert.equal(re.test(err), true, "Expected error not found")
         )
         .then(() => 
-            voteMapComparisonTest(user1, pollId, expected)
+            voteMapComparisonTest(user[0], pollId, expected)
         );
     });
 });
