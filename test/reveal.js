@@ -1,12 +1,5 @@
 require('./testHelpers.js')();
 
-var PLCRVoting = artifacts.require("./PLCRVoting.sol");
-const commitDuration = '1000000';
-const revealDuration = '1000000';
-
-// regular expression to check for invalid opcode error
-const re = new RegExp("(invalid opcode)","i");
-
 function pollComparison(user, pollID, expected) {
     let voter;
     return PLCRVoting.deployed()

@@ -1,7 +1,5 @@
 require('./testHelpers.js')();
 
-const PLCRVoting = artifacts.require("./PLCRVoting.sol");
-
 contract('Data Structure Testing', (accounts) => {
     require('./testConf')(accounts);
 

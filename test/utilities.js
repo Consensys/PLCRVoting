@@ -1,14 +1,5 @@
 require('./testHelpers.js')();
 
-var BN = require('bn.js');
-var fs = require("fs");
-
-const commitDuration = '1000000';
-const revealDuration = '1000000';
-
-// regular expression to check for invalid opcode error
-const re = new RegExp("(invalid opcode)","i");
-
 contract('Utilities Testing', function(accounts) {
     require('./testConf')(accounts);
     // Check for non-existence of the single poll

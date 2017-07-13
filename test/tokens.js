@@ -2,7 +2,6 @@ require('./testHelpers.js')();
 
 contract('Token Testing', (accounts) => {
     require('./testConf')(accounts);
-    const tokenAmt = 10;
 
     it("should exchange user[0]'s 100 ERC20 for voting tokens", () => {
 	let vote;
