@@ -10,7 +10,7 @@ const revealDuration = '1000000';
 const re = new RegExp("(invalid opcode)","i");
 
 contract('Commit Testing', function(accounts) { 
-    const [owner, user1, user2, user3, user4, user5, user6] = accounts;
+    require('./testConf')(accounts);
     const tokenAmt = 10;
 
     function voteMapComparisonTest(user, pollID, attrNameToExpectedValueMap) {
@@ -196,7 +196,7 @@ contract('Commit Testing', function(accounts) {
         });   
     });
 
-    it("should single commit (by user1) to a single poll (commit period active)", function() {
+    it("should single commit (by user[0]) to a single poll (commit period active)", function() {
         let voter;
         let pollId;
         var hash = createVoteHash(0, 79);
@@ -204,15 +204,15 @@ contract('Commit Testing', function(accounts) {
         return PLCRVoting.deployed()
         .then(function(instance) {
             voter = instance;
-            return voter.requestVotingRights(10, {from: user1})
+            return voter.requestVotingRights(10, {from: user[0]})
         })
         .then(function () {
             return voter.startPoll("potato", 50, commitDuration, revealDuration);
         }).then(function (result) {
             pollId = (result.logs[0].args.pollID.toString());
-            return voter.commitVote(pollId, hash, 10, 0, {from: user1});
+            return voter.commitVote(pollId, hash, 10, 0, {from: user[0]});
         }).then(() => 
-            voteMapComparisonTest(user1, pollId, 
+            voteMapComparisonTest(user[0], pollId, 
                 {prevID: 0,
                  nextID: 0,
                  numTokens: 10,
@@ -220,7 +220,7 @@ contract('Commit Testing', function(accounts) {
         );
     });
     
-    it("should three commits (by single user2) to a single poll (commit period active)", function() {
+    it("should three commits (by single user[1]) to a single poll (commit period active)", function() {
         let voter;
         let pollId;
         var finalHash = createVoteHash(0, 80);
@@ -228,19 +228,19 @@ contract('Commit Testing', function(accounts) {
         return PLCRVoting.deployed()
         .then(function(instance) {
             voter = instance;
-            return voter.requestVotingRights(20, {from: user2})
+            return voter.requestVotingRights(20, {from: user[1]})
         })
         .then(function () {
             return voter.startPoll("apple", 50, commitDuration, revealDuration);
         }).then(function (result) {
             pollId = (result.logs[0].args.pollID.toString());
-            return voter.commitVote(pollId, createVoteHash(0, 5), 10, 0, {from: user2});
+            return voter.commitVote(pollId, createVoteHash(0, 5), 10, 0, {from: user[1]});
         }).then(function () {
-            return voter.commitVote(pollId, createVoteHash(1, 35), 2, 0, {from: user2});
+            return voter.commitVote(pollId, createVoteHash(1, 35), 2, 0, {from: user[1]});
         }).then(function () {
-            return voter.commitVote(pollId, finalHash, 7, pollId, {from: user2});
+            return voter.commitVote(pollId, finalHash, 7, pollId, {from: user[1]});
         }).then(() =>
-            voteMapComparisonTest(user2, pollId, 
+            voteMapComparisonTest(user[1], pollId, 
                 {prevID: 0,
                  nextID: 0,
                  numTokens: 7,
@@ -257,31 +257,31 @@ contract('Commit Testing', function(accounts) {
         return PLCRVoting.deployed()
         .then(function(instance) {
             voter = instance;
-            return voter.requestVotingRights(10, {from: user3})
+            return voter.requestVotingRights(10, {from: user[2]})
         })
-        .then(() => voter.requestVotingRights(10, {from: user4}))
-        .then(() => voter.requestVotingRights(10, {from: user5}))
+        .then(() => voter.requestVotingRights(10, {from: user[3]}))
+        .then(() => voter.requestVotingRights(10, {from: user[4]}))
         .then(() => voter.startPoll("orange", 50, commitDuration, revealDuration))
         .then((result) => pollId = result.logs[0].args.pollID.toString())
-        .then(() => voter.commitVote(pollId, finalHash1, 9, 0, {from: user3}))
+        .then(() => voter.commitVote(pollId, finalHash1, 9, 0, {from: user[2]}))
         .then(() =>
-            voter.commitVote(pollId, finalHash2, 2, 0, {from: user4}))
+            voter.commitVote(pollId, finalHash2, 2, 0, {from: user[3]}))
         .then(() =>
-            voter.commitVote(pollId, finalHash3, 7, 0, {from: user5}))
+            voter.commitVote(pollId, finalHash3, 7, 0, {from: user[4]}))
         .then(() => 
-            voteMapComparisonTest(user3, pollId, 
+            voteMapComparisonTest(user[2], pollId, 
                 {prevID: 0,
                  nextID: 0,
                  numTokens: 9,
                  commitHash: finalHash1}))
         .then(() =>
-            voteMapComparisonTest(user4, pollId, 
+            voteMapComparisonTest(user[3], pollId, 
                 {prevID: 0,
                  nextID: 0,
                  numTokens: 2,
                  commitHash: finalHash2}))
         .then(() =>
-            voteMapComparisonTest(user5, pollId, 
+            voteMapComparisonTest(user[4], pollId, 
                 {prevID: 0,
                  nextID: 0,
                  numTokens: 7,
@@ -314,15 +314,15 @@ contract('Commit Testing', function(accounts) {
         return PLCRVoting.deployed()
         .then(function(instance) {
             voter = instance;
-            return voter.requestVotingRights(10, {from: user1})
+            return voter.requestVotingRights(10, {from: user[0]})
         })
         .then(() => voter.startPoll("potato", 50, commitDuration, revealDuration))
         .then((result) => pollId = (result.logs[0].args.pollID.toString()))
         .then(() => increaseTime(1000001))
-        .then(() => voter.commitVote(pollId, hash, 10, 0, {from: user1}))
+        .then(() => voter.commitVote(pollId, hash, 10, 0, {from: user[0]}))
         .catch((err) => assert.equal(re.test(err), true, "Expected error not found"))
         .then(() => 
-            voteMapComparisonTest(user1, pollId, 
+            voteMapComparisonTest(user[0], pollId, 
                 {prevID: 0,
                  nextID: 0,
                  numTokens: 0,

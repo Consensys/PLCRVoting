@@ -10,10 +10,10 @@ const revealDuration = '1000000';
 const re = new RegExp("(invalid opcode)","i");
 
 contract('Utilities Testing', function(accounts) {
+    require('./testConf')(accounts);
     // Check for non-existence of the single poll
     // and then the existence of the poll and then that the poll
     // is in commit phase
-    const [owner, user1, user2, user3, user4, user5, user6, user7, user8, user9] = accounts;
 
     const utilConf = JSON.parse(fs.readFileSync("./conf/testUtilities.json"));
 

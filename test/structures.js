@@ -3,6 +3,7 @@ require('./testHelpers.js')();
 const PLCRVoting = artifacts.require("./PLCRVoting.sol");
 
 contract('Data Structure Testing', (accounts) => {
+    require('./testConf')(accounts);
 
   it("should check getAttribute is 0 when voteMap empty", () => {
     return PLCRVoting.deployed()
@@ -15,7 +16,7 @@ contract('Data Structure Testing', (accounts) => {
     return PLCRVoting.deployed()
     .then((instance) => voting = instance)
     .then(() => voting.setAttribute('10', 'prevID', '25'))
-    .then(() => createIndexHash(accounts[0], '10', 'prevID'))
+    .then(() => createIndexHash(owner, '10', 'prevID'))
     .then((hash) => voting.voteMap.call(hash))
     .then((result) => assert.equal(Number(result), '25', "Testing failed."));
   });
@@ -149,16 +150,16 @@ contract('Data Structure Testing', (accounts) => {
     .then((instance) => voting = instance)
 
     // use the function being tested
-    .then(() => voting.insertToDll(pollID, prevID, numTokens, commitHash, {from:accounts[9]}))
+    .then(() => voting.insertToDll(pollID, prevID, numTokens, commitHash, {from:user[8]}))
 
     // get attributes to check
-    .then(() => voting.getAttribute.call('0', 'nextID', {from:accounts[9]}))
+    .then(() => voting.getAttribute.call('0', 'nextID', {from:user[8]}))
     .then((result) => next_0 = result)
-    .then(() => voting.getAttribute.call('0', 'prevID', {from:accounts[9]}))
+    .then(() => voting.getAttribute.call('0', 'prevID', {from:user[8]}))
     .then((result) => prev_0 = result)
-    .then(() => voting.getAttribute.call(pollID, 'nextID', {from:accounts[9]}))
+    .then(() => voting.getAttribute.call(pollID, 'nextID', {from:user[8]}))
     .then((result) => next_new = result)
-    .then(() => voting.getAttribute.call(pollID, 'prevID', {from:accounts[9]}))
+    .then(() => voting.getAttribute.call(pollID, 'prevID', {from:user[8]}))
     .then((result) => prev_new = result)
 
     // check equality
@@ -181,28 +182,28 @@ contract('Data Structure Testing', (accounts) => {
     .then((instance) => voting = instance)
 
     // initialize double linked list
-    .then(() => voting.setAttribute('0', 'nextID', pollID, {from:accounts[8]}))
-    .then(() => voting.setAttribute(pollID, 'nextID', '25', {from:accounts[8]}))
-    .then(() => voting.setAttribute('25', 'nextID', '0', {from:accounts[8]}))
-    .then(() => voting.setAttribute('0', 'prevID', '25', {from:accounts[8]}))
-    .then(() => voting.setAttribute(pollID, 'prevID', '0', {from:accounts[8]}))
-    .then(() => voting.setAttribute('25', 'prevID', pollID, {from:accounts[8]}))
-    .then(() => voting.setAttribute(pollID, 'numTokens', '1200', {from:accounts[8]}))
-    .then(() => voting.setAttribute('25', 'numTokens', '30000', {from:accounts[8]}))
-    .then(() => voting.setAttribute(pollID, 'commitHash', '0xab817d209103a160ddcfed5d97912c7e207da04a8a9960c64875cecec0bfb0de', {from:accounts[8]}))
-    .then(() => voting.setAttribute('25', 'commitHash', '0xca817d209103a160ddcfed5d97912c7e207da04a8a9960c64875cecec0bfb0de', {from:accounts[8]}))
+    .then(() => voting.setAttribute('0', 'nextID', pollID, {from:user[7]}))
+    .then(() => voting.setAttribute(pollID, 'nextID', '25', {from:user[7]}))
+    .then(() => voting.setAttribute('25', 'nextID', '0', {from:user[7]}))
+    .then(() => voting.setAttribute('0', 'prevID', '25', {from:user[7]}))
+    .then(() => voting.setAttribute(pollID, 'prevID', '0', {from:user[7]}))
+    .then(() => voting.setAttribute('25', 'prevID', pollID, {from:user[7]}))
+    .then(() => voting.setAttribute(pollID, 'numTokens', '1200', {from:user[7]}))
+    .then(() => voting.setAttribute('25', 'numTokens', '30000', {from:user[7]}))
+    .then(() => voting.setAttribute(pollID, 'commitHash', '0xab817d209103a160ddcfed5d97912c7e207da04a8a9960c64875cecec0bfb0de', {from:user[7]}))
+    .then(() => voting.setAttribute('25', 'commitHash', '0xca817d209103a160ddcfed5d97912c7e207da04a8a9960c64875cecec0bfb0de', {from:user[7]}))
 
     // use the function being tested
-    .then(() => voting.deleteFromDll(pollID, {from:accounts[8]}))
+    .then(() => voting.deleteFromDll(pollID, {from:user[7]}))
 
     // get attributes to check
-    .then(() => voting.getAttribute.call('0', 'nextID', {from:accounts[8]}))
+    .then(() => voting.getAttribute.call('0', 'nextID', {from:user[7]}))
     .then((result) => next_0 = result)
-    .then(() => voting.getAttribute.call('25', 'prevID', {from:accounts[8]}))
+    .then(() => voting.getAttribute.call('25', 'prevID', {from:user[7]}))
     .then((result) => prev_25 = result)
-    .then(() => voting.getAttribute.call(pollID, 'nextID', {from:accounts[8]}))
+    .then(() => voting.getAttribute.call(pollID, 'nextID', {from:user[7]}))
     .then((result) => node_next = result)
-    .then(() => voting.getAttribute.call(pollID, 'prevID', {from:accounts[8]}))
+    .then(() => voting.getAttribute.call(pollID, 'prevID', {from:user[7]}))
     .then((result) => node_prev = result)
 
     // check equality
@@ -222,23 +223,23 @@ contract('Data Structure Testing', (accounts) => {
     .then((instance) => voting = instance)
 
     // initialize double linked list
-    .then(() => voting.setAttribute('0', 'nextID', '10', {from:accounts[7]}))
-    .then(() => voting.setAttribute('10', 'nextID', pollID, {from:accounts[7]}))
-    .then(() => voting.setAttribute(pollID, 'nextID', '0', {from:accounts[7]}))
-    .then(() => voting.setAttribute('0', 'prevID', pollID, {from:accounts[7]}))
-    .then(() => voting.setAttribute('10', 'prevID', '0', {from:accounts[7]}))
-    .then(() => voting.setAttribute(pollID, 'prevID', '10', {from:accounts[7]}))
-    .then(() => voting.setAttribute('10', 'numTokens', '1200', {from:accounts[7]}))
-    .then(() => voting.setAttribute(pollID, 'numTokens', '30000', {from:accounts[7]}))
-    .then(() => voting.setAttribute('10', 'commitHash', '0xca817d209103a160ddcfed5d97912c7e207da04a8a9960c64875cecec0bfb0de', {from:accounts[7]}))
-    .then(() => voting.setAttribute(pollID, 'commitHash', '0xab817d209103a160ddcfed5d97912c7e207da04a8a9960c64875cecec0bfb0de', {from:accounts[7]}))
+    .then(() => voting.setAttribute('0', 'nextID', '10', {from:user[6]}))
+    .then(() => voting.setAttribute('10', 'nextID', pollID, {from:user[6]}))
+    .then(() => voting.setAttribute(pollID, 'nextID', '0', {from:user[6]}))
+    .then(() => voting.setAttribute('0', 'prevID', pollID, {from:user[6]}))
+    .then(() => voting.setAttribute('10', 'prevID', '0', {from:user[6]}))
+    .then(() => voting.setAttribute(pollID, 'prevID', '10', {from:user[6]}))
+    .then(() => voting.setAttribute('10', 'numTokens', '1200', {from:user[6]}))
+    .then(() => voting.setAttribute(pollID, 'numTokens', '30000', {from:user[6]}))
+    .then(() => voting.setAttribute('10', 'commitHash', '0xca817d209103a160ddcfed5d97912c7e207da04a8a9960c64875cecec0bfb0de', {from:user[6]}))
+    .then(() => voting.setAttribute(pollID, 'commitHash', '0xab817d209103a160ddcfed5d97912c7e207da04a8a9960c64875cecec0bfb0de', {from:user[6]}))
 
     // use the function being tested
-    .then(() => voting.getLastNode.call({from:accounts[7]}))
+    .then(() => voting.getLastNode.call({from:user[6]}))
     .then((result) => lastNode = result)
 
     // get attributes to check
-    .then(() => voting.getAttribute.call('0', 'prevID', {from:accounts[7]}))
+    .then(() => voting.getAttribute.call('0', 'prevID', {from:user[6]}))
     .then((result) => prev_0 = result)
 
     // check equality
@@ -255,19 +256,19 @@ contract('Data Structure Testing', (accounts) => {
     .then((instance) => voting = instance)
 
     // initialize double linked list
-    .then(() => voting.setAttribute('0', 'nextID', '10', {from:accounts[6]}))
-    .then(() => voting.setAttribute('10', 'nextID', pollID, {from:accounts[6]}))
-    .then(() => voting.setAttribute(pollID, 'nextID', '0', {from:accounts[6]}))
-    .then(() => voting.setAttribute('0', 'prevID', pollID, {from:accounts[6]}))
-    .then(() => voting.setAttribute('10', 'prevID', '0', {from:accounts[6]}))
-    .then(() => voting.setAttribute(pollID, 'prevID', '10', {from:accounts[6]}))
-    .then(() => voting.setAttribute('10', 'numTokens', '1200', {from:accounts[6]}))
-    .then(() => voting.setAttribute(pollID, 'numTokens', '30000', {from:accounts[6]}))
-    .then(() => voting.setAttribute('10', 'commitHash', '0xca817d209103a160ddcfed5d97912c7e207da04a8a9960c64875cecec0bfb0de', {from:accounts[6]}))
-    .then(() => voting.setAttribute(pollID, 'commitHash', '0xab817d209103a160ddcfed5d97912c7e207da04a8a9960c64875cecec0bfb0de', {from:accounts[6]}))
+    .then(() => voting.setAttribute('0', 'nextID', '10', {from:user[5]}))
+    .then(() => voting.setAttribute('10', 'nextID', pollID, {from:user[5]}))
+    .then(() => voting.setAttribute(pollID, 'nextID', '0', {from:user[5]}))
+    .then(() => voting.setAttribute('0', 'prevID', pollID, {from:user[5]}))
+    .then(() => voting.setAttribute('10', 'prevID', '0', {from:user[5]}))
+    .then(() => voting.setAttribute(pollID, 'prevID', '10', {from:user[5]}))
+    .then(() => voting.setAttribute('10', 'numTokens', '1200', {from:user[5]}))
+    .then(() => voting.setAttribute(pollID, 'numTokens', '30000', {from:user[5]}))
+    .then(() => voting.setAttribute('10', 'commitHash', '0xca817d209103a160ddcfed5d97912c7e207da04a8a9960c64875cecec0bfb0de', {from:user[5]}))
+    .then(() => voting.setAttribute(pollID, 'commitHash', '0xab817d209103a160ddcfed5d97912c7e207da04a8a9960c64875cecec0bfb0de', {from:user[5]}))
 
     // use the function being tested
-    .then(() => voting.getMaxTokens.call({from:accounts[6]}))
+    .then(() => voting.getMaxTokens.call({from:user[5]}))
     .then((result) => maxNumTokens = result)
 
     // check equality
