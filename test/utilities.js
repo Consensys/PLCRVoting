@@ -6,11 +6,6 @@ contract('Utilities Testing', function(accounts) {
     // and then the existence of the poll and then that the poll
     // is in commit phase
 
-    const utilConf = JSON.parse(fs.readFileSync("./conf/testUtilities.json"));
-
-    var trustedAccounts = [];
-    utilConf.trustedAccounts.forEach((idx) => trustedAccounts.push(accounts[idx]));
-
     it("should check if a non-owner can start a poll", () => {
         return getVoteContract()
             .then((instance) => instance.startPoll('', 50, commitDuration, revealDuration, {from: accounts[1]}))
