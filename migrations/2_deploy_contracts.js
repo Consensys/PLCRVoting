@@ -18,6 +18,7 @@ function getERC20Token() {
 module.exports = (deployer, network, accounts) => {
     const owner = accounts[0];
     const users = accounts.slice(1, 10);
+    console.log(accounts);
 
     let tokenConf = JSON.parse(fs.readFileSync('./conf/testToken.json'));
 
