@@ -15,41 +15,41 @@ function getERC20Token() {
         .then((tokenAddr) => HumanStandardToken.at(tokenAddr));
 }
 
-function transfer(recipient, sender, amount) {
-    return getERC20Token()
-        .then((token) => token.transfer(recipient, amount, {from: sender}));
-}
-
-function approve(spender, holder, amount) {
-    return getERC20Token()
-        .then((token) => token.approve(spender, amount, {from: holder}));
-}
-
-function distributeAndAllow(origin, actor, spender, amount) {
-    return transfer(actor, origin, amount)
-        .then(() => approve(spender, actor, amount));
-}
-
-async function multipleDistributeAndAllow(owner, userArray, spender, amountsArray){
-    return await Promise.all(userArray.map(async (user, index) => {
-        await distributeAndAllow(owner, user, spender, amountsArray[index])
-    }));
-}
-
 module.exports = (deployer, network, accounts) => {
     const owner = accounts[0];
     const users = accounts.slice(1, 10);
 
     let tokenConf = JSON.parse(fs.readFileSync('./conf/testToken.json'));
 
-    let tokenInstance;
-
-    deployer.deploy(HumanStandardToken,
+    // deploy the HumanStandardToken contract
+    deployer.deploy(
+    	HumanStandardToken,
         tokenConf.initialAmount, 
         tokenConf.tokenName,
         tokenConf.decimalUnits,
-        tokenConf.tokenSymbol
+        tokenConf.tokenSymbol,
+        {from: owner}
     )
-        .then(() => deployer.deploy(VotingContract, HumanStandardToken.address))
-        .then(() => multipleDistributeAndAllow(owner, users, VotingContract.address, tokenConf.userAmounts));
+
+    // deploy the PLCRVoting contract
+    .then(() => deployer.deploy(
+    	VotingContract, 
+    	HumanStandardToken.address,
+    	{from: owner}
+    ))
+
+    // distribute token 
+    .then(
+    async () => {
+    	let token = await getERC20Token();
+
+    	console.log("  Distributing tokens to users...");
+
+    	return await Promise.all(
+    		users.map(async (user, idx) => {
+    			await token.transfer(user, tokenConf.userAmounts[idx], {from: owner}) 
+    			await token.approve(VotingContract.address, tokenConf.userAmounts[idx], {from: user})
+    		})
+    	);
+    });
 };
