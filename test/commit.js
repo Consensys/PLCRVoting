@@ -577,6 +577,13 @@ contract('Commit Testing', function(accounts) {
         // Should throw invalid opcode
 
         let voter;
+
+        let commitInfo = {
+            hash: createVoteHash(1, 20),
+            numTokens: 10001,
+            prevId: 0 
+        };
+
         return PLCRVoting.deployed()
         .then((instance) => {
             voter = instance;
@@ -584,8 +591,8 @@ contract('Commit Testing', function(accounts) {
         })
         .then((result) => {
             var pollId = result.logs[0].args.pollID.toString();
-            return voter.commitVote(pollId, createVoteHash(1, 20), 
-                10001, 0);
+            return voter.commitVote(pollId, commitInfo.hash, 
+                commitInfo.numTokens, commitInfo.prevId);
         }).catch((err) => assert.equal(re.test(err), true, "Expected error not found"));
     });
   
@@ -593,26 +600,33 @@ contract('Commit Testing', function(accounts) {
         // Should throw invalid opcode
         let voter;
         let pollId;
-        let hash = createVoteHash(0, 79);
+
+        let numTokensToLoad = 10;
+        let commitInfo = {
+            hash: createVoteHash(0, 79),
+            numTokens: 10,
+            prevId: 0
+        };
+
+        let expected = {prevID: 0,
+                 nextID: 0,
+                 numTokens: 0,
+                 commitHash: 0x0};
 
         return PLCRVoting.deployed()
         .then(function(instance) {
             voter = instance;
-            return voter.loadTokens(10, {from: user1})
+            return voter.loadTokens(numTokensToLoad, {from: user1})
         })
         .then(() => voter.startPoll("potato", 50, commitDuration, revealDuration))
         .then((result) => pollId = (result.logs[0].args.pollID.toString()))
         .then(() => increaseTime(commitDuration + 1))
-        .then(() => voter.commitVote(pollId, hash, 10, 0, {from: user1}))
+        .then(() => voter.commitVote(pollId, commitInfo.hash, commitInfo.numTokens, commitInfo.prevId, {from: user1}))
         .catch((err) => 
             assert.equal(re.test(err), true, "Expected error not found")
         )
         .then(() => 
-            voteMapComparisonTest(user1, pollId, 
-                {prevID: 0,
-                 nextID: 0,
-                 numTokens: 0,
-                 commitHash: 0x0})
+            voteMapComparisonTest(user1, pollId, expected)
             );
     });
 });
