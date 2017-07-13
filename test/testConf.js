@@ -1,3 +1,4 @@
+require('./testHelpers.js')();
 module.exports = function(accounts) {
 
     // import statements
