@@ -1,7 +1,7 @@
 {
   "initialAmount": "10000",
   "tokenName": "AdToken",
-  "decimalUnits": "9",
+  "decimalUnits": "0",
   "tokenSymbol": "ADT",
-  "userAmounts": [100, 200, 300, 400, 500, 600, 700, 0, 0, 0]
+  "userAmounts": [100, 100, 100, 50, 20, 0, 0, 0, 0]
 }
