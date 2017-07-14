@@ -74,4 +74,32 @@ contract('User Demo Testing', function(accounts) {
             .then(() => contract.isPassed.call(pollA))
             .then((result) => assert.equal(result, true, "Poll should have passed but did not"));
     });
+
+    it("should check user rewards for each poll", () => {
+        let arraySalts = [20, 10, 420, 666];
+
+        let contract;
+        return getVoteContract()
+            .then((instance) => contract = instance)
+
+            // poll 1 rewards
+            .then(() => contract.getNumPassingTokens.call(1, arraySalts[0], {from: user[0]}))
+            .then((result) => assert.equal(result, 0, "User0 passing tokens incorrect"))
+            .then(() => contract.getNumPassingTokens.call(1, arraySalts[1], {from: user[1]}))
+            .then((result) => assert.equal(result, 100, "User1 passing tokens incorrect"))
+            .then(() => contract.getNumPassingTokens.call(1, arraySalts[2], {from: user[2]}))
+            .then((result) => assert.equal(result, 75, "User2 passing tokens incorrect"))
+
+            // poll 2 rewards
+            .then(() => contract.getNumPassingTokens.call(2, arraySalts[1], {from: user[1]}))
+            .then((result) => assert.equal(result, 5, "User1 passing tokens incorrect"))
+            .then(() => contract.getNumPassingTokens.call(2, arraySalts[2], {from: user[2]}))
+            .then((result) => assert.equal(result, 0, "User2 passing tokens incorrect"))
+
+            // poll 3 rewards
+            .then(() => contract.getNumPassingTokens.call(3, arraySalts[1], {from: user[1]}))
+            .then((result) => assert.equal(result, 25, "User1 passing tokens incorrect"))
+            .then(() => contract.getNumPassingTokens.call(3, arraySalts[2], {from: user[2]}))
+            .then((result) => assert.equal(result, 0, "User2 passing tokens incorrect"));
+    });
 });
