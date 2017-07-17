@@ -13,8 +13,8 @@ contract PLCRVoting {
         string proposal;        /// proposal to be voted for/against
         uint commitEndDate;     /// expiration date of commit period for poll
         uint revealEndDate;     /// expiration date of reveal period for poll
-        uint voteQuotaSnap;	/// snapshot of canonical voteQuota
-        uint votesFor;		/// tally of votes supporting proposal
+        uint voteQuorum;	    /// number of votes required for a proposal to pass
+        uint votesFor;		    /// tally of votes supporting proposal
         uint votesAgainst;      /// tally of votes countering proposal
     }
     
@@ -41,7 +41,7 @@ contract PLCRVoting {
     HumanStandardToken public token;
 
     /**
-    @dev Initializes voteQuota, commitDuration, revealDuration, and pollNonce in addition to token contract and trusted mapping
+    @dev Initializes voteQuorum, commitDuration, revealDuration, and pollNonce in addition to token contract and trusted mapping
     @param tokenAddr The address where the ERC20 token contract is deployed
     */
     function PLCRVoting(address tokenAddr) {
@@ -194,18 +194,20 @@ contract PLCRVoting {
 
     /**
     @dev Initiates a poll with canonical configured parameters at pollID emitted by PollCreated event
-    @param proposalStr String representing poll subject matter to be voted for or against
-    @param voteQuota Type of majority (out of 100) that is necessary for poll to be successful
+    @param _proposal String representing poll subject matter to be voted for or against
+    @param _voteQuorum Type of majority (out of 100) that is necessary for poll to be successful
+    @param _commitDuration Length of desired commit period in seconds
+    @param _revealDuration Length of desired reveal period in seconds
     */
-    function startPoll(string proposalStr, uint voteQuota, uint commitDuration, uint revealDuration) public returns (uint pollID) {
+    function startPoll(string _proposal, uint _voteQuorum, uint _commitDuration, uint _revealDuration) public returns (uint pollID) {
         require(isOwner(msg.sender));
         pollNonce = pollNonce + 1;
 
         pollMap[pollNonce] = Poll({
-            proposal: proposalStr,
+            proposal: _proposal,
+            voteQuorum: _voteQuorum,
             commitEndDate: block.timestamp + commitDuration,
             revealEndDate: block.timestamp + commitDuration + revealDuration,
-            voteQuotaSnap: voteQuota,
             votesFor: 0,
             votesAgainst: 0
         });
@@ -216,14 +218,14 @@ contract PLCRVoting {
  
     /**
     @notice Determines if proposal has passed
-    @dev Check if votesFor out of totalVotes exceeds votesQuota (requires pollEnded)
+    @dev Check if votesFor out of totalVotes exceeds votesQuorum (requires pollEnded)
     @param pollID Integer identifier associated with target poll
     */
     function isPassed(uint pollID) constant public returns (bool passed) {
         require(pollEnded(pollID));
 
         Poll poll = pollMap[pollID];
-        return ((100 - poll.voteQuotaSnap) * poll.votesFor) >= (poll.voteQuotaSnap * poll.votesAgainst);
+        return ((100 - poll.voteQuorumSnap) * poll.votesFor) >= (poll.voteQuorumSnap * poll.votesAgainst);
     }
 
     // ----------------
