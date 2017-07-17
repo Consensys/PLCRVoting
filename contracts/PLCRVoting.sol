@@ -87,7 +87,7 @@ contract PLCRVoting {
     @param numTokens The number of tokens to be committed towards the target poll
     @param prevPollID The ID of the poll that the user has voted the maximum number of tokens in which is still less than or equal to numTokens 
     */
-    function commitVote(uint pollID, bytes32 hashOfVoteAndSalt, uint numTokens, uint prevPollID) external returns (bool successful) {
+    function commitVote(uint pollID, bytes32 hashOfVoteAndSalt, uint numTokens, uint prevPollID) external {
         // Make sure the user has enough tokens to commit
         require(hasEnoughTokens(numTokens));
 
@@ -107,7 +107,7 @@ contract PLCRVoting {
             // which would imply that no commit to this 
             // poll was previously made
             if (getCommitHash(pollID) == 0) {
-                return false;
+                throw;
             }
             
             // Making an update --> the previous node
@@ -134,10 +134,11 @@ contract PLCRVoting {
             }
             // Insert the <node at poll ID> after
             // the node at <prevPollID>:
-            insertToDll(pollID, prevPollID2, numTokens, hashOfVoteAndSalt);
+            insertToDll(pollID, prevPollID, numTokens, hashOfVoteAndSalt);
+        } else {
+            // Invalid prevPollID
+            throw;
         }
-        // Invalid prevPollID
-        return false;
     }
 
     /**
@@ -146,7 +147,7 @@ contract PLCRVoting {
     @param salt Secret number used to generate commitHash for associated poll
     @param voteOption Vote choice used to generate commitHash for associated poll
     */
-    function revealVote(uint pollID, uint salt, uint voteOption) external returns (bool successful) {
+    function revealVote(uint pollID, uint salt, uint voteOption) external {
         
         // Make sure the reveal period is active
         require(revealPeriodActive(pollID));
@@ -169,9 +170,9 @@ contract PLCRVoting {
             
             // Remove the node referring to this vote as we no longer need it
             deleteFromDll(pollID);
-            return true;
+        } else {
+            throw;
         }
-        return false;
     }
 
     function getNumPassingTokens(address user, uint pollID, uint salt) constant public returns (uint correctVotes) {
