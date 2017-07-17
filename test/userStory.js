@@ -3,6 +3,7 @@ require('./testHelpers.js')();
 contract('User Demo Testing', function(accounts) {
     require('./testConf')(accounts);
 
+    let poll1, poll2, poll3, poll4;
     it("should test simple token requesting", () => {
         let contract;
         return getVoteContract()
@@ -10,7 +11,6 @@ contract('User Demo Testing', function(accounts) {
             .then(() => contract.requestVotingRights(50, {from:user[0]}))
             .then(() => contract.requestVotingRights(50, {from:user[1]}))
             .then(() => contract.requestVotingRights(100, {from:user[2]}))
-            .catch((err) => assert.equal(re.test(err), false, "Error in requesting voting rights"))
             .then(() => contract.voteTokenBalance.call(user[0]))
             .then((balance) => assert.equal(balance, 50, "User0 balance not updated"))
             .then(() => contract.voteTokenBalance.call(user[1]))
@@ -52,54 +52,118 @@ contract('User Demo Testing', function(accounts) {
         let arraySalts = [20, 10, 420, 666];
         let arrayVoteOption = [0, 1, 1, 0];
         let contract;
-        let pollA;
         return getVoteContract()
             .then((instance) => contract = instance)
             .then(() => launchPoll("Mike grows out long hair", commitDuration, revealDuration))
-            .then((result) => pollA = result)
-            .then(() => contract.commitVote(pollA, createVoteHash(arrayVoteOption[0], arraySalts[0]), 101, 0, {from:user[0]}))
+            .then((result) => poll1 = result)
+            .then(() => contract.commitVote(poll1, createVoteHash(arrayVoteOption[0], arraySalts[0]), 101, 0, {from:user[0]}))
             .catch((err) => assert.equal(re.test(err), true, "Committing too many tokens"))
-            .then(() => contract.commitVote(pollA, createVoteHash(arrayVoteOption[1], arraySalts[1]), 100, 0, {from:user[1]}))
-            .then(() => contract.commitVote(pollA, createVoteHash(arrayVoteOption[2], arraySalts[2]), 75, 0, {from:user[2]}))
-            .then(() => contract.commitVote(pollA, createVoteHash(arrayVoteOption[3], arraySalts[3]), 25, 0, {from:user[3]}))
+            .then(() => contract.commitVote(poll1, createVoteHash(arrayVoteOption[1], arraySalts[1]), 100, 0, {from:user[1]}))
+            .then(() => contract.commitVote(poll1, createVoteHash(arrayVoteOption[2], arraySalts[2]), 75, 0, {from:user[2]}))
+            .then(() => contract.commitVote(poll1, createVoteHash(arrayVoteOption[3], arraySalts[3]), 25, 0, {from:user[3]}))
             .then(() => increaseTime(commitDuration + 1))
-            .then(() => contract.revealVote(pollA, arraySalts[0], arrayVoteOption[0])) 
+            .then(() => contract.revealVote(poll1, arraySalts[0], arrayVoteOption[0])) 
             .catch((err) => assert.equal(re.test(err), true, "Revealing vote that should not been committed"))
-            .then(() => contract.commitVote(pollA, createVoteHash(arrayVoteOption[0], arraySalts[0]), 10, 0, {from:user[0]}))
+            .then(() => contract.commitVote(poll1, createVoteHash(arrayVoteOption[0], arraySalts[0]), 10, 0, {from:user[0]}))
             .catch((err) => assert.equal(re.test(err), true, "Committing during reveal period"))
-            .then(() => contract.revealVote(pollA, arraySalts[1], arrayVoteOption[1])) 
-            .then(() => contract.revealVote(pollA, arraySalts[2], arrayVoteOption[2])) 
-            .then(() => contract.revealVote(pollA, arraySalts[3], arrayVoteOption[3])) 
+            .then(() => contract.revealVote(poll1, arraySalts[1], arrayVoteOption[1], {from: user[1]})) 
+            .then(() => contract.revealVote(poll1, arraySalts[2], arrayVoteOption[2], {from: user[2]})) 
+            .then(() => contract.revealVote(poll1, arraySalts[3], arrayVoteOption[3], {from: user[3]})) 
             .then(() => increaseTime(revealDuration + 1))
-            .then(() => contract.isPassed.call(pollA))
+            .then(() => contract.isPassed.call(poll1))
             .then((result) => assert.equal(result, true, "Poll should have passed but did not"));
     });
 
+    it("should test multiple votes for single user", () => {
+        let contract;
+
+        let arraySalts = [10, 420, 666];
+
+        function catchWithdraw(numTokens, user) {
+            return contract.withdrawVotingRights(numTokens, {from: user})
+            .then(() => assert.ok(false, "withdraw didn't throw"))
+            .catch((err) => assert.equal(re.test(err), true, "withdraw threw incorrectly"))
+        }
+
+        return getVoteContract()
+            .then((instance) => contract = instance)
+
+            // launch poll 2
+            .then(() => launchPoll("Yorke comes in on time", commitDuration, revealDuration))
+            .then((pollID) => poll2 = pollID)
+
+            // launch poll 3
+            .then(() => launchPoll("Aspyn eats a taco", commitDuration, revealDuration))
+            .then((pollID) => poll3 = pollID)
+
+            //launch poll 4
+            .then(() => launchPoll("Terry gets less tall", commitDuration, revealDuration))
+            .then((pollID) => poll4 = pollID)
+
+            // check if poll4 passed
+            .then(() => contract.isPassed.call(poll2))
+            .then((passed) => assert.ok(false, "isPassed didn't throw"))
+            .catch((err) => assert.equal(re.test(err), true, "isPassed threw incorrectly"))
+
+            // commit a vote to each poll
+            .then(() => contract.commitVote(poll2, createVoteHash(1, arraySalts[0]), 5, 0, {from: user[1]}))
+            .then(() => contract.commitVote(poll3, createVoteHash(0, arraySalts[1]), 25, poll2, {from: user[1]}))
+            .then(() => contract.commitVote(poll4, createVoteHash(1, arraySalts[2]), 51, poll3, {from: user[1]}))
+
+            .then(() => catchWithdraw(51, user[1]))
+            .then(() => increaseTime(commitDuration + 1))
+
+            .then(() => catchWithdraw(51, user[1]))
+            .then(() => contract.revealVote(poll3, arraySalts[1], 0, {from: user[1]}))
+            
+            .then(() => catchWithdraw(51, user[1]))
+            .then(() => contract.withdrawVotingRights(49, {from: user[1]})) //committed 51, 100 tokens total
+
+            .then(() => contract.revealVote(poll4, arraySalts[2], 1, {from: user[1]}))
+            .then(() => contract.withdrawVotingRights(51, {from: user[1]})) //withdraw remaining 51 tokens
+
+            .then(() => contract.isPassed.call(poll3))
+            .then((passed) => assert.ok(false, "isPassed didn't throw"))
+            .catch((err) => assert.equal(re.test(err), true, "isPassed threw incorrectly"))
+
+            .then(() => increaseTime(revealDuration + 1))
+            .then(() => contract.isPassed.call(poll2))
+            .then((passed) => assert.equal(passed, true, "poll2 passed incorrectly"))
+
+            .then(() => contract.isPassed.call(poll3))
+            .then((passed) => assert.equal(passed, false, "poll3 passed incorrectly"))
+
+            .then(() => contract.isPassed.call(poll4))
+            .then((passed) => assert.equal(passed, true, "poll4 didn't pass"))
+
+            .then(() => catchWithdraw(51, user[1]));
+    });
+
     it("should check user rewards for each poll", () => {
-        let arraySalts = [20, 10, 420, 666];
+        let arraySalts = [20, 10, 420];
 
         let contract;
         return getVoteContract()
             .then((instance) => contract = instance)
 
             // poll 1 rewards
-            .then(() => contract.getNumPassingTokens.call(1, arraySalts[0], {from: user[0]}))
-            .then((result) => assert.equal(result, 0, "User0 passing tokens incorrect"))
-            .then(() => contract.getNumPassingTokens.call(1, arraySalts[1], {from: user[1]}))
-            .then((result) => assert.equal(result, 100, "User1 passing tokens incorrect"))
-            .then(() => contract.getNumPassingTokens.call(1, arraySalts[2], {from: user[2]}))
-            .then((result) => assert.equal(result, 75, "User2 passing tokens incorrect"))
+            .then(() => contract.getNumPassingTokens.call(poll1, arraySalts[0], {from: user[0]}))
+            .then((result) => assert.equal(result, 0, "User0 poll1 reward incorrect"))
+            .then(() => contract.getNumPassingTokens.call(poll1, arraySalts[1], {from: user[1]}))
+            .then((result) => assert.equal(result, 100, "User1 poll1 reward incorrect"))
+            .then(() => contract.getNumPassingTokens.call(poll1, arraySalts[2], {from: user[2]}))
+            .then((result) => assert.equal(result, 75, "User2 poll1 reward incorrect"))
 
             // poll 2 rewards
-            .then(() => contract.getNumPassingTokens.call(2, arraySalts[1], {from: user[1]}))
-            .then((result) => assert.equal(result, 5, "User1 passing tokens incorrect"))
-            .then(() => contract.getNumPassingTokens.call(2, arraySalts[2], {from: user[2]}))
-            .then((result) => assert.equal(result, 0, "User2 passing tokens incorrect"))
+            .then(() => contract.getNumPassingTokens.call(poll2, arraySalts[1], {from: user[1]}))
+            .then((result) => assert.equal(result, 5, "User1 poll2 reward incorrect"))
+            .then(() => contract.getNumPassingTokens.call(poll2, arraySalts[2], {from: user[2]}))
+            .then((result) => assert.equal(result, 0, "User2 poll2 reward incorrect"))
 
             // poll 3 rewards
-            .then(() => contract.getNumPassingTokens.call(3, arraySalts[1], {from: user[1]}))
-            .then((result) => assert.equal(result, 25, "User1 passing tokens incorrect"))
-            .then(() => contract.getNumPassingTokens.call(3, arraySalts[2], {from: user[2]}))
-            .then((result) => assert.equal(result, 0, "User2 passing tokens incorrect"));
+            .then(() => contract.getNumPassingTokens.call(poll3, arraySalts[1], {from: user[1]}))
+            .then((result) => assert.equal(result, 0, "User1 poll3 reward incorrect"))
+            .then(() => contract.getNumPassingTokens.call(poll3, arraySalts[2], {from: user[2]}))
+            .then((result) => assert.equal(result, 0, "User2 poll3 reward incorrect"));
     });
 });
