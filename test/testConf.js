@@ -14,7 +14,6 @@ module.exports = function(accounts) {
     this.commitDuration = 1000000; 
     this.revealDuration = 1000000;
     this.tokenAmt = 10;
-    this.trustedAccounts = JSON.parse(fs.readFileSync("./conf/testUtilities.json")).trustedAccounts;
 
     // regular expression to check for invalid opcode error
     this.re = new RegExp("(invalid opcode)","i");

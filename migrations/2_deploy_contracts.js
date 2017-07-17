@@ -3,7 +3,7 @@ const VotingContract = artifacts.require("./PLCRVoting.sol");
 const HumanStandardToken = artifacts.require("./HumanStandardToken.sol");
 
 // NODE VARS:
-const fs = require(`fs`);
+const fs = require("fs");
 
 function getVoteContract() {
     return VotingContract.deployed();
