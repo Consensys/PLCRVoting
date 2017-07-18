@@ -88,57 +88,20 @@ contract PLCRVoting {
     @param prevPollID The ID of the poll that the user has voted the maximum number of tokens in which is still less than or equal to numTokens 
     */
     function commitVote(uint pollID, bytes32 hashOfVoteAndSalt, uint numTokens, uint prevPollID) external {
-        // Make sure the user has enough tokens to commit
-        require(hasEnoughTokens(numTokens));
-
-        // Make sure the commit period is active
+        uint prevID = prevPollID;
         require(commitPeriodActive(pollID));
+        require(hasEnoughTokens(numTokens)); // prevent user from overspending
+        require(pollID != 0);                // prevent user from committing to zero node placerholder
 
-        // Make sure user is not trying to manually commit
-        // a vote corresponding the zero node
-        require(pollID != 0);
+        if (pollID == prevPollID)            // check to see if user is making an update in the same place
+            prevID = getPreviousID(pollID);
 
-        uint prevPollID2 = prevPollID;
-        // Check to see if we are making an update
-        // as opposed to an insert
-        bool isUpdatingExistingNode = false;
-        if (pollID == prevPollID) {
-            // Check to see if the commit hash was not previously set,
-            // which would imply that no commit to this 
-            // poll was previously made
-            if (getCommitHash(pollID) == 0) {
-                throw;
-            }
-            
-            // Making an update --> the previous node
-            // has already been set, and so that
-            // node can be used for validation
-            prevPollID2 = getPreviousID(pollID);
+        require(validateNode(prevID, pollID, numTokens)); // valid DLL placement
 
-            isUpdatingExistingNode = true;
-        } else if (getCommitHash(pollID) != 0) {
-            isUpdatingExistingNode = true;
-        } 
+        if (getCommitHash(pollID) != 0)      // check if there is an existing commit
+            deleteFromDll(pollID);
 
-        // Determine if the new node can be inserted/updated
-        // at the given spot (i.e. the node right after prevPollID)
-        bool isValid = validateNode(prevPollID2,pollID, numTokens);
-
-        // Node is valid
-        if (isValid) {
-            // Update a previous commit
-            if (isUpdatingExistingNode) {
-                // Delete the current node as we will be re-inserting
-                // that node with new attributes 
-                deleteFromDll(pollID);
-            }
-            // Insert the <node at poll ID> after
-            // the node at <prevPollID>:
-            insertToDll(pollID, prevPollID, numTokens, hashOfVoteAndSalt);
-        } else {
-            // Invalid prevPollID
-            throw;
-        }
+        insertToDll(pollID, prevID, numTokens, hashOfVoteAndSalt);
     }
 
     /**
