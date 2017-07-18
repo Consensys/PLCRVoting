@@ -48,5 +48,23 @@ contract('Rescue Tokens', function(accounts) {
             .then((balance) => assert.equal(25, balance, "balance should have been changed"));
     });
 
-
+    it("should test simple rescue tokens for unrevealed vote (poll not ended)", () => {
+        let contract;
+        let pollID;
+        return getVoteContract()
+            .then((instance) => contract = instance)
+            .then(() => contract.requestVotingRights(50, {from:user[0]}))
+            .then(() => launchPoll("I am legend", commitDuration, revealDuration))
+            .then((_pollID) => pollID = _pollID)
+            .then(() => contract.commitVote(pollID, createVoteHash(0, 4), 50, 0, {from: user[0]}))
+            .then(() => increaseTime(commitDuration + 1))
+            .then(() => contract.withdrawVotingRights(25, {from: user[0]}))
+            .catch((err) => assert.equal(re.test(err), true, "Error in withdrawing voting rights"))
+            .then(() => contract.voteTokenBalance.call(user[0]))
+            .then((balance) => assert.equal(50, balance, "balance should not have been changed"))
+            .then(() => contract.rescueTokens(pollID, {from: user[0]}))
+            .catch((err) => assert.equal(re.test(err), true, "Error in rescuing tokens"))
+            .then(() => contract.voteTokenBalance.call(user[0]))
+            .then((balance) => assert.equal(50, balance, "balance should not have been changed"));
+    });
 });
