@@ -148,31 +148,20 @@ contract PLCRVoting {
     @param voteOption Vote choice used to generate commitHash for associated poll
     */
     function revealVote(uint pollID, uint salt, uint voteOption) external {
-        
         // Make sure the reveal period is active
         require(revealPeriodActive(pollID));
+        require(!hasBeenRevealed(pollID));                        // prevent user from revealing multiple times
+        require(sha3(voteOption, salt) == getCommitHash(pollID)); // compare resultant hash from inputs to original commitHash
 
-        // Make sure the vote has not yet been revealed
-        require(!hasBeenRevealed(pollID));
+        uint numTokens = getNumTokens(pollID); 
 
-        bytes32 currHash = sha3(voteOption, salt);
+        if (voteOption == VOTE_OPTION_FOR) // apply numTokens to appropriate poll choice
+            pollMap[pollID].votesFor += numTokens;
+        else
+            pollMap[pollID].votesAgainst += numTokens;
+        
+        deleteFromDll(pollID); // remove the node referring to this vote upon reveal
 
-        // Check if the hash from the input is the 
-        // same as the commit hash
-        if (currHash == getCommitHash(pollID)) {
-            // Record the vote
-            uint numTokens = getNumTokens(pollID);
-            if (voteOption == VOTE_OPTION_FOR) {
-                pollMap[pollID].votesFor += numTokens;
-            } else {
-                pollMap[pollID].votesAgainst += numTokens;
-            }
-            
-            // Remove the node referring to this vote as we no longer need it
-            deleteFromDll(pollID);
-        } else {
-            throw;
-        }
     }
 
     function getNumPassingTokens(address user, uint pollID, uint salt) constant public returns (uint correctVotes) {
