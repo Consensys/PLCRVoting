@@ -174,14 +174,14 @@ contract PLCRVoting {
         return false;
     }
 
-    function getNumPassingTokens(uint pollID, uint salt) constant public returns (uint correctVotes) {
+    function getNumPassingTokens(address user, uint pollID, uint salt) constant public returns (uint correctVotes) {
         require(pollEnded(pollID));
         uint winnerVote = isPassed(pollID) ? 1 : 0; 
         bytes32 winnerHash = sha3(winnerVote, salt);
-        bytes32 commitHash = getCommitHash(pollID);
+        bytes32 commitHash = bytes32(voteMap[sha3(user, pollID, 'commitHash')]);
 
         if (commitHash == winnerHash) {
-            uint numTokens = getAttribute(pollID, "numTokens");
+            uint numTokens = voteMap[sha3(user, pollID, 'numTokens')];
             return numTokens;
         } else {
             return 0;
