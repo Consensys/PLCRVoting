@@ -347,6 +347,16 @@ contract PLCRVoting {
     }
 
     /**
+    @dev Unlocks tokens locked in unrevealed vote where poll has ended
+    @param pollID Integer identifier associated with the target poll
+    */
+    function rescueTokens(uint pollID) public {
+        require(pollEnded(pollID));
+        require(!hasBeenRevealed(pollID));
+        deleteFromDll(pollID);
+    }
+
+    /**
     @dev Wrapper for getAttribute with attrName="prevID"
     @param pollID Integer identifier associated with target poll
     @return Integer identifier pointing to previous poll in sorted poll-linked-list
