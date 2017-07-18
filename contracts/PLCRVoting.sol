@@ -206,8 +206,8 @@ contract PLCRVoting {
         pollMap[pollNonce] = Poll({
             proposal: _proposal,
             voteQuorum: _voteQuorum,
-            commitEndDate: block.timestamp + commitDuration,
-            revealEndDate: block.timestamp + commitDuration + revealDuration,
+            commitEndDate: block.timestamp + _commitDuration,
+            revealEndDate: block.timestamp + _commitDuration + _revealDuration,
             votesFor: 0,
             votesAgainst: 0
         });
@@ -225,7 +225,7 @@ contract PLCRVoting {
         require(pollEnded(pollID));
 
         Poll poll = pollMap[pollID];
-        return ((100 - poll.voteQuorumSnap) * poll.votesFor) >= (poll.voteQuorumSnap * poll.votesAgainst);
+        return ((100 - poll.voteQuorum) * poll.votesFor) >= (poll.voteQuorum * poll.votesAgainst);
     }
 
     // ----------------
