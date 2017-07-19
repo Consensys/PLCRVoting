@@ -128,7 +128,7 @@ contract('User Demo Testing', function(accounts) {
 
             .then(() => increaseTime(revealDuration + 1))
             .then(() => contract.isPassed.call(poll2))
-            .then((passed) => assert.equal(passed, true, "poll2 passed incorrectly"))
+            .then((passed) => assert.equal(passed, false, "poll2 did not pass incorrectly"))
 
             .then(() => contract.isPassed.call(poll3))
             .then((passed) => assert.equal(passed, false, "poll3 passed incorrectly"))
@@ -156,7 +156,7 @@ contract('User Demo Testing', function(accounts) {
 
             // poll 2 rewards
             .then(() => contract.getNumPassingTokens.call(user[1], poll2, arraySalts[1]))
-            .then((result) => assert.equal(result, 5, "User1 poll2 reward incorrect"))
+            .then((result) => assert.equal(result, 0, "User1 poll2 reward incorrect"))
             .then(() => contract.getNumPassingTokens.call(user[2], poll2, arraySalts[2]))
             .then((result) => assert.equal(result, 0, "User2 poll2 reward incorrect"))
 
