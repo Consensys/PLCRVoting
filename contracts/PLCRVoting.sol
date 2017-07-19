@@ -234,8 +234,14 @@ contract PLCRVoting {
     @return Boolean indication of whether user has already revealed
     */
     function hasBeenRevealed(uint pollID) constant public returns (bool revealed) {
-        uint prevID = getPreviousID(pollID);
-        return prevID == getNextID(pollID) && prevID == pollID;
+        return hasBeenRevealed(msg.sender, pollID);
+    }
+
+    function hasBeenRevealed(address user, uint pollID) constant private returns (bool revealed) {
+        uint prevID = voteMap[sha3(user, pollID, "prevID")];
+        uint nextID = voteMap[sha3(user, pollID, "nextID")];
+        return prevID == nextID && prevID == pollID;
+
     }
 
     // ---------------------------
