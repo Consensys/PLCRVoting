@@ -23,11 +23,17 @@ contract PLCRVoting {
     uint pollNonce;
     event PollCreated(uint pollID);
 
+    // Constants for attributes in double linked-list represented by voteMap
+    string constant public ATTR_PREV_ID = "prevID";
+    string constant public ATTR_NEXT_ID = "nextID";
+    string constant public ATTR_NUM_TOKENS = "numTokens";
+    string constant public ATTR_COMMIT_HASH = "commitHash";
+
     // represent a double linked list through mapping
-    // sha3(userAddress, pollID, "prevID") => byte32 prevID
-    // sha3(userAddress, pollID, "nextID") => byte32 nextID
-    // sha3(userAddress, pollID, "numTokens") => byte32 numTokens
-    // sha3(userAddress, pollID, "commitHash") => byte32 commitHash
+    // sha3(userAddress, pollID, ATTR_PREV_ID) => byte32 prevID
+    // sha3(userAddress, pollID, ATTR_NEXT_ID) => byte32 nextID
+    // sha3(userAddress, pollID, ATTR_NUM_TOKENS) => byte32 numTokens
+    // sha3(userAddress, pollID, ATTR_COMMIT_HASH) => byte32 commitHash
     mapping(bytes32 => uint) public voteMap;    
        
     uint constant VOTE_OPTION_FOR = 1; /// vote option indicating a vote for the proposal
@@ -240,8 +246,8 @@ contract PLCRVoting {
     }
 
     function hasBeenRevealed(address user, uint pollID) constant private returns (bool revealed) {
-        uint prevID = voteMap[sha3(user, pollID, "prevID")];
-        uint nextID = voteMap[sha3(user, pollID, "nextID")];
+        uint prevID = voteMap[sha3(user, pollID, ATTR_PREV_ID)];
+        uint nextID = voteMap[sha3(user, pollID, ATTR_NEXT_ID)];
         return prevID == nextID && prevID == pollID;
 
     }
@@ -286,21 +292,21 @@ contract PLCRVoting {
     @param numTokens Number of tokens to be committed to target poll
     */
     function insertToDll(uint pollID, uint prevID, uint numTokens, bytes32 commitHash) internal {
-        uint nextID = getAttribute(prevID, "nextID");
+        uint nextID = getAttribute(prevID, ATTR_NEXT_ID);
 
         // make nextNode.prev point to newNode
-        setAttribute(nextID, "prevID", pollID);
+        setAttribute(nextID, ATTR_PREV_ID, pollID);
 
         // make prevNode.next point to newNode
-        setAttribute(prevID, "nextID", pollID);
+        setAttribute(prevID, ATTR_NEXT_ID, pollID);
 
         // make newNode point to next and prev 
-        setAttribute(pollID, "prevID", prevID); 
-        setAttribute(pollID, "nextID", nextID); 
+        setAttribute(pollID, ATTR_PREV_ID, prevID); 
+        setAttribute(pollID, ATTR_NEXT_ID, nextID); 
 
         // set properties of newNode
-        setAttribute(pollID, "numTokens", numTokens);
-        setAttribute(pollID, "commitHash", uint(commitHash));
+        setAttribute(pollID, ATTR_NUM_TOKENS, numTokens);
+        setAttribute(pollID, ATTR_COMMIT_HASH, uint(commitHash));
     }
 
     /**   
@@ -309,16 +315,16 @@ contract PLCRVoting {
     */
     function deleteFromDll(uint pollID) internal {
         // get next and prev node pollIDs
-        uint prevID = getAttribute(pollID, "prevID");
-        uint nextID = getAttribute(pollID, "nextID");
+        uint prevID = getAttribute(pollID, ATTR_PREV_ID);
+        uint nextID = getAttribute(pollID, ATTR_NEXT_ID);
 
         // remove node from list
-        setAttribute(prevID, "nextID", nextID);
-        setAttribute(nextID, "prevID", prevID);
+        setAttribute(prevID, ATTR_NEXT_ID, nextID);
+        setAttribute(nextID, ATTR_PREV_ID, prevID);
 
         // set nodes prev and next to its own pollID
-        setAttribute(pollID, "nextID", pollID); 
-        setAttribute(pollID, "prevID", pollID); 
+        setAttribute(pollID, ATTR_NEXT_ID, pollID); 
+        setAttribute(pollID, ATTR_PREV_ID, pollID); 
     }
 
     /**
@@ -365,30 +371,30 @@ contract PLCRVoting {
     }
 
     /**
-    @dev Wrapper for getAttribute with attrName="prevID"
+    @dev Wrapper for getAttribute with attrName=ATTR_PREV_ID
     @param pollID Integer identifier associated with target poll
     @return Integer identifier pointing to previous poll in sorted poll-linked-list
     */
     function getPreviousID(uint pollID) constant public returns (uint prevPollID) {
-        return getAttribute(pollID, "prevID");
+        return getAttribute(pollID, ATTR_PREV_ID);
     }
 
     /**
-    @dev Wrapper for getAttribute with attrName="nextID"
+    @dev Wrapper for getAttribute with attrName=ATTR_NEXT_ID
     @param pollID Integer identifier associated with target poll
     @return Integer identifier pointing to next poll in sorted poll-linked-list
     */
     function getNextID(uint pollID) constant public returns (uint nextPollID) {
-        return getAttribute(pollID, "nextID");
+        return getAttribute(pollID, ATTR_NEXT_ID);
     }
 
     /**
-    @dev Wrapper for getAttribute with attrName="numTokens"
+    @dev Wrapper for getAttribute with attrName=ATTR_NUM_TOKENS
     @param pollID Integer identifier associated with target poll
     @return Number of tokens committed to poll in sorted poll-linked-list
     */
     function getNumTokens(uint pollID) constant public returns (uint numTokens) {
-        return getAttribute(pollID, "numTokens");
+        return getAttribute(pollID, ATTR_NUM_TOKENS);
     }
 
     /**
@@ -396,7 +402,7 @@ contract PLCRVoting {
     @return Integer identifier to poll with maximum number of tokens committed to it
     */
     function getLastNode() constant public returns (uint pollID) {
-        return getAttribute(0, "prevID");
+        return getAttribute(0, ATTR_PREV_ID);
     }
 
     /**
@@ -404,7 +410,7 @@ contract PLCRVoting {
     @return Maximum number of tokens committed in poll specified 
     */
     function getMaxTokens() constant public returns (uint numTokens) {
-        return getAttribute(getLastNode(), "numTokens");
+        return getAttribute(getLastNode(), ATTR_NUM_TOKENS);
     }
     
     /**
