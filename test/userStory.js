@@ -62,7 +62,7 @@ contract('User Demo Testing', function(accounts) {
             .then(() => contract.commitVote(poll1, createVoteHash(arrayVoteOption[2], arraySalts[2]), 75, 0, {from:user[2]}))
             .then(() => contract.commitVote(poll1, createVoteHash(arrayVoteOption[3], arraySalts[3]), 25, 0, {from:user[3]}))
             .then(() => increaseTime(commitDuration + 1))
-            .then(() => contract.revealVote(poll1, arraySalts[0], arrayVoteOption[0])) 
+            .then(() => contract.revealVote(poll1, arraySalts[0], arrayVoteOption[0], {from: user[0]})) 
             .catch((err) => assert.equal(re.test(err), true, "Revealing vote that should not been committed"))
             .then(() => contract.commitVote(poll1, createVoteHash(arrayVoteOption[0], arraySalts[0]), 10, 0, {from:user[0]}))
             .catch((err) => assert.equal(re.test(err), true, "Committing during reveal period"))
@@ -150,7 +150,7 @@ contract('User Demo Testing', function(accounts) {
             .then(() => contract.getNumPassingTokens.call(user[0], poll1, arraySalts[0]))
             .then((result) => assert.equal(result, 0, "User0 poll1 reward incorrect"))
             .then(() => contract.getNumPassingTokens.call(user[1], poll1, arraySalts[1]))
-            .then((result) => assert.equal(result, 100, "User1 poll1 reward incorrect"))
+            .then((result) => assert.equal(Number(result), 100, "User1 poll1 reward incorrect"))
             .then(() => contract.getNumPassingTokens.call(user[2], poll1, arraySalts[2]))
             .then((result) => assert.equal(result, 75, "User2 poll1 reward incorrect"))
 
