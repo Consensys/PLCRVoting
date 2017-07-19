@@ -133,7 +133,9 @@ contract PLCRVoting {
         bytes32 winnerHash = sha3(winnerVote, salt);
         bytes32 commitHash = bytes32(voteMap[sha3(user, pollID, 'commitHash')]);
 
-        if (commitHash == winnerHash) {
+        // Check that the vote has been revealed and that the
+        // vote's commit hash is the same as the winning vote's hash
+        if (hasBeenRevealed(user, pollID) && commitHash == winnerHash) {
             uint numTokens = voteMap[sha3(user, pollID, 'numTokens')];
             return numTokens;
         } else {
