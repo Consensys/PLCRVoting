@@ -47,8 +47,10 @@ module.exports = (deployer, network, accounts) => {
 
     	return await Promise.all(
     		users.map(async (user, idx) => {
-    			await token.transfer(user, tokenConf.userAmounts[idx], {from: owner}) 
-    			await token.approve(VotingContract.address, tokenConf.userAmounts[idx], {from: user})
+                    if (tokenConf.userAmounts[idx] != 0){
+        			await token.transfer(user, tokenConf.userAmounts[idx], {from: owner}) 
+         			await token.approve(VotingContract.address, tokenConf.userAmounts[idx], {from: user})
+                    }
     		})
     	);
     });
