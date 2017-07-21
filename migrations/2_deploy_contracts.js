@@ -1,6 +1,7 @@
 // CONTRACTS:
 const VotingContract = artifacts.require("./PLCRVoting.sol");
 const HumanStandardToken = artifacts.require("./HumanStandardToken.sol");
+const ASCSDLL = artifacts.require("./ASCSDLL.sol");
 
 // NODE VARS:
 const fs = require("fs");
@@ -20,6 +21,9 @@ module.exports = (deployer, network, accounts) => {
     const users = accounts.slice(1, 10);
 
     let tokenConf = JSON.parse(fs.readFileSync('./conf/testToken.json'));
+
+    deployer.deploy(ASCSDLL);
+    deployer.link(ASCSDLL, VotingContract);
 
     // deploy the HumanStandardToken contract
     deployer.deploy(
