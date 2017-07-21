@@ -66,12 +66,16 @@ contract('User Demo Testing', function(accounts) {
             .catch((err) => assert.equal(re.test(err), true, "Revealing vote that should not been committed"))
             .then(() => contract.commitVote(poll1, createVoteHash(arrayVoteOption[0], arraySalts[0]), 10, 0, {from:user[0]}))
             .catch((err) => assert.equal(re.test(err), true, "Committing during reveal period"))
-            .then(() => contract.revealVote(poll1, arraySalts[1], arrayVoteOption[1], {from: user[1]})) 
+            .then(() => contract.revealVote.call(poll1, arraySalts[1], arrayVoteOption[1], {from: user[1]})) 
+            .then(() => console.log('Printing hasBeenRevealed1 right after reveal'))
+            .then(() => contract.hasBeenRevealed1.call(user[1], poll1))
+            .then(console.log)
             .then(() => contract.revealVote(poll1, arraySalts[2], arrayVoteOption[2], {from: user[2]})) 
             .then(() => contract.revealVote(poll1, arraySalts[3], arrayVoteOption[3], {from: user[3]})) 
             .then(() => increaseTime(revealDuration + 1))
             .then(() => contract.isPassed.call(poll1))
             .then((result) => assert.equal(result, true, "Poll should have passed but did not"));
+            assert();
     });
 
     it("should test multiple votes for single user", () => {

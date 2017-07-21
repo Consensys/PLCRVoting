@@ -25,10 +25,10 @@ contract PLCRVoting {
     event PollCreated(uint pollID);
 
     // Constants for attributes in double linked-list represented by voteMap
-    bytes32 constant public ATTR_PREV_ID = "prevID";
-    bytes32 constant public ATTR_NEXT_ID = "nextID";
-    bytes32 constant public ATTR_NUM_TOKENS = "numTokens";
-    bytes32 constant public ATTR_COMMIT_HASH = "commitHash";
+  //  bytes32 constant public "prev" = "prev";
+  //  bytes32 constant public "next" = "next";
+   // bytes32 constant public "numTokens" = "numTokens";
+   // bytes32 constant public "commitHash" = "commitHash";
 
     // Use DLL Library for managing votes(i.e commitHash and numTokens)
     using ASCSDLL for ASCSDLL.Data;
@@ -54,8 +54,8 @@ contract PLCRVoting {
         pollNonce = INITIAL_POLL_NONCE;
 
         bytes32[] memory z = new bytes32[](2);
-        z[0] = (ATTR_NUM_TOKENS);
-        z[1] = (ATTR_COMMIT_HASH);
+        z[0] = ("numTokens");
+        z[1] = ("commitHash");
         uint sortAttrIdx = 0;
         dll.setOptions(z, sortAttrIdx);
     }
@@ -98,7 +98,6 @@ contract PLCRVoting {
     @param prevPollID The ID of the poll that the user has voted the maximum number of tokens in which is still less than or equal to numTokens 
     */
     function commitVote(uint pollID, bytes32 hashOfVoteAndSalt, uint numTokens, uint prevPollID) external {
-        uint prevID = prevPollID;
         require(commitPeriodActive(pollID));
         require(hasEnoughTokens(numTokens)); // prevent user from overspending
         require(pollID != 0);                // prevent user from committing to zero node placerholder
@@ -109,6 +108,7 @@ contract PLCRVoting {
         dll.insert(prevPollID, pollID, attrVals);
     }
 
+    event uintEvent(uint a);
     /**
     @notice Reveals vote with choice and secret salt used in generating commitHash to attribute committed tokens
     @param pollID Integer identifier associated with target poll
@@ -123,25 +123,27 @@ contract PLCRVoting {
 
         uint numTokens = getNumTokens(pollID); 
 
-        if (voteOption == VOTE_OPTION_FOR) // apply numTokens to appropriate poll choice
+        if (voteOption == VOTE_OPTION_FOR){ // apply numTokens to appropriate poll choice
             pollMap[pollID].votesFor += numTokens;
-        else
+        }
+        else {
             pollMap[pollID].votesAgainst += numTokens;
+        }
         
         dll.remove(pollID); // remove the node referring to this vote upon reveal
-
     }
 
-    function getNumPassingTokens(address user, uint pollID, uint salt) constant public returns (uint correctVotes) {
+    function getNumPassingTokens(address user, uint pollID, uint salt) public returns (uint correctVotes) {
         require(pollEnded(pollID));
         uint winnerVote = isPassed(pollID) ? 1 : 0; 
         bytes32 winnerHash = sha3(winnerVote, salt);
-        bytes32 commitHash = bytes32(dll.store[sha3(user, pollID, ATTR_COMMIT_HASH)]);
+//        bytes32 commitHash = bytes32(dll.store[sha3(user, pollID, "commitHash")]);
 
         // Check that the vote has been revealed and that the
         // vote's commit hash is the same as the winning vote's hash
-        if (hasBeenRevealed(user, pollID) && commitHash == winnerHash) {
-            return dll.store[sha3(user, pollID, ATTR_NUM_TOKENS)];
+        if (hasBeenRevealed1(user, pollID) && bytes32(dll.store[sha3(user, pollID, "commitHash")]) == winnerHash) {
+//        if (hasBeenRevealed(user, pollID) && commitHash == winnerHash) {
+            return dll.store[sha3(user, pollID, "numTokens")];
         } else {
             return 0;
         }
@@ -240,14 +242,16 @@ contract PLCRVoting {
     @return Boolean indication of whether user has already revealed
     */
     function hasBeenRevealed(uint pollID) constant public returns (bool revealed) {
-        return hasBeenRevealed(msg.sender, pollID);
+        return hasBeenRevealed1(msg.sender, pollID);
     }
 
-    function hasBeenRevealed(address user, uint pollID) constant private returns (bool revealed) {
-        uint prevID = dll.store[sha3(user, pollID, ATTR_PREV_ID)];
-        uint nextID = dll.store[sha3(user, pollID, ATTR_NEXT_ID)];
-        return prevID == nextID && prevID == pollID;
+    event ash(address a);
 
+    function hasBeenRevealed1(address user, uint pollID) returns (bool revealed) {
+        uint prevID = dll.store[sha3(user, pollID, "prev")];
+        ash(user);
+        uint nextID = dll.store[sha3(user, pollID, "next")];
+        return prevID == nextID && prevID == pollID;
     } 
 
     // ---------------------------
@@ -260,7 +264,7 @@ contract PLCRVoting {
     @return Bytes32 hash property attached to target poll 
     */
     function getCommitHash(uint pollID) constant public returns (bytes32 commitHash) { 
-        return bytes32(dll.getAttr(pollID, ATTR_NEXT_ID));    
+        return bytes32(dll.getAttr(pollID, "commitHash"));    
     } 
 
     /**
@@ -274,12 +278,12 @@ contract PLCRVoting {
     }
 
     /**
-    @dev Wrapper for getAttribute with attrName=ATTR_NUM_TOKENS
+    @dev Wrapper for getAttribute with attrName="numTokens"
     @param pollID Integer identifier associated with target poll
     @return Number of tokens committed to poll in sorted poll-linked-list
     */
     function getNumTokens(uint pollID) constant public returns (uint numTokens) {
-        return dll.getAttr(pollID, ATTR_NUM_TOKENS);
+        return dll.getAttr(pollID, "numTokens");
     }
 
     /**
@@ -287,7 +291,7 @@ contract PLCRVoting {
     @return Integer identifier to poll with maximum number of tokens committed to it
     */
     function getLastNode() constant public returns (uint pollID) {
-        return dll.getAttr(0, ATTR_PREV_ID);
+        return dll.getAttr(0, "prev");
     }
 
     /**
@@ -295,7 +299,7 @@ contract PLCRVoting {
     @return Maximum number of tokens committed in poll specified 
     */
     function getMaxTokens() constant public returns (uint numTokens) {
-        return dll.getAttr(getLastNode(), ATTR_NUM_TOKENS);
+        return dll.getAttr(getLastNode(), "numTokens");
     } 
     
     /**
