@@ -68,13 +68,10 @@ library ASCSDLL {
         return false;
     }
 
-    event UE(uint num);
     /// removes curr nodes's links from list but preserves its data
     function remove(Data storage self, uint curr) {
         uint prev = getPrev(self, curr);
         uint next = getNext(self, curr);
-        UE(prev);
-        UE(next);
 
         setAttr(self, prev, "next", next);
         setAttr(self, next, "prev", prev);

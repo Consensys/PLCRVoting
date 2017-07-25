@@ -108,7 +108,6 @@ contract PLCRVoting {
         dll.insert(prevPollID, pollID, attrVals);
     }
 
-    event uintEvent(uint a);
     /**
     @notice Reveals vote with choice and secret salt used in generating commitHash to attribute committed tokens
     @param pollID Integer identifier associated with target poll
