@@ -24,12 +24,6 @@ contract PLCRVoting {
     uint pollNonce;
     event PollCreated(uint pollID);
 
-    // Constants for attributes in double linked-list represented by voteMap
-  //  bytes32 constant public "prev" = "prev";
-  //  bytes32 constant public "next" = "next";
-   // bytes32 constant public "numTokens" = "numTokens";
-   // bytes32 constant public "commitHash" = "commitHash";
-
     // Use DLL Library for managing votes(i.e commitHash and numTokens)
     using ASCSDLL for ASCSDLL.Data;
     ASCSDLL.Data dll;
@@ -132,21 +126,25 @@ contract PLCRVoting {
         dll.remove(pollID); // remove the node referring to this vote upon reveal
     }
 
-    function getNumPassingTokens(address user, uint pollID, uint salt) public returns (uint correctVotes) {
+    function getNumPassingTokens(uint pollID, uint salt) public constant returns (uint correctVotes) {
         require(pollEnded(pollID));
-        uint winnerVote = isPassed(pollID) ? 1 : 0; 
-        bytes32 winnerHash = sha3(winnerVote, salt);
-//        bytes32 commitHash = bytes32(dll.store[sha3(user, pollID, "commitHash")]);
+        require(hasBeenRevealed(pollID));
 
-        // Check that the vote has been revealed and that the
-        // vote's commit hash is the same as the winning vote's hash
-        if (hasBeenRevealed1(user, pollID) && bytes32(dll.store[sha3(user, pollID, "commitHash")]) == winnerHash) {
-//        if (hasBeenRevealed(user, pollID) && commitHash == winnerHash) {
-            return dll.store[sha3(user, pollID, "numTokens")];
-        } else {
-            return 0;
-        }
-    } 
+        uint winningChoice = isPassed(pollID) ? 1 : 0;
+        bytes32 winnerHash = sha3(winningChoice, salt);
+        bytes32 commitHash = getCommitHash(pollID);
+
+        return (winnerHash == commitHash) ? getNumTokens(pollID) : 0;
+    }
+
+    // function getNumPassingTokens(address user, uint pollID, uint salt) public returns (uint correctVotes) {
+    //     require(pollEnded(pollID));
+    //     uint winnerVote = isPassed(pollID) ? 1 : 0; 
+    //     bytes32 winnerHash = sha3(winnerVote, salt);
+    //     bytes32 commitHash = bytes32(dll.store[sha3(user, pollID, "commitHash")]);
+
+    //     return (commitHash == winnerHash) ? dll.store[sha3(user, pollID, "numTokens")] : 0;
+    // } 
 
     // ==================
     // POLLING INTERFACE:
@@ -185,7 +183,7 @@ contract PLCRVoting {
         require(pollEnded(pollID));
 
         Poll poll = pollMap[pollID];
-        return (100 * poll.votesFor) > poll.voteQuorum * (poll.votesFor + poll.votesAgainst);
+        return (100 * poll.votesFor) > (poll.voteQuorum * (poll.votesFor + poll.votesAgainst));
     }
 
     // ----------------
@@ -241,17 +239,16 @@ contract PLCRVoting {
     @return Boolean indication of whether user has already revealed
     */
     function hasBeenRevealed(uint pollID) constant public returns (bool revealed) {
-        return hasBeenRevealed1(msg.sender, pollID);
+        uint prevID = dll.getAttr(pollID, "prev");
+        uint nextID = dll.getAttr(pollID, "next");
+        return (prevID == pollID) && (nextID == pollID);
     }
 
-    event ash(address a);
-
-    function hasBeenRevealed1(address user, uint pollID) returns (bool revealed) {
-        uint prevID = dll.store[sha3(user, pollID, "prev")];
-        ash(user);
-        uint nextID = dll.store[sha3(user, pollID, "next")];
-        return prevID == nextID && prevID == pollID;
-    } 
+    // function hasBeenRevealed1(address user, uint pollID) returns (bool revealed) {
+    //     uint prevID = dll.store[sha3(user, pollID, "prev")];
+    //     uint nextID = dll.store[sha3(user, pollID, "next")];
+    //     return prevID == nextID && prevID == pollID;
+    // } 
 
     // ---------------------------
     // DOUBLE-LINKED-LIST HELPERS:

@@ -54,27 +54,42 @@ contract('User Demo Testing', function(accounts) {
         let contract;
         return getVoteContract()
             .then((instance) => contract = instance)
+            
             .then(() => launchPoll("Mike grows out long hair", commitDuration, revealDuration))
             .then((result) => poll1 = result)
+            
             .then(() => contract.commitVote(poll1, createVoteHash(arrayVoteOption[0], arraySalts[0]), 101, 0, {from:user[0]}))
             .catch((err) => assert.equal(re.test(err), true, "Committing too many tokens"))
+            
             .then(() => contract.commitVote(poll1, createVoteHash(arrayVoteOption[1], arraySalts[1]), 100, 0, {from:user[1]}))
             .then(() => contract.commitVote(poll1, createVoteHash(arrayVoteOption[2], arraySalts[2]), 75, 0, {from:user[2]}))
             .then(() => contract.commitVote(poll1, createVoteHash(arrayVoteOption[3], arraySalts[3]), 25, 0, {from:user[3]}))
             .then(() => increaseTime(commitDuration + 1))
+            
             .then(() => contract.revealVote(poll1, arraySalts[0], arrayVoteOption[0], {from: user[0]})) 
             .catch((err) => assert.equal(re.test(err), true, "Revealing vote that should not been committed"))
+            
             .then(() => contract.commitVote(poll1, createVoteHash(arrayVoteOption[0], arraySalts[0]), 10, 0, {from:user[0]}))
             .catch((err) => assert.equal(re.test(err), true, "Committing during reveal period"))
-            .then(() => contract.revealVote.call(poll1, arraySalts[1], arrayVoteOption[1], {from: user[1]})) 
-            .then(() => console.log('Printing hasBeenRevealed1 right after reveal'))
-            .then(() => contract.hasBeenRevealed1.call(user[1], poll1))
-            .then(console.log)
+            
+            .then(() => contract.revealVote(poll1, arraySalts[1], arrayVoteOption[1], {from: user[1]}))
+            // .then(() => contract.hasBeenRevealed.call(poll1, {from: user[1]}))
+            // .then((revealed) => console.log("poll1, user[1] revealed: ", revealed))
+            
             .then(() => contract.revealVote(poll1, arraySalts[2], arrayVoteOption[2], {from: user[2]})) 
+            // .then(() => contract.hasBeenRevealed.call(poll1, {from: user[2]}))
+            // .then((revealed) => console.log("poll1, user[2] revealed: ", revealed))
+            
             .then(() => contract.revealVote(poll1, arraySalts[3], arrayVoteOption[3], {from: user[3]})) 
+            // .then(() => contract.hasBeenRevealed.call(poll1, {from: user[3]}))
+            // .then((revealed) => console.log("poll1, user[3] revealed: ", revealed))
+            
             .then(() => increaseTime(revealDuration + 1))
             .then(() => contract.isPassed.call(poll1))
-            .then((result) => assert.equal(result, true, "Poll should have passed but did not"));
+            .then((result) => {
+                // console.log("poll1 passed:", result)
+                assert.equal(result, true, "Poll should have passed but did not")
+            });
             assert();
     });
 
@@ -119,12 +134,19 @@ contract('User Demo Testing', function(accounts) {
 
             .then(() => catchWithdraw(51, user[1]))
             .then(() => contract.revealVote(poll3, arraySalts[1], 0, {from: user[1]}))
-            
+            // .then(() => contract.hasBeenRevealed.call(poll3, {from: user[1]}))
+            // .then((revealed) => console.log("poll3, user[1] revealed: ", revealed))
+
             .then(() => catchWithdraw(51, user[1]))
             .then(() => contract.withdrawVotingRights(49, {from: user[1]})) //committed 51, 100 tokens total
+            // .then(() => console.log("withdraw of 49 succeeded"))
 
             .then(() => contract.revealVote(poll4, arraySalts[2], 1, {from: user[1]}))
-            .then(() => contract.withdrawVotingRights(51, {from: user[1]})) //withdraw remaining 51 tokens
+            // .then(() => contract.hasBeenRevealed.call(poll4, {from: user[1]}))
+            // .then((revealed) => console.log("poll4, user[1] revealed: ", revealed))
+            
+            .then(() => contract.withdrawVotingRights(46, {from: user[1]})) //withdraw remaining 46 tokens (5 still locked)
+            // .then(() => console.log("withdraw of remaining _46_ succeeded"))
 
             .then(() => contract.isPassed.call(poll3))
             .then((passed) => assert.ok(false, "isPassed didn't throw"))
@@ -138,9 +160,7 @@ contract('User Demo Testing', function(accounts) {
             .then((passed) => assert.equal(passed, false, "poll3 passed incorrectly"))
 
             .then(() => contract.isPassed.call(poll4))
-            .then((passed) => assert.equal(passed, true, "poll4 didn't pass"))
-
-            .then(() => catchWithdraw(51, user[1]));
+            .then((passed) => assert.equal(passed, true, "poll4 didn't pass"));
     });
 
     it("should check user rewards for each poll", () => {
@@ -151,23 +171,30 @@ contract('User Demo Testing', function(accounts) {
             .then((instance) => contract = instance)
 
             // poll 1 rewards
-            .then(() => contract.getNumPassingTokens.call(user[0], poll1, arraySalts[0]))
-            .then((result) => assert.equal(result, 0, "User0 poll1 reward incorrect"))
-            .then(() => contract.getNumPassingTokens.call(user[1], poll1, arraySalts[1]))
+            .then(() => contract.getNumPassingTokens.call(poll1, arraySalts[0], {from: user[0]}))
+            .then((passing) => assert.ok(false, "getNumPassingTokens didn't throw when user hasn't revealed"))
+            .catch((err) => assert.equal(re.test(err), true, "getNumPassingTokens threw incorrectly"))
+
+            .then(() => contract.getNumPassingTokens.call(poll1, arraySalts[1], {from: user[1]}))
             .then((result) => assert.equal(Number(result), 100, "User1 poll1 reward incorrect"))
-            .then(() => contract.getNumPassingTokens.call(user[2], poll1, arraySalts[2]))
-            .then((result) => assert.equal(result, 75, "User2 poll1 reward incorrect"))
+            
+            .then(() => contract.getNumPassingTokens.call(poll1, arraySalts[2], {from: user[2]}))
+            .then((result) => assert.equal(Number(result), 75, "User2 poll1 reward incorrect"))
 
             // poll 2 rewards
-            .then(() => contract.getNumPassingTokens.call(user[1], poll2, arraySalts[1]))
+            .then(() => contract.getNumPassingTokens.call(poll2, arraySalts[1], {from: user[1]}))
             .then((result) => assert.equal(result, 0, "User1 poll2 reward incorrect"))
-            .then(() => contract.getNumPassingTokens.call(user[2], poll2, arraySalts[2]))
-            .then((result) => assert.equal(result, 0, "User2 poll2 reward incorrect"))
+
+            .then(() => contract.getNumPassingTokens.call(poll2, arraySalts[2], {from: user[2]}))
+            .then((passing) => assert.ok(false, "getNumPassingTokens didn't throw when user hasn't revealed"))
+            .catch((err) => assert.equal(re.test(err), true, "getNumPassingTokens threw incorrectly"))
 
             // poll 3 rewards
-            .then(() => contract.getNumPassingTokens.call(user[1], poll3, arraySalts[1]))
+            .then(() => contract.getNumPassingTokens.call(poll3, arraySalts[1], {from: user[1]}))
             .then((result) => assert.equal(result, 0, "User1 poll3 reward incorrect"))
-            .then(() => contract.getNumPassingTokens.call(user[2], poll3, arraySalts[2]))
-            .then((result) => assert.equal(result, 0, "User2 poll3 reward incorrect"));
+            
+            .then(() => contract.getNumPassingTokens.call(poll3, arraySalts[2], {from: user[2]}))
+            .then((passing) => assert.ok(false, "getNumPassingTokens didn't throw when user hasn't revealed"))
+            .catch((err) => assert.equal(re.test(err), true, "getNumPassingTokens threw incorrectly"));
     });
 });
