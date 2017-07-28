@@ -2,11 +2,17 @@
 
 ## Summary
 
-Smart contract written in Solidity that allows for trustless token-weighted voting, where tokens used in voting are locked until the  respective poll for which they were use has ended.
+Smart contract for voting on the Ethereum blockchain
+
+* <b>Trustless</b> platform ensures only properly cast votes are counted.
+* <b>Secure</b> token-weighting mechanism prevents the same tokens from being used by different users in the same poll.
+* <b>Unbiased</b> voting allows for users to vote without being able to see the votes of others, removing groupthink and implicit biases.
 
 ## The Voting Process
 
 ### Poll
+
+#### Start Poll
 The process begins with a poll, which only the contract owner can create, centered upon some proposal. The proposal can be anything, but for now we will use the following as our proposal: "John gets employee of the month." So in the most basic sense, users vote either for or against the proposal. In this case, people vote for or against John getting the employee of the month award.
 
 ### Submitting Votes
