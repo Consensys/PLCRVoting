@@ -1,4 +1,4 @@
-# Partial-Lock Commit-Reveal Voting Scheme
+# Partial-Lock Commit-Reveal Voting
 
 ## Summary
 
