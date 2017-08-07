@@ -1,7 +1,8 @@
 // CONTRACTS:
 const VotingContract = artifacts.require("./PLCRVoting.sol");
 const HumanStandardToken = artifacts.require("./HumanStandardToken.sol");
-const ASCSDLL = artifacts.require("./ASCSDLL.sol");
+const DLL = artifacts.require("./DLL.sol");
+const AttributeStore = artifacts.require("./AttributeStore.sol");
 
 // NODE VARS:
 const fs = require("fs");
@@ -22,8 +23,13 @@ module.exports = (deployer, network, accounts) => {
 
     let tokenConf = JSON.parse(fs.readFileSync('./conf/testToken.json'));
 
-    deployer.deploy(ASCSDLL);
-    deployer.link(ASCSDLL, VotingContract);
+    // deploy libraries
+    deployer.deploy(DLL);
+    deployer.deploy(AttributeStore);
+
+    // link libraries
+    deployer.link(DLL, VotingContract);
+    deployer.link(AttributeStore, VotingContract);
 
     // deploy the HumanStandardToken contract
     deployer.deploy(
@@ -43,18 +49,17 @@ module.exports = (deployer, network, accounts) => {
     ))
 
     // distribute token 
-    .then(
-    async () => {
+    .then(async () => {
     	let token = await getERC20Token();
 
     	console.log("  Distributing tokens to users...");
 
     	return await Promise.all(
     		users.map(async (user, idx) => {
-                    if (tokenConf.userAmounts[idx] != 0){
+                if (tokenConf.userAmounts[idx] != 0){
         			await token.transfer(user, tokenConf.userAmounts[idx], {from: owner}) 
          			await token.approve(VotingContract.address, tokenConf.userAmounts[idx], {from: user})
-                    }
+                }
     		})
     	);
     });

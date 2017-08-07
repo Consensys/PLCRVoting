@@ -1,6 +1,7 @@
 pragma solidity ^0.4.8;
 import "./HumanStandardToken.sol";
-import "./ASCSDLL.sol";
+import "./DLL.sol";
+import "./AttributeStore.sol";
 
 /**
 @title Partial-Lock-Commit-Reveal Voting scheme with ERC20 tokens 
@@ -24,10 +25,12 @@ contract PLCRVoting {
     uint pollNonce;
     event PollCreated(uint pollID);
 
-    // Use DLL Library for managing votes(i.e commitHash and numTokens)
-    using ASCSDLL for ASCSDLL.Data;
-    ASCSDLL.Data dll;
-       
+    using DLL for DLL.Data;
+    mapping(address => DLL.Data) dllMap;
+
+    using AttributeStore for AttributeStore.Data;
+    AttributeStore.Data store;   
+
     uint constant VOTE_OPTION_FOR = 1; /// vote option indicating a vote for the proposal
 
     // ============
@@ -46,12 +49,6 @@ contract PLCRVoting {
         token = HumanStandardToken(tokenAddr);
         owner = msg.sender;
         pollNonce = INITIAL_POLL_NONCE;
-
-        bytes32[] memory z = new bytes32[](2);
-        z[0] = ("numTokens");
-        z[1] = ("commitHash");
-        uint sortAttrIdx = 0;
-        dll.setOptions(z, sortAttrIdx);
     }
 
     // ================
@@ -96,10 +93,24 @@ contract PLCRVoting {
         require(hasEnoughTokens(numTokens)); // prevent user from overspending
         require(pollID != 0);                // prevent user from committing to zero node placerholder
 
-        uint[] memory attrVals = new uint[](2);
-        attrVals[0] = (numTokens);
-        attrVals[1] = (uint(hashOfVoteAndSalt));
-        dll.insert(prevPollID, pollID, attrVals);
+        uint nextPollID = dllMap[msg.sender].getNext(prevPollID);
+
+        require(validPosition(prevPollID, nextPollID, numTokens));
+        dllMap[msg.sender].insert(prevPollID, pollID, nextPollID);
+
+        bytes32 UUID = attrUUID(pollID);
+        store.attachAttribute(UUID, "numTokens", numTokens);
+        store.attachAttribute(UUID, "commitHash", uint(hashOfVoteAndSalt));
+    }
+
+    function validPosition(uint prevID, uint nextID, uint numTokens) internal constant returns (bool) {
+        bool prevValid = (numTokens >= store.getAttribute(attrUUID(prevID), "numTokens"));
+        bool nextValid = (numTokens <= store.getAttribute(attrUUID(nextID), "numTokens") || nextID == 0);
+        return prevValid && nextValid;
+    }
+
+    function attrUUID(uint pollID) public constant returns (bytes32) {
+        return sha3(msg.sender, pollID);
     }
 
     /**
@@ -123,7 +134,7 @@ contract PLCRVoting {
             pollMap[pollID].votesAgainst += numTokens;
         }
         
-        dll.remove(pollID); // remove the node referring to this vote upon reveal
+        dllMap[msg.sender].remove(pollID); // remove the node referring to this vote upon reveal
     }
 
     function getNumPassingTokens(uint pollID, uint salt) public constant returns (uint correctVotes) {
@@ -239,16 +250,10 @@ contract PLCRVoting {
     @return Boolean indication of whether user has already revealed
     */
     function hasBeenRevealed(uint pollID) constant public returns (bool revealed) {
-        uint prevID = dll.getAttr(pollID, "prev");
-        uint nextID = dll.getAttr(pollID, "next");
+        uint prevID = dllMap[msg.sender].getPrev(pollID);
+        uint nextID = dllMap[msg.sender].getNext(pollID);
         return (prevID == pollID) && (nextID == pollID);
     }
-
-    // function hasBeenRevealed1(address user, uint pollID) returns (bool revealed) {
-    //     uint prevID = dll.store[sha3(user, pollID, "prev")];
-    //     uint nextID = dll.store[sha3(user, pollID, "next")];
-    //     return prevID == nextID && prevID == pollID;
-    // } 
 
     // ---------------------------
     // DOUBLE-LINKED-LIST HELPERS:
@@ -260,7 +265,7 @@ contract PLCRVoting {
     @return Bytes32 hash property attached to target poll 
     */
     function getCommitHash(uint pollID) constant public returns (bytes32 commitHash) { 
-        return bytes32(dll.getAttr(pollID, "commitHash"));    
+        return bytes32(store.getAttribute(attrUUID(pollID), "commitHash"));    
     } 
 
     /**
@@ -270,7 +275,8 @@ contract PLCRVoting {
     function rescueTokens(uint pollID) public {
         require(pollEnded(pollID));
         require(!hasBeenRevealed(pollID));
-        dll.reset(pollID);
+
+        dllMap[msg.sender].remove(pollID);
     }
 
     /**
@@ -279,7 +285,7 @@ contract PLCRVoting {
     @return Number of tokens committed to poll in sorted poll-linked-list
     */
     function getNumTokens(uint pollID) constant public returns (uint numTokens) {
-        return dll.getAttr(pollID, "numTokens");
+        return store.getAttribute(attrUUID(pollID), "numTokens");
     }
 
     /**
@@ -287,7 +293,7 @@ contract PLCRVoting {
     @return Integer identifier to poll with maximum number of tokens committed to it
     */
     function getLastNode() constant public returns (uint pollID) {
-        return dll.getAttr(0, "prev");
+        return dllMap[msg.sender].getPrev(0);
     }
 
     /**
@@ -295,7 +301,7 @@ contract PLCRVoting {
     @return Maximum number of tokens committed in poll specified 
     */
     function getMaxTokens() constant public returns (uint numTokens) {
-        return dll.getAttr(getLastNode(), "numTokens");
+        return getNumTokens(getLastNode());
     } 
     
     /**
