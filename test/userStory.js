@@ -19,7 +19,7 @@ contract('User Demo Testing', function(accounts) {
             .then((balance) => assert.equal(balance, 100, "User2 balance not updated"));
     });
 
-    it("should test repeat token requesting and attemps at over-requesting", () => {
+    it("should test repeat token requesting and attempts at over-requesting", () => {
         let contract;
         return getVoteContract()
             .then((instance) => contract = instance)
