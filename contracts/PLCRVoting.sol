@@ -83,11 +83,11 @@ contract PLCRVoting {
     /**
     @notice Commits vote using hash of choice and secret salt to conceal vote until reveal
     @param pollID Integer identifier associated with target poll
-    @param hashOfVoteAndSalt Commit hash of voter's secret choice and salt (randomly chosen number needed to reveal)
+    @param secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order)
     @param numTokens The number of tokens to be committed towards the target poll
     @param prevPollID The ID of the poll that the user has voted the maximum number of tokens in which is still less than or equal to numTokens 
     */
-    function commitVote(uint pollID, bytes32 hashOfVoteAndSalt, uint numTokens, uint prevPollID) external {
+    function commitVote(uint pollID, bytes32 secretHash, uint numTokens, uint prevPollID) external {
         require(commitPeriodActive(pollID));
         require(hasEnoughTokens(numTokens)); // prevent user from overspending
         require(pollID != 0);                // prevent user from committing to zero node placerholder
@@ -99,7 +99,7 @@ contract PLCRVoting {
 
         bytes32 UUID = attrUUID(pollID);
         store.attachAttribute(UUID, "numTokens", numTokens);
-        store.attachAttribute(UUID, "commitHash", uint(hashOfVoteAndSalt));
+        store.attachAttribute(UUID, "commitHash", uint(secretHash));
     }
 
     /**
@@ -119,10 +119,10 @@ contract PLCRVoting {
     /**
     @notice Reveals vote with choice and secret salt used in generating commitHash to attribute committed tokens
     @param pollID Integer identifier associated with target poll
-    @param salt Secret number used to generate commitHash for associated poll
     @param voteOption Vote choice used to generate commitHash for associated poll
+    @param salt Secret number used to generate commitHash for associated poll
     */
-    function revealVote(uint pollID, uint salt, uint voteOption) external {
+    function revealVote(uint pollID, uint voteOption, uint salt) external {
         // Make sure the reveal period is active
         require(revealPeriodActive(pollID));
         require(!hasBeenRevealed(pollID));                        // prevent user from revealing multiple times

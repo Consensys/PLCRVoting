@@ -39,7 +39,7 @@ contract('Rescue Tokens', function(accounts) {
             .then((_pollID) => pollID = _pollID)
             .then(() => contract.commitVote(pollID, createVoteHash(vote.option, vote.salt), 50, 0, {from: user[1]}))
             .then(() => increaseTime(commitDuration + 1))
-            .then(() => contract.revealVote(pollID, vote.salt, vote.option, {from: user[1]}))
+            .then(() => contract.revealVote(pollID, vote.option, vote.salt, {from: user[1]}))
             .then(() => increaseTime(revealDuration))
             .then(() => contract.rescueTokens(pollID, {from: user[1]}))
             .catch((err) => assert.equal(re.test(err), true, "Error in rescue for revealed tokens"))

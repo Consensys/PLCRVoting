@@ -66,21 +66,21 @@ contract('User Demo Testing', function(accounts) {
             .then(() => contract.commitVote(poll1, createVoteHash(arrayVoteOption[3], arraySalts[3]), 25, 0, {from:user[3]}))
             .then(() => increaseTime(commitDuration + 1))
             
-            .then(() => contract.revealVote(poll1, arraySalts[0], arrayVoteOption[0], {from: user[0]})) 
+            .then(() => contract.revealVote(poll1, arrayVoteOption[0], arraySalts[0], {from: user[0]})) 
             .catch((err) => assert.equal(re.test(err), true, "Revealing vote that should not been committed"))
             
             .then(() => contract.commitVote(poll1, createVoteHash(arrayVoteOption[0], arraySalts[0]), 10, 0, {from:user[0]}))
             .catch((err) => assert.equal(re.test(err), true, "Committing during reveal period"))
             
-            .then(() => contract.revealVote(poll1, arraySalts[1], arrayVoteOption[1], {from: user[1]}))
+            .then(() => contract.revealVote(poll1, arrayVoteOption[1], arraySalts[1], {from: user[1]}))
             // .then(() => contract.hasBeenRevealed.call(poll1, {from: user[1]}))
             // .then((revealed) => console.log("poll1, user[1] revealed: ", revealed))
             
-            .then(() => contract.revealVote(poll1, arraySalts[2], arrayVoteOption[2], {from: user[2]})) 
+            .then(() => contract.revealVote(poll1, arrayVoteOption[2], arraySalts[2], {from: user[2]})) 
             // .then(() => contract.hasBeenRevealed.call(poll1, {from: user[2]}))
             // .then((revealed) => console.log("poll1, user[2] revealed: ", revealed))
             
-            .then(() => contract.revealVote(poll1, arraySalts[3], arrayVoteOption[3], {from: user[3]})) 
+            .then(() => contract.revealVote(poll1, arrayVoteOption[3], arraySalts[3], {from: user[3]})) 
             // .then(() => contract.hasBeenRevealed.call(poll1, {from: user[3]}))
             // .then((revealed) => console.log("poll1, user[3] revealed: ", revealed))
             
@@ -133,7 +133,7 @@ contract('User Demo Testing', function(accounts) {
             .then(() => increaseTime(commitDuration + 1))
 
             .then(() => catchWithdraw(51, user[1]))
-            .then(() => contract.revealVote(poll3, arraySalts[1], 0, {from: user[1]}))
+            .then(() => contract.revealVote(poll3, 0, arraySalts[1], {from: user[1]}))
             // .then(() => contract.hasBeenRevealed.call(poll3, {from: user[1]}))
             // .then((revealed) => console.log("poll3, user[1] revealed: ", revealed))
 
@@ -141,7 +141,7 @@ contract('User Demo Testing', function(accounts) {
             .then(() => contract.withdrawVotingRights(49, {from: user[1]})) //committed 51, 100 tokens total
             // .then(() => console.log("withdraw of 49 succeeded"))
 
-            .then(() => contract.revealVote(poll4, arraySalts[2], 1, {from: user[1]}))
+            .then(() => contract.revealVote(poll4, 1, arraySalts[2], {from: user[1]}))
             // .then(() => contract.hasBeenRevealed.call(poll4, {from: user[1]}))
             // .then((revealed) => console.log("poll4, user[1] revealed: ", revealed))
             
