@@ -70,7 +70,7 @@ contract PLCRVoting {
     @param numTokens The number of ERC20 tokens desired in exchange for voting rights
     */
     function withdrawVotingRights(uint numTokens) external {
-        uint availableTokens = voteTokenBalance[msg.sender] - getMaxTokens();
+        uint availableTokens = voteTokenBalance[msg.sender] - getLockedTokens();
         require(availableTokens >= numTokens);
         require(token.transfer(msg.sender, numTokens));
         voteTokenBalance[msg.sender] -= numTokens;
@@ -297,7 +297,7 @@ contract PLCRVoting {
     @dev Gets the numTokens property of getLastNode
     @return Maximum number of tokens committed in poll specified 
     */
-    function getMaxTokens() constant public returns (uint numTokens) {
+    function getLockedTokens() constant public returns (uint numTokens) {
         return getNumTokens(getLastNode());
     } 
     
