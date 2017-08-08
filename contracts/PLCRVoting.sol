@@ -28,7 +28,7 @@ contract PLCRVoting {
     mapping(address => DLL.Data) dllMap;
 
     using AttributeStore for AttributeStore.Data;
-    AttributeStore.Data store;   
+    AttributeStore.Data store;
 
     uint constant VOTE_OPTION_FOR = 1; /// vote option indicating a vote for the proposal
 
@@ -102,14 +102,18 @@ contract PLCRVoting {
         store.attachAttribute(UUID, "commitHash", uint(hashOfVoteAndSalt));
     }
 
-    function validPosition(uint prevID, uint nextID, uint numTokens) internal constant returns (bool) {
+    /**
+    @dev Compares previous and next poll's committed tokens for sorting purposes
+    @param prevID Integer identifier associated with previous poll in sorted order
+    @param nextID Integer identifier associated with next poll in sorted order
+    @param numTokens The number of tokens to be committed towards the poll (used for sorting)
+    @return valid Boolean indication of if the specified position maintains the sort
+    */
+    function validPosition(uint prevID, uint nextID, uint numTokens) public constant returns (bool valid) {
         bool prevValid = (numTokens >= store.getAttribute(attrUUID(prevID), "numTokens"));
-        bool nextValid = (numTokens <= store.getAttribute(attrUUID(nextID), "numTokens") || nextID == 0);
+        // if next is zero node, numTokens does not need to be greater
+        bool nextValid = (numTokens <= store.getAttribute(attrUUID(nextID), "numTokens") || nextID == 0); 
         return prevValid && nextValid;
-    }
-
-    function attrUUID(uint pollID) public constant returns (bytes32) {
-        return sha3(msg.sender, pollID);
     }
 
     /**
@@ -126,16 +130,19 @@ contract PLCRVoting {
 
         uint numTokens = getNumTokens(pollID); 
 
-        if (voteOption == VOTE_OPTION_FOR){ // apply numTokens to appropriate poll choice
+        if (voteOption == VOTE_OPTION_FOR) // apply numTokens to appropriate poll choice
             pollMap[pollID].votesFor += numTokens;
-        }
-        else {
+        else
             pollMap[pollID].votesAgainst += numTokens;
-        }
         
         dllMap[msg.sender].remove(pollID); // remove the node referring to this vote upon reveal
     }
 
+    /**
+    @param pollID Integer identifier associated with target poll
+    @param salt Arbitrarily chosen integer used to generate secretHash
+    @return correctVotes Number of tokens voted for winning option
+    */
     function getNumPassingTokens(uint pollID, uint salt) public constant returns (uint correctVotes) {
         require(pollEnded(pollID));
         require(hasBeenRevealed(pollID));
@@ -146,15 +153,6 @@ contract PLCRVoting {
 
         return (winnerHash == commitHash) ? getNumTokens(pollID) : 0;
     }
-
-    // function getNumPassingTokens(address user, uint pollID, uint salt) public returns (uint correctVotes) {
-    //     require(pollEnded(pollID));
-    //     uint winnerVote = isPassed(pollID) ? 1 : 0; 
-    //     bytes32 winnerHash = sha3(winnerVote, salt);
-    //     bytes32 commitHash = bytes32(dll.store[sha3(user, pollID, "commitHash")]);
-
-    //     return (commitHash == winnerHash) ? dll.store[sha3(user, pollID, "numTokens")] : 0;
-    // } 
 
     // ==================
     // POLLING INTERFACE:
@@ -330,5 +328,14 @@ contract PLCRVoting {
     */
     function isExpired(uint terminationDate) constant public returns (bool expired) {
         return (block.timestamp > terminationDate);
+    }
+
+    /**
+    @dev Generates an identifier which associates a user and a poll together
+    @param pollID Integer identifier associated with target poll
+    @return UUID Hash which is deterministic from user and pollID
+    */
+    function attrUUID(uint pollID) public constant returns (bytes32 UUID) {
+        return sha3(msg.sender, pollID);
     }
 }
