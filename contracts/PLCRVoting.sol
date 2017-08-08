@@ -12,7 +12,6 @@ contract PLCRVoting {
     mapping(address => uint) public voteTokenBalance;
 
     struct Poll {
-        string proposal;        /// proposal to be voted for/against
         uint commitEndDate;     /// expiration date of commit period for poll
         uint revealEndDate;     /// expiration date of reveal period for poll
         uint voteQuorum;	    /// number of votes required for a proposal to pass
@@ -163,17 +162,15 @@ contract PLCRVoting {
 
     /**
     @dev Initiates a poll with canonical configured parameters at pollID emitted by PollCreated event
-    @param _proposal String representing poll subject matter to be voted for or against
     @param _voteQuorum Type of majority (out of 100) that is necessary for poll to be successful
     @param _commitDuration Length of desired commit period in seconds
     @param _revealDuration Length of desired reveal period in seconds
     */
-    function startPoll(string _proposal, uint _voteQuorum, uint _commitDuration, uint _revealDuration) public returns (uint pollID) {
+    function startPoll(uint _voteQuorum, uint _commitDuration, uint _revealDuration) public returns (uint pollID) {
         require(isOwner(msg.sender));
         pollNonce = pollNonce + 1;
 
         pollMap[pollNonce] = Poll({
-            proposal: _proposal,
             voteQuorum: _voteQuorum,
             commitEndDate: block.timestamp + _commitDuration,
             revealEndDate: block.timestamp + _commitDuration + _revealDuration,

@@ -76,7 +76,7 @@ module.exports = function() {
     // launches poll and returns pollID as string
     this.launchPoll = function(proposal, commitDuration, revealDuration) {
         return getVoteContract()
-            .then((vote) => vote.startPoll(proposal, 50, commitDuration, revealDuration))
+            .then((vote) => vote.startPoll(0, commitDuration, revealDuration))
             .then((result) => result.logs[0].args.pollID.toString());
     }
 }
