@@ -86,14 +86,6 @@ plcr.rescueTokens(pollID);
 Rescues by unlocking votes committed to poll labelled by `pollID` that were never revealed
 * requires that the poll labelled by `pollID` has ended
 
-### getLockedTokens
-
-```jsx
-plcr.getLockedTokens();
-```
-Retrieves the maximum amount of locked votes in any active poll for the given user
-
-
 ## Voting Interface
 
 ### commitVote
@@ -130,14 +122,13 @@ Attributes `numTokens` votes for option `voteOption` committed to poll labelled 
 ### startPoll
 
 ```jsx
-string proposal = "should I wake up early?";
 uint quorum = 50;
 uint commitDuration = 100;
 uint revealDuration = 100;
-uint pollID = plcr.startPoll(proposal, quorum, commitDuration, revealDuration);
+uint pollID = plcr.startPoll(quorum, commitDuration, revealDuration);
 ```
 
-Generates a poll labelled by `pollID` with `proposal` requiring a percentage majority of `quorum` configuring `commitDuration` and `revealDuration`
+Generates a poll labelled by `pollID` requiring a percentage majority of `quorum` configuring `commitDuration` and `revealDuration`
 * requires that the `msg.sender` is the deployer (owner) of the `plcr` instance
 
 ### isPassed
