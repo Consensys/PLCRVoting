@@ -171,29 +171,29 @@ contract('User Demo Testing', function(accounts) {
             .then((instance) => contract = instance)
 
             // poll 1 rewards
-            .then(() => contract.getNumPassingTokens.call(poll1, arraySalts[0], {from: user[0]}))
+            .then(() => contract.getNumPassingTokens.call(user[0], poll1, arraySalts[0]))
             .then((passing) => assert.ok(false, "getNumPassingTokens didn't throw when user hasn't revealed"))
             .catch((err) => assert.equal(re.test(err), true, "getNumPassingTokens threw incorrectly"))
 
-            .then(() => contract.getNumPassingTokens.call(poll1, arraySalts[1], {from: user[1]}))
+            .then(() => contract.getNumPassingTokens.call(user[1], poll1, arraySalts[1]))
             .then((result) => assert.equal(Number(result), 100, "User1 poll1 reward incorrect"))
             
-            .then(() => contract.getNumPassingTokens.call(poll1, arraySalts[2], {from: user[2]}))
+            .then(() => contract.getNumPassingTokens.call(user[2], poll1, arraySalts[2]))
             .then((result) => assert.equal(Number(result), 75, "User2 poll1 reward incorrect"))
 
             // poll 2 rewards
-            .then(() => contract.getNumPassingTokens.call(poll2, arraySalts[1], {from: user[1]}))
+            .then(() => contract.getNumPassingTokens.call(user[1], poll2, arraySalts[1]))
             .then((result) => assert.equal(result, 0, "User1 poll2 reward incorrect"))
 
-            .then(() => contract.getNumPassingTokens.call(poll2, arraySalts[2], {from: user[2]}))
+            .then(() => contract.getNumPassingTokens.call(user[2], poll2, arraySalts[2]))
             .then((passing) => assert.ok(false, "getNumPassingTokens didn't throw when user hasn't revealed"))
             .catch((err) => assert.equal(re.test(err), true, "getNumPassingTokens threw incorrectly"))
 
             // poll 3 rewards
-            .then(() => contract.getNumPassingTokens.call(poll3, arraySalts[1], {from: user[1]}))
+            .then(() => contract.getNumPassingTokens.call(user[1], poll3, arraySalts[1]))
             .then((result) => assert.equal(result, 0, "User1 poll3 reward incorrect"))
             
-            .then(() => contract.getNumPassingTokens.call(poll3, arraySalts[2], {from: user[2]}))
+            .then(() => contract.getNumPassingTokens.call(user[2], poll3, arraySalts[2]))
             .then((passing) => assert.ok(false, "getNumPassingTokens didn't throw when user hasn't revealed"))
             .catch((err) => assert.equal(re.test(err), true, "getNumPassingTokens threw incorrectly"));
     });

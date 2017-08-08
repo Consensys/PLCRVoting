@@ -30,8 +30,6 @@ contract PLCRVoting {
     using AttributeStore for AttributeStore.Data;
     AttributeStore.Data store;
 
-    uint constant VOTE_OPTION_FOR = 1; /// vote option indicating a vote for the proposal
-
     // ============
     // CONSTRUCTOR:
     // ============
@@ -70,10 +68,21 @@ contract PLCRVoting {
     @param numTokens The number of ERC20 tokens desired in exchange for voting rights
     */
     function withdrawVotingRights(uint numTokens) external {
-        uint availableTokens = voteTokenBalance[msg.sender] - getLockedTokens();
+        uint availableTokens = voteTokenBalance[msg.sender] - getLockedTokens(msg.sender);
         require(availableTokens >= numTokens);
         require(token.transfer(msg.sender, numTokens));
         voteTokenBalance[msg.sender] -= numTokens;
+    }
+
+    /**
+    @dev Unlocks tokens locked in unrevealed vote where poll has ended
+    @param pollID Integer identifier associated with the target poll
+    */
+    function rescueTokens(uint pollID) external {
+        require(pollEnded(pollID));
+        require(!hasBeenRevealed(msg.sender, pollID));
+
+        dllMap[msg.sender].remove(pollID);
     }
 
     // =================
@@ -89,15 +98,16 @@ contract PLCRVoting {
     */
     function commitVote(uint pollID, bytes32 secretHash, uint numTokens, uint prevPollID) external {
         require(commitPeriodActive(pollID));
-        require(hasEnoughTokens(numTokens)); // prevent user from overspending
+        require(voteTokenBalance[msg.sender] >= numTokens); // prevent user from overspending
         require(pollID != 0);                // prevent user from committing to zero node placerholder
 
         uint nextPollID = dllMap[msg.sender].getNext(prevPollID);
 
-        require(validPosition(prevPollID, nextPollID, numTokens));
+        require(validPosition(prevPollID, nextPollID, msg.sender, numTokens));
         dllMap[msg.sender].insert(prevPollID, pollID, nextPollID);
 
-        bytes32 UUID = attrUUID(pollID);
+        bytes32 UUID = attrUUID(msg.sender, pollID);
+
         store.attachAttribute(UUID, "numTokens", numTokens);
         store.attachAttribute(UUID, "commitHash", uint(secretHash));
     }
@@ -106,13 +116,14 @@ contract PLCRVoting {
     @dev Compares previous and next poll's committed tokens for sorting purposes
     @param prevID Integer identifier associated with previous poll in sorted order
     @param nextID Integer identifier associated with next poll in sorted order
+    @param voter Address of user to check DLL position for
     @param numTokens The number of tokens to be committed towards the poll (used for sorting)
     @return valid Boolean indication of if the specified position maintains the sort
     */
-    function validPosition(uint prevID, uint nextID, uint numTokens) public constant returns (bool valid) {
-        bool prevValid = (numTokens >= store.getAttribute(attrUUID(prevID), "numTokens"));
+    function validPosition(uint prevID, uint nextID, address voter, uint numTokens) public constant returns (bool valid) {
+        bool prevValid = (numTokens >= getNumTokens(voter, prevID));
         // if next is zero node, numTokens does not need to be greater
-        bool nextValid = (numTokens <= store.getAttribute(attrUUID(nextID), "numTokens") || nextID == 0); 
+        bool nextValid = (numTokens <= getNumTokens(voter, nextID) || nextID == 0); 
         return prevValid && nextValid;
     }
 
@@ -125,12 +136,12 @@ contract PLCRVoting {
     function revealVote(uint pollID, uint voteOption, uint salt) external {
         // Make sure the reveal period is active
         require(revealPeriodActive(pollID));
-        require(!hasBeenRevealed(pollID));                        // prevent user from revealing multiple times
-        require(sha3(voteOption, salt) == getCommitHash(pollID)); // compare resultant hash from inputs to original commitHash
+        require(!hasBeenRevealed(msg.sender, pollID));                        // prevent user from revealing multiple times
+        require(sha3(voteOption, salt) == getCommitHash(msg.sender, pollID)); // compare resultant hash from inputs to original commitHash
 
-        uint numTokens = getNumTokens(pollID); 
+        uint numTokens = getNumTokens(msg.sender, pollID); 
 
-        if (voteOption == VOTE_OPTION_FOR) // apply numTokens to appropriate poll choice
+        if (voteOption == 1) // apply numTokens to appropriate poll choice
             pollMap[pollID].votesFor += numTokens;
         else
             pollMap[pollID].votesAgainst += numTokens;
@@ -143,15 +154,15 @@ contract PLCRVoting {
     @param salt Arbitrarily chosen integer used to generate secretHash
     @return correctVotes Number of tokens voted for winning option
     */
-    function getNumPassingTokens(uint pollID, uint salt) public constant returns (uint correctVotes) {
+    function getNumPassingTokens(address voter, uint pollID, uint salt) public constant returns (uint correctVotes) {
         require(pollEnded(pollID));
-        require(hasBeenRevealed(pollID));
+        require(hasBeenRevealed(voter, pollID));
 
         uint winningChoice = isPassed(pollID) ? 1 : 0;
         bytes32 winnerHash = sha3(winningChoice, salt);
-        bytes32 commitHash = getCommitHash(pollID);
+        bytes32 commitHash = getCommitHash(voter, pollID);
 
-        return (winnerHash == commitHash) ? getNumTokens(pollID) : 0;
+        return (winnerHash == commitHash) ? getNumTokens(voter, pollID) : 0;
     }
 
     // ==================
@@ -204,11 +215,10 @@ contract PLCRVoting {
     function getTotalNumberOfTokensForWinningOption(uint pollID) constant public returns (uint numTokens) {
         require(pollEnded(pollID));
 
-        if (isPassed(pollID)) {
+        if (isPassed(pollID))
             return pollMap[pollID].votesFor;
-        } else {
+        else
             return pollMap[pollID].votesAgainst;
-        }
     }
 
     /**
@@ -241,12 +251,13 @@ contract PLCRVoting {
 
     /**
     @dev Checks if user has already revealed for specified poll
+    @param voter Address of user to check against
     @param pollID Integer identifier associated with target poll
     @return Boolean indication of whether user has already revealed
     */
-    function hasBeenRevealed(uint pollID) constant public returns (bool revealed) {
-        uint prevID = dllMap[msg.sender].getPrev(pollID);
-        uint nextID = dllMap[msg.sender].getNext(pollID);
+    function hasBeenRevealed(address voter, uint pollID) constant public returns (bool revealed) {
+        uint prevID = dllMap[voter].getPrev(pollID);
+        uint nextID = dllMap[voter].getNext(pollID);
         return (prevID == pollID) && (nextID == pollID);
     }
 
@@ -256,56 +267,40 @@ contract PLCRVoting {
 
     /**
     @dev Gets the bytes32 commitHash property of target poll
+    @param voter Address of user to check against
     @param pollID Integer identifier associated with target poll
     @return Bytes32 hash property attached to target poll 
     */
-    function getCommitHash(uint pollID) constant public returns (bytes32 commitHash) { 
-        return bytes32(store.getAttribute(attrUUID(pollID), "commitHash"));    
+    function getCommitHash(address voter, uint pollID) constant public returns (bytes32 commitHash) { 
+        return bytes32(store.getAttribute(attrUUID(voter, pollID), "commitHash"));    
     } 
 
     /**
-    @dev Unlocks tokens locked in unrevealed vote where poll has ended
-    @param pollID Integer identifier associated with the target poll
-    */
-    function rescueTokens(uint pollID) public {
-        require(pollEnded(pollID));
-        require(!hasBeenRevealed(pollID));
-
-        dllMap[msg.sender].remove(pollID);
-    }
-
-    /**
     @dev Wrapper for getAttribute with attrName="numTokens"
+    @param voter Address of user to check against
     @param pollID Integer identifier associated with target poll
     @return Number of tokens committed to poll in sorted poll-linked-list
     */
-    function getNumTokens(uint pollID) constant public returns (uint numTokens) {
-        return store.getAttribute(attrUUID(pollID), "numTokens");
+    function getNumTokens(address voter, uint pollID) constant public returns (uint numTokens) {
+        return store.getAttribute(attrUUID(voter, pollID), "numTokens");
     }
 
     /**
     @dev Gets top element of sorted poll-linked-list
+    @param voter Address of user to check against
     @return Integer identifier to poll with maximum number of tokens committed to it
     */
-    function getLastNode() constant public returns (uint pollID) {
+    function getLastNode(address voter) constant public returns (uint pollID) {
         return dllMap[msg.sender].getPrev(0);
     }
 
     /**
     @dev Gets the numTokens property of getLastNode
+    @param voter Address of user to check against
     @return Maximum number of tokens committed in poll specified 
     */
-    function getLockedTokens() constant public returns (uint numTokens) {
-        return getNumTokens(getLastNode());
-    } 
-    
-    /**
-    @dev Checks if user has enough votingTokens for committing
-    @param numTokens Number of votingTokens to be committed
-    @return Boolean indication of whether user is approved to proceed committing numTokens
-    */
-    function hasEnoughTokens(uint numTokens) constant public returns (bool hasEnough) {
-        return voteTokenBalance[msg.sender] >= numTokens;
+    function getLockedTokens(address voter) constant public returns (uint numTokens) {
+        return getNumTokens(voter, getLastNode(voter));
     }
  
     // ----------------
@@ -335,7 +330,7 @@ contract PLCRVoting {
     @param pollID Integer identifier associated with target poll
     @return UUID Hash which is deterministic from user and pollID
     */
-    function attrUUID(uint pollID) public constant returns (bytes32 UUID) {
-        return sha3(msg.sender, pollID);
+    function attrUUID(address user, uint pollID) public constant returns (bytes32 UUID) {
+        return sha3(user, pollID);
     }
 }
