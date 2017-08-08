@@ -20,9 +20,9 @@ contract('Rescue Tokens', function(accounts) {
             .then(() => contract.voteTokenBalance.call(user[0]))
             .then((balance) => assert.equal(50, Number(balance), "balance should not have been changed"))
             .then(() => contract.rescueTokens(pollID, {from: user[0]}))
-            .then(() => contract.withdrawVotingRights(25, {from: user[0]}))
+            .then(() => contract.withdrawVotingRights(49, {from: user[0]}))
             .then(() => contract.voteTokenBalance.call(user[0]))
-            .then((balance) => assert.equal(25, Number(balance), "balance should have been changed"));
+            .then((balance) => assert.equal(1, balance, "balance should have been changed"))
     });
 
     it("should test simple rescue tokens for revealed vote (poll ended)", () => {
@@ -61,10 +61,10 @@ contract('Rescue Tokens', function(accounts) {
             .then(() => contract.withdrawVotingRights(25, {from: user[0]}))
             .catch((err) => assert.equal(re.test(err), true, "Error in withdrawing voting rights"))
             .then(() => contract.voteTokenBalance.call(user[0]))
-            .then((balance) => assert.equal(50, balance, "balance should not have been changed"))
+            .then((balance) => assert.equal(51, balance, "balance should not have been changed"))
             .then(() => contract.rescueTokens(pollID, {from: user[0]}))
             .catch((err) => assert.equal(re.test(err), true, "Error in rescuing tokens"))
             .then(() => contract.voteTokenBalance.call(user[0]))
-            .then((balance) => assert.equal(50, balance, "balance should not have been changed"));
+            .then((balance) => assert.equal(51, balance, "balance should not have been changed"));
     });
 });
