@@ -11,10 +11,10 @@
   "dependencies": {
     "bn.js": "4.11.6",
     "ethereumjs-abi": "0.6.4",
-    "ethjs-provider-http": "^0.1.6",
-    "ethjs-query": "^0.2.6",
-    "ethjs-rpc": "^0.1.5",
-    "ethjs-util": "^0.1.4",
+    "ethjs-provider-http": "0.1.6",
+    "ethjs-query": "0.2.6",
+    "ethjs-rpc": "0.1.5",
+    "ethjs-util": "0.1.4",
     "truffle-hdwallet-provider": "^0.0.3"
   },
   "devDependencies": {
