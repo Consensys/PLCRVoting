@@ -35,7 +35,6 @@ contract PLCRVoting {
     // ============
 
     uint constant INITIAL_POLL_NONCE = 0;
-    address owner;
     HumanStandardToken public token;
 
     /**
@@ -44,7 +43,6 @@ contract PLCRVoting {
     */
     function PLCRVoting(address tokenAddr) {
         token = HumanStandardToken(tokenAddr);
-        owner = msg.sender;
         pollNonce = INITIAL_POLL_NONCE;
     }
 
@@ -176,7 +174,6 @@ contract PLCRVoting {
     @param _revealDuration Length of desired reveal period in seconds
     */
     function startPoll(uint _voteQuorum, uint _commitDuration, uint _revealDuration) public returns (uint pollID) {
-        require(isOwner(msg.sender));
         pollNonce = pollNonce + 1;
 
         pollMap[pollNonce] = Poll({
@@ -306,15 +303,6 @@ contract PLCRVoting {
     // ----------------
     // GENERAL HELPERS:
     // ----------------
-
-    /**
-    @dev Limits access to powerful/dangerous functions
-    @param user Address to check owner against
-    @return owner Boolean indicating if user matches owner
-    */
-    function isOwner(address user) constant public returns (bool wasOwner) {
-        return user == owner;
-    }
 
     /**
     @dev Checks if an expiration date has been reached
