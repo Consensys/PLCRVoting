@@ -288,7 +288,7 @@ contract PLCRVoting {
     @return Integer identifier to poll with maximum number of tokens committed to it
     */
     function getLastNode(address voter) constant public returns (uint pollID) {
-        return dllMap[msg.sender].getPrev(0);
+        return dllMap[voter].getPrev(0);
     }
 
     /**
