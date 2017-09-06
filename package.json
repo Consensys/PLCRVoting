@@ -4,7 +4,8 @@
   "description": "Voting smart contract system for use with ERC20 tokens",
   "scripts": {
     "test": "test",
-    "lint": "eslint --fix"
+    "fix": "eslint --fix",
+    "lint": "eslint"
   },
   "author": "Yorke Rhodes <yorke.rhodesiv@consensys.net>, Aspyn Palatnick <aspyn.palatnick@consensys.net>, Cem Ozer <cem.ozer@consensys.net>",
   "license": "ISC",
@@ -18,6 +19,8 @@
     "truffle-hdwallet-provider": "^0.0.3"
   },
   "devDependencies": {
-    "eslint-config-vidroll": "1.0.0"
+    "eslint": "4.4.1",
+    "eslint-config-airbnb-base": "11.3.1",
+    "eslint-plugin-import": "2.7.0"
   }
 }
