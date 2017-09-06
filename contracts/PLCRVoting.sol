@@ -1,5 +1,5 @@
 pragma solidity ^0.4.8;
-import "./HumanStandardToken.sol";
+import "tokens/HumanStandardToken.sol";
 import "./DLL.sol";
 import "./AttributeStore.sol";
 

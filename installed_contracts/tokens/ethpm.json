@@ -1,0 +1,27 @@
+{
+  "authors": [
+    "Simon de la Rouviere <simon.delarouviere@consensys.net>",
+    "Joseph Chow <joseph.chow@consensys.net>"
+  ],
+  "license": "MIT",
+  "description": "Ethereum Token Contracts",
+  "keywords": [
+    "tokens",
+    "consensys"
+  ],
+  "links": {},
+  "sources": [
+    "./contracts/HumanStandardToken.sol",
+    "./contracts/HumanStandardTokenFactory.sol",
+    "./contracts/Migrations.sol",
+    "./contracts/SampleRecipientSuccess.sol",
+    "./contracts/SampleRecipientThrow.sol",
+    "./contracts/StandardToken.sol",
+    "./contracts/Token.sol",
+    "./contracts/TokenTester.sol"
+  ],
+  "dependencies": {},
+  "manifest_version": 1,
+  "package_name": "tokens",
+  "version": "0.0.3"
+}
