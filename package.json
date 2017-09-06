@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Voting smart contract system for use with ERC20 tokens",
   "scripts": {
-    "test": "test",
+    "test": "node test.js",
     "fix": "eslint --fix",
     "lint": "eslint"
   },
