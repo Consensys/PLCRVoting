@@ -1,68 +1,54 @@
 /* global artifacts */
 
-// CONTRACTS:
-const VotingContract = artifacts.require('./PLCRVoting.sol');
+const PLCRVoting = artifacts.require('./PLCRVoting.sol');
 const HumanStandardToken = artifacts.require('./HumanStandardToken.sol');
 const DLL = artifacts.require('./DLL.sol');
 const AttributeStore = artifacts.require('./AttributeStore.sol');
 
-// NODE VARS:
 const fs = require('fs');
 
-function getVoteContract() {
-  return VotingContract.deployed();
-}
-
-function getERC20Token() {
-  return getVoteContract()
-    .then(vote => vote.token.call())
-    .then(tokenAddr => HumanStandardToken.at(tokenAddr));
-}
-
 module.exports = (deployer, network, accounts) => {
-  const owner = accounts[0];
-  const users = accounts.slice(1, 10);
-
-  const tokenConf = JSON.parse(fs.readFileSync('./conf/testToken.json'));
-
   // deploy libraries
   deployer.deploy(DLL);
   deployer.deploy(AttributeStore);
 
   // link libraries
-  deployer.link(DLL, VotingContract);
-  deployer.link(AttributeStore, VotingContract);
+  deployer.link(DLL, PLCRVoting);
+  deployer.link(AttributeStore, PLCRVoting);
 
-  // deploy the HumanStandardToken contract
-  deployer.deploy(
-    HumanStandardToken,
-    tokenConf.initialAmount,
-    tokenConf.tokenName,
-    tokenConf.decimalUnits,
-    tokenConf.tokenSymbol,
-    { from: owner },
-  )
+  if (network === 'development') {
+    const tokenConf = {
+      initialAmount: '1000',
+      tokenName: 'TestToken',
+      decimalUnits: '0',
+      tokenSymbol: 'TEST',
+    };
 
-    // deploy the PLCRVoting contract
-    .then(() => deployer.deploy(
-      VotingContract,
-      HumanStandardToken.address,
-      { from: owner },
-    ))
+    deployer.deploy(
+      HumanStandardToken,
+      tokenConf.initialAmount,
+      tokenConf.tokenName,
+      tokenConf.decimalUnits,
+      tokenConf.tokenSymbol,
+    )
+      .then(() => deployer.deploy(
+        PLCRVoting,
+        HumanStandardToken.address,
+      ))
+      .then(async () => {
+        const plcr = await PLCRVoting.deployed();
+        const token = HumanStandardToken.at(await plcr.token.call());
 
-    // distribute token 
-    .then(async () => {
-      const token = await getERC20Token();
-
-      console.log('  Distributing tokens to users...');
-
-      return Promise.all(
-        users.map(async (user, idx) => {
-          if (tokenConf.userAmounts[idx] !== 0) {
-            await token.transfer(user, tokenConf.userAmounts[idx], { from: owner });
-            await token.approve(VotingContract.address, tokenConf.userAmounts[idx], { from: user });
-          }
-        }),
-      );
-    });
+        return Promise.all(
+          accounts.map(async (user) => {
+            await token.transfer(user, 100);
+            await token.approve(plcr.address, 100, { from: user });
+            console.log(`Transferred 100 tokens to ${user} and approved plcr to use them`);
+          }),
+        );
+      });
+  } else {
+    const conf = JSON.parse(fs.readFileSync('conf/config.json'));
+    deployer.deploy(PLCRVoting, conf.token);
+  }
 };
