@@ -43,7 +43,6 @@ module.exports = (deployer, network, accounts) => {
           accounts.map(async (user) => {
             await token.transfer(user, 100);
             await token.approve(plcr.address, 100, { from: user });
-            console.log(`Transferred 100 tokens to ${user} and approved plcr to use them`);
           }),
         );
       });
