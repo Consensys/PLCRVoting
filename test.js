@@ -33,11 +33,15 @@ try {
   process.exit(1);
 }
 
+let secrets;
+let mnemonic;
 if (!fs.existsSync('secrets.json')) {
-  throw new Error('no secrets.json found.');
+  console.log('No secrets.json found. Running tests with a default mnemonic...');
+  mnemonic = '';
+} else {
+  secrets = JSON.parse(fs.readFileSync('secrets.json', 'utf8'));
+  mnemonic = secrets.mnemonic;
 }
-const secrets = JSON.parse(fs.readFileSync('secrets.json', 'utf8'));
-const mnemonic = secrets.mnemonic;
 
 const testRPCInput = { accounts: generateAccounts(mnemonic, 0, ACCOUNTS, []) };
 
