@@ -42,7 +42,7 @@ module.exports = (deployer, network, accounts) => {
         return Promise.all(
           accounts.map(async (user) => {
             await token.transfer(user, 100);
-            await token.approve(plcr.address, 100, { from: user });
+            await token.approve(plcr.address, 90, { from: user });
           }),
         );
       });
