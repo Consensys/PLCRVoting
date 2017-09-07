@@ -1,18 +1,68 @@
 /* eslint-env mocha */
-/* global contract */
+/* global contract assert */
 
-contract('PLCRVoting', () => {
-  describe('Function: requestVotingRights', () => {
-    it('should grant voting rights for 10 tokens');
-    it('should grant voting rights for 25 more tokens');
-    it('should not grant voting rights for more tokens than the user has');
-    it('should not grant voting rights for more tokens than the user has approved plcr for');
+
+const utils = require('./utils.js');
+
+contract('PLCRVoting', (accounts) => {
+  describe('Function: requestVotingRights', async () => {
+    const plcr = await utils.getPLCRInstance();
+    const [alice, bob] = accounts;
+
+    it('should grant voting rights for 10 tokens', async () => {
+      await utils.as(alice, plcr.requestVotingRights, 10);
+      const voteTokenBalance = await plcr.voteTokenBalance.call(alice);
+      assert.strictEqual(voteTokenBalance.toNumber(10), 10,
+        'Voting rights were not properly assigned');
+    });
+
+    it('should grant voting rights for 25 more tokens', async () => {
+      await utils.as(alice, plcr.requestVotingRights, 25);
+      const voteTokenBalance = await plcr.voteTokenBalance.call(alice);
+      assert.strictEqual(voteTokenBalance.toNumber(10), 35,
+        'Voting rights were not properly assigned');
+    });
+
+    it('should not grant voting rights for more tokens than the user has', async () => {
+      const errMsg = 'Alice was able to acquire more voting rights than she has tokens';
+      try {
+        await utils.as(alice, plcr.requestVotingRights, 200);
+        assert(false, errMsg);
+      } catch (err) {
+        assert(utils.isEVMException, err);
+        const voteTokenBalance = await plcr.voteTokenBalance.call(alice);
+        assert.strictEqual(voteTokenBalance.toNumber(10), 35, errMsg);
+      }
+    });
+
+    it('should not grant voting rights for more tokens than the user has approved ' +
+       'plcr for', async () => {
+      const errMsg = 'Bob was able to acquire more voting rights than he had approved the PLCR for';
+      try {
+        await utils.as(bob, plcr.requestVotingRights, 95);
+        assert(false, errMsg);
+      } catch (err) {
+        assert(utils.isEVMException, err);
+        const voteTokenBalance = await plcr.voteTokenBalance.call(bob);
+        assert.strictEqual(voteTokenBalance.toNumber(10), 0, errMsg);
+      }
+    });
   });
 });
 
-contract('PLCRVoting', () => {
-  describe('Function: withdrawVotingRights', () => {
-    it('should withdraw voting rights for 10 tokens');
+contract('PLCRVoting', (accounts) => {
+  describe('Function: withdrawVotingRights', async () => {
+    const plcr = await utils.getPLCRInstance();
+    const [alice] = accounts;
+
+    it('should withdraw voting rights for 10 tokens', async () => {
+      await utils.as(alice, plcr.requestVotingRights, 11);
+      await utils.as(alice, plcr.withdrawVotingRights, 10);
+      const voteTokenBalance = await plcr.voteTokenBalance.call(alice);
+      assert.strictEqual(voteTokenBalance.toNumber(10), 1,
+        'Alice could not withdraw voting rights');
+    });
+
     it('should withdraw voting rights for all remaining tokens');
     it('should fail when the user requests to withdraw more tokens than are available to them');
   });
