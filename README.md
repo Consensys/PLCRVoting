@@ -1,4 +1,5 @@
 # Partial-Lock Commit-Reveal Voting
+[ ![Codeship Status for ConsenSys/PLCRVoting](https://app.codeship.com/projects/e58babc0-7647-0135-1b40-3a2518fac0ae/status?branch=master)](https://app.codeship.com/projects/244454)
 
 ## Summary
 
