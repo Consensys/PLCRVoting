@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 /* global contract assert */
 
-
+const BN = require('bn.js');
 const utils = require('./utils.js');
 
 contract('PLCRVoting', (accounts) => {
@@ -66,16 +66,80 @@ contract('PLCRVoting', (accounts) => {
         'Alice could not withdraw voting rights');
     });
 
-    it('should withdraw voting rights for all remaining tokens');
-    it('should fail when the user requests to withdraw more tokens than are available to them');
+    it('should fail when the user requests to withdraw more tokens than are available to them',
+      async () => {
+        const plcr = await utils.getPLCRInstance();
+        const errMsg = 'Alice was able to withdraw more voting rights than she should have had';
+        try {
+          await utils.as(alice, plcr.withdrawVotingRights, 10);
+          assert(false, errMsg);
+        } catch (err) {
+          assert(utils.isEVMException(err), err);
+        }
+        const voteTokenBalance = await plcr.voteTokenBalance.call(alice);
+        assert.strictEqual(voteTokenBalance.toNumber(10), 1, errMsg);
+      });
+
+    it('should withdraw voting rights for all remaining tokens', async () => {
+      const plcr = await utils.getPLCRInstance();
+      await utils.as(alice, plcr.withdrawVotingRights, 1);
+      const voteTokenBalance = await plcr.voteTokenBalance.call(alice);
+      assert.strictEqual(voteTokenBalance.toNumber(10), 0,
+        'Alice has voting rights when she should have none');
+    });
   });
 });
 
-contract('PLCRVoting', () => {
+contract('PLCRVoting', (accounts) => {
   describe('Function: rescueTokens', () => {
+    const [alice, bob] = accounts;
+
     it('should enable the user to withdraw tokens they committed but did not reveal after ' +
-       'a poll has ended');
-    it('should not allow users to withdraw tokens they committed before a poll has ended');
+      'a poll has ended', async () => {
+      const plcr = await utils.getPLCRInstance();
+      const token = await utils.getERC20Token();
+
+      const startingBalance = await token.balanceOf.call(alice);
+      await utils.as(alice, plcr.requestVotingRights, 50);
+      const pollID = await utils.as(alice, utils.launchPoll, 50, 100, 100);
+      const secretHash = utils.createVoteHash(1, 420);
+      await utils.as(alice, plcr.commitVote, pollID, secretHash, 50, 0);
+      await utils.increaseTime(201);
+      await utils.as(alice, plcr.rescueTokens, pollID);
+      await utils.as(alice, plcr.withdrawVotingRights, 50);
+      const finalBalance = await token.balanceOf.call(alice);
+      assert.strictEqual(finalBalance.toString(10), startingBalance.toString(10),
+        'Alice was not able to rescue unrevealed tokens for a poll which had ended');
+    });
+
+    it('should not allow users to withdraw tokens they committed before a poll has ended',
+      async () => {
+        const plcr = await utils.getPLCRInstance();
+        const token = await utils.getERC20Token();
+        const errMsg = 'Bob was able to withdraw unrevealed tokens before a poll ended';
+
+        const startingBalance = await token.balanceOf.call(bob);
+        await utils.as(bob, plcr.requestVotingRights, 50);
+        const pollID = await utils.as(bob, utils.launchPoll, 50, 100, 100);
+        const secretHash = utils.createVoteHash(1, 420);
+        await utils.as(bob, plcr.commitVote, pollID, secretHash, 50, 0);
+        await utils.increaseTime(150);
+        try {
+          await utils.as(bob, plcr.rescueTokens, pollID);
+          assert(false, errMsg);
+        } catch (err) {
+          assert(utils.isEVMException(err), err.toString());
+        }
+        try {
+          await utils.as(bob, plcr.withdrawVotingRights, 50);
+          assert(false, errMsg);
+        } catch (err) {
+          assert(utils.isEVMException(err), err.toString());
+        }
+        const finalBalance = await token.balanceOf.call(bob);
+        assert.strictEqual(finalBalance.toString(10),
+          startingBalance.sub(new BN('50', 10)).toString(10), errMsg);
+      });
   });
 });
 
