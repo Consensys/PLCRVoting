@@ -1,16 +1,12 @@
 {
-  "package_name": "PLCRVoting",
+  "package_name": "Bug-Repro",
   "version": "1.0.0",
-  "description": "PLCR voting for ERC20 tokens",
+  "description": "Just reproducing a bug",
   "authors": [
-    "Yorke Rhodes",
-    "Cem Ozer",
-    "Aspyn Palatnick"
+    "Satan"
   ],
   "keywords": [
-    "tokens",
-    "consensys",
-    "plcr"
+    "bugs"
   ],
   "dependencies": {
     "tokens": "0.0.3"
