@@ -5,11 +5,11 @@
 const utils = require('./utils.js');
 
 contract('PLCRVoting', (accounts) => {
-  describe('Function: requestVotingRights', async () => {
-    const plcr = await utils.getPLCRInstance();
+  describe('Function: requestVotingRights', () => {
     const [alice, bob] = accounts;
 
     it('should grant voting rights for 10 tokens', async () => {
+      const plcr = await utils.getPLCRInstance();
       await utils.as(alice, plcr.requestVotingRights, 10);
       const voteTokenBalance = await plcr.voteTokenBalance.call(alice);
       assert.strictEqual(voteTokenBalance.toNumber(10), 10,
@@ -17,6 +17,7 @@ contract('PLCRVoting', (accounts) => {
     });
 
     it('should grant voting rights for 25 more tokens', async () => {
+      const plcr = await utils.getPLCRInstance();
       await utils.as(alice, plcr.requestVotingRights, 25);
       const voteTokenBalance = await plcr.voteTokenBalance.call(alice);
       assert.strictEqual(voteTokenBalance.toNumber(10), 35,
@@ -24,6 +25,7 @@ contract('PLCRVoting', (accounts) => {
     });
 
     it('should not grant voting rights for more tokens than the user has', async () => {
+      const plcr = await utils.getPLCRInstance();
       const errMsg = 'Alice was able to acquire more voting rights than she has tokens';
       try {
         await utils.as(alice, plcr.requestVotingRights, 200);
@@ -37,6 +39,7 @@ contract('PLCRVoting', (accounts) => {
 
     it('should not grant voting rights for more tokens than the user has approved ' +
        'plcr for', async () => {
+      const plcr = await utils.getPLCRInstance();
       const errMsg = 'Bob was able to acquire more voting rights than he had approved the PLCR for';
       try {
         await utils.as(bob, plcr.requestVotingRights, 95);
@@ -51,11 +54,11 @@ contract('PLCRVoting', (accounts) => {
 });
 
 contract('PLCRVoting', (accounts) => {
-  describe('Function: withdrawVotingRights', async () => {
-    const plcr = await utils.getPLCRInstance();
+  describe('Function: withdrawVotingRights', () => {
     const [alice] = accounts;
 
     it('should withdraw voting rights for 10 tokens', async () => {
+      const plcr = await utils.getPLCRInstance();
       await utils.as(alice, plcr.requestVotingRights, 11);
       await utils.as(alice, plcr.withdrawVotingRights, 10);
       const voteTokenBalance = await plcr.voteTokenBalance.call(alice);
