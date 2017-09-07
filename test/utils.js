@@ -47,7 +47,7 @@ const utils = {
   },
 
   // returns deployed vote contract
-  getVoteContract() {
+  getPLCRInstance() {
     return PLCRVoting.deployed();
   },
 
@@ -74,6 +74,34 @@ const utils = {
     return this.getVoteContract()
       .then(vote => vote.startPoll(0, commitDuration, revealDuration))
       .then(result => result.logs[0].args.pollID.toString());
+  },
+
+  as(actor, fn, ...args) {
+    function detectSendObject(potentialSendObj) {
+      function hasOwnProperty(obj, prop) {
+        const proto = obj.constructor.prototype;
+        return (prop in obj) &&
+       (!(prop in proto) || proto[prop] !== obj[prop]);
+      }
+
+      if (typeof potentialSendObj === 'object') {
+        if (hasOwnProperty(potentialSendObj, 'from') ||
+           hasOwnProperty(potentialSendObj, 'to') ||
+           hasOwnProperty(potentialSendObj, 'gas') ||
+           hasOwnProperty(potentialSendObj, 'gasPrice') ||
+           hasOwnProperty(potentialSendObj, 'value')
+        ) {
+          throw new Error('It is unsafe to use "as" with custom send objects');
+        }
+      }
+    }
+    detectSendObject(args[args.length - 1]);
+    const sendObject = { from: actor };
+    return fn(...args, sendObject);
+  },
+
+  isEVMException(err) {
+    return err.toString().includes('invalid opcode');
   },
 
 };
