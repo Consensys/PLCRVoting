@@ -159,7 +159,7 @@ contract('PLCRVoting', (accounts) => {
       assert.strictEqual(storedHash, secretHash, 'The secretHash was not stored properly');
     });
 
-    it('should update a commit for a poll', async () => {
+    it('should update a commit for a poll by changing the secretHash', async () => {
       const plcr = await utils.getPLCRInstance();
       const errMsg = 'Alice was not able to update her commit';
       const pollID = 1;
@@ -172,6 +172,8 @@ contract('PLCRVoting', (accounts) => {
       assert.notEqual(originalHash, storedHash, errMsg);
       assert.strictEqual(storedHash, secretHash, errMsg);
     });
+
+    it('should update a commit for a poll by changing the numTokens, and remove the old node');
 
     it('should not allow a user to commit in a poll for which the commit period has ended',
       async () => {
@@ -322,6 +324,62 @@ contract('PLCRVoting', () => {
 contract('PLCRVoting', () => {
   describe('Function: getLockedTokens', () => {
     it('should return the number of tokens the user has locked in polls');
+  });
+});
+
+contract('PLCRVoting', (accounts) => {
+  describe('Function: getInsertPointForNumTokens', () => {
+    const [alice] = accounts;
+
+    // TODO: Improve this test with positive assertions
+    it('should return the correct insert point for a new node in a DLL', async () => {
+      // Create { A: 1, B: 5, C: 10 }
+      // Then insert { A: 1, D: 3, B: 5, C: 10 }
+      // And then { A: 1, D: 3, B: 5, E: 7, C: 10 }
+      const plcr = await utils.getPLCRInstance();
+
+      await utils.as(alice, plcr.requestVotingRights, 50);
+
+      let pollID = await utils.as(alice, utils.launchPoll, 50, 100, 100);
+      let secretHash = utils.createVoteHash(1, 420);
+      let numTokens = 1;
+      let insertPoint = await plcr.getInsertPointForNumTokens.call(alice, numTokens);
+      await utils.as(alice, plcr.commitVote, pollID, secretHash, numTokens, insertPoint);
+
+      // { A: 1 }
+
+      pollID = await utils.as(alice, utils.launchPoll, 50, 100, 100);
+      secretHash = utils.createVoteHash(1, 420);
+      numTokens = 5;
+      insertPoint = await plcr.getInsertPointForNumTokens.call(alice, numTokens);
+      await utils.as(alice, plcr.commitVote, pollID, secretHash, numTokens, insertPoint);
+
+      // { A: 1, B: 5 }
+
+      pollID = await utils.as(alice, utils.launchPoll, 50, 100, 100);
+      secretHash = utils.createVoteHash(1, 420);
+      numTokens = 10;
+      insertPoint = await plcr.getInsertPointForNumTokens.call(alice, numTokens);
+      await utils.as(alice, plcr.commitVote, pollID, secretHash, numTokens, insertPoint);
+
+      // { A: 1, B: 5, C: 10 }
+
+      pollID = await utils.as(alice, utils.launchPoll, 50, 100, 100);
+      secretHash = utils.createVoteHash(1, 420);
+      numTokens = 3;
+      insertPoint = await plcr.getInsertPointForNumTokens.call(alice, numTokens);
+      await utils.as(alice, plcr.commitVote, pollID, secretHash, numTokens, insertPoint);
+
+      // { A: 1, D: 3, B: 5, C: 10 }
+
+      pollID = await utils.as(alice, utils.launchPoll, 50, 100, 100);
+      secretHash = utils.createVoteHash(1, 420);
+      numTokens = 7;
+      insertPoint = await plcr.getInsertPointForNumTokens.call(alice, numTokens);
+      await utils.as(alice, plcr.commitVote, pollID, secretHash, numTokens, insertPoint);
+
+      // { A: 1, D: 3, B: 5, E: 7, C: 10 }
+    });
   });
 });
 
