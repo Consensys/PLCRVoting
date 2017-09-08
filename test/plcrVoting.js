@@ -143,12 +143,80 @@ contract('PLCRVoting', (accounts) => {
   });
 });
 
-contract('PLCRVoting', () => {
+contract('PLCRVoting', (accounts) => {
   describe('Function: commitVote', () => {
-    it('should commit a vote for a poll');
-    it('should update a commit for a poll');
-    it('should not allow a user to commit in a poll for which the commit period has ended');
-    it('should not allow a user to commit for a poll which does not exist');
+    const [alice] = accounts;
+
+    it('should commit a vote for a poll', async () => {
+      const plcr = await utils.getPLCRInstance();
+
+      await utils.as(alice, plcr.requestVotingRights, 50);
+      const pollID = await utils.as(alice, utils.launchPoll, 50, 100, 100);
+      const secretHash = utils.createVoteHash(1, 420);
+      await utils.as(alice, plcr.commitVote, pollID, secretHash, 50, 0);
+      const storedHash = await plcr.getCommitHash.call(alice, pollID.toNumber(10));
+
+      assert.strictEqual(storedHash, secretHash, 'The secretHash was not stored properly');
+    });
+
+    it('should update a commit for a poll', async () => {
+      const plcr = await utils.getPLCRInstance();
+      const errMsg = 'Alice was not able to update her commit';
+      const pollID = 1;
+
+      const originalHash = await plcr.getCommitHash.call(alice, pollID);
+      const secretHash = utils.createVoteHash(0, 420);
+      await utils.as(alice, plcr.commitVote, pollID, secretHash, 50, 0);
+      const storedHash = await plcr.getCommitHash.call(alice, pollID);
+
+      assert.notEqual(originalHash, storedHash, errMsg);
+      assert.strictEqual(storedHash, secretHash, errMsg);
+    });
+
+    it('should not allow a user to commit in a poll for which the commit period has ended',
+      async () => {
+        const plcr = await utils.getPLCRInstance();
+        const pollID = 1;
+        const errMsg = 'Alice was able to commit to a poll after its commit period ended';
+
+        await utils.increaseTime(101);
+
+        const originalHash = await plcr.getCommitHash.call(alice, pollID);
+        const secretHash = utils.createVoteHash(1, 420);
+        try {
+          await utils.as(alice, plcr.commitVote, pollID, secretHash, 50, 0);
+          assert(false, errMsg);
+        } catch (err) {
+          assert(utils.isEVMException(err), err.toString());
+        }
+        const storedHash = await plcr.getCommitHash.call(alice, pollID);
+
+        assert.strictEqual(storedHash, originalHash, errMsg);
+      });
+
+    it('should not allow a user to commit for a poll which does not exist', async () => {
+      const plcr = await utils.getPLCRInstance();
+      const errMsg = 'Alice was able to commit to a poll which does not exist';
+
+      await utils.as(alice, plcr.requestVotingRights, 40);
+      const secretHash = utils.createVoteHash(1, 420);
+      try {
+        await utils.as(alice, plcr.commitVote, 0, secretHash, 20, 1);
+        assert(false, errMsg);
+      } catch (err) {
+        assert(utils.isEVMException(err), err.toString());
+      }
+
+      try {
+        await utils.as(alice, plcr.commitVote, 1, secretHash, 20, 1);
+        assert(false, errMsg);
+      } catch (err) {
+        assert(utils.isEVMException(err), err.toString());
+      }
+
+      const tokensCommitted = await plcr.getLockedTokens.call(alice);
+      assert.strictEqual(tokensCommitted.toNumber(10), 50, errMsg);
+    });
   });
 });
 
