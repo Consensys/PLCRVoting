@@ -8,6 +8,14 @@ import "./AttributeStore.sol";
 @author Team: Aspyn Palatnick, Cem Ozer, Yorke Rhodes
 */
 contract PLCRVoting {
+
+
+    event VoteCommitted(address voter, uint pollID, uint numTokens);
+    event VoteRevealed(address voter, uint pollID, uint numTokens, uint choice);
+    event PollCreated(uint voteQuorum, uint commitDuration, uint revealDuration, uint pollID);
+    event VotingRightsGranted(address voter, uint numTokens);
+    event VotingRightsWithdrawn(address voter, uint numTokens);
+
     /// maps user's address to voteToken balance
     mapping(address => uint) public voteTokenBalance;
 
@@ -22,7 +30,6 @@ contract PLCRVoting {
     /// maps pollID to Poll struct
     mapping(uint => Poll) public pollMap;
     uint pollNonce;
-    event PollCreated(uint pollID);
 
     using DLL for DLL.Data;
     mapping(address => DLL.Data) dllMap;
@@ -59,6 +66,7 @@ contract PLCRVoting {
         require(token.balanceOf(msg.sender) >= numTokens);
         require(token.transferFrom(msg.sender, this, numTokens));
         voteTokenBalance[msg.sender] += numTokens;
+        VotingRightsGranted(msg.sender, numTokens);
     }
 
     /**
@@ -70,6 +78,7 @@ contract PLCRVoting {
         require(availableTokens >= numTokens);
         require(token.transfer(msg.sender, numTokens));
         voteTokenBalance[msg.sender] -= numTokens;
+        VotingRightsGranted(msg.sender, numTokens);
     }
 
     /**
@@ -108,6 +117,8 @@ contract PLCRVoting {
 
         store.attachAttribute(UUID, "numTokens", numTokens);
         store.attachAttribute(UUID, "commitHash", uint(secretHash));
+
+        VoteCommitted(msg.sender, pollID, numTokens);
     }
 
     /**
@@ -145,6 +156,8 @@ contract PLCRVoting {
             pollMap[pollID].votesAgainst += numTokens;
         
         dllMap[msg.sender].remove(pollID); // remove the node referring to this vote upon reveal
+
+        VoteRevealed(msg.sender, pollID, numTokens, voteOption);
     }
 
     /**
@@ -184,7 +197,7 @@ contract PLCRVoting {
             votesAgainst: 0
         });
 
-        PollCreated(pollNonce);
+        PollCreated(_voteQuorum, _commitDuration, _revealDuration, pollNonce);
         return pollNonce;
     }
  
