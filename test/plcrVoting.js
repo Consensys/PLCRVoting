@@ -145,7 +145,7 @@ contract('PLCRVoting', (accounts) => {
 
 contract('PLCRVoting', (accounts) => {
   describe('Function: commitVote', () => {
-    const [alice] = accounts;
+    const [alice, bob] = accounts;
 
     it('should commit a vote for a poll', async () => {
       const plcr = await utils.getPLCRInstance();
@@ -172,8 +172,6 @@ contract('PLCRVoting', (accounts) => {
       assert.notEqual(originalHash, storedHash, errMsg);
       assert.strictEqual(storedHash, secretHash, errMsg);
     });
-
-    it('should update a commit for a poll by changing the numTokens, and remove the old node');
 
     it('should not allow a user to commit in a poll for which the commit period has ended',
       async () => {
@@ -218,6 +216,29 @@ contract('PLCRVoting', (accounts) => {
 
       const tokensCommitted = await plcr.getLockedTokens.call(alice);
       assert.strictEqual(tokensCommitted.toNumber(10), 50, errMsg);
+    });
+
+    it('should update a commit for a poll by changing the numTokens, and allow the user to ' +
+       'withdraw all their tokens when the poll ends', async () => {
+      const plcr = await utils.getPLCRInstance();
+      const token = await utils.getERC20Token();
+
+      const startingBalance = await token.balanceOf.call(bob);
+      await utils.as(bob, plcr.requestVotingRights, 50);
+      const pollID = await utils.as(bob, utils.launchPoll, 50, 100, 100);
+      const secretHash = utils.createVoteHash(1, 420);
+      await utils.as(bob, plcr.commitVote, pollID, secretHash, 10, 0);
+      await utils.as(bob, plcr.commitVote, pollID, secretHash, 20, 1);
+
+      await utils.increaseTime(101);
+
+      await utils.as(bob, plcr.revealVote, pollID, 1, 420);
+
+      await utils.as(bob, plcr.withdrawVotingRights, 50);
+
+      const finalBalance = await token.balanceOf.call(bob);
+      assert.strictEqual(startingBalance.toString(10), finalBalance.toString(10),
+        'Bob locked tokens by changing his commit');
     });
   });
 });
