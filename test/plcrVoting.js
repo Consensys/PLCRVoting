@@ -148,27 +148,41 @@ contract('PLCRVoting', (accounts) => {
 contract('PLCRVoting', (accounts) => {
   describe('Function: commitVote', () => {
     const [alice, bob] = accounts;
+    const defaultOptions = {
+      actor: alice,
+      votingRights: '50',
+      quorum: '50',
+      revealPeriod: '100',
+      commitPeriod: '100',
+      vote: '1',
+      salt: '420',
+      numTokens: '50',
+      prevPollID: '0',
+    };
 
     it('should commit a vote for a poll', async () => {
-      const plcr = await utils.getPLCRInstance();
+      const options = defaultOptions;
 
-      await utils.as(alice, plcr.requestVotingRights, 50);
-      const pollID = await utils.as(alice, utils.launchPoll, 50, 100, 100);
-      const secretHash = utils.createVoteHash(1, 420);
-      await utils.as(alice, plcr.commitVote, pollID, secretHash, 50, 0);
-      const storedHash = await plcr.getCommitHash.call(alice, pollID.toNumber(10));
+      const plcr = await utils.getPLCRInstance();
+      const pollID = await utils.startPollAndCommitVote(options);
+      const secretHash = utils.createVoteHash(options.vote, options.salt);
+      const storedHash = await plcr.getCommitHash.call(options.actor, pollID.toString(10));
 
       assert.strictEqual(storedHash, secretHash, 'The secretHash was not stored properly');
     });
 
     it('should update a commit for a poll by changing the secretHash', async () => {
+      const options = defaultOptions;
+      options.vote = '0';
+
       const plcr = await utils.getPLCRInstance();
       const errMsg = 'Alice was not able to update her commit';
-      const pollID = 1;
+      const pollID = '1';
 
       const originalHash = await plcr.getCommitHash.call(alice, pollID);
-      const secretHash = utils.createVoteHash(0, 420);
-      await utils.as(alice, plcr.commitVote, pollID, secretHash, 50, 0);
+      const secretHash = utils.createVoteHash(options.vote, options.salt);
+      await utils.as(alice, plcr.commitVote, pollID, secretHash, options.numTokens,
+        options.prevPollID);
       const storedHash = await plcr.getCommitHash.call(alice, pollID);
 
       assert.notEqual(originalHash, storedHash, errMsg);

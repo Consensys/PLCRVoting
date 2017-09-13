@@ -89,6 +89,32 @@ const utils = {
     return err.toString().includes('invalid opcode');
   },
 
+  startPollAndCommitVote: async (options) => {
+    if (
+      typeof options.actor !== 'string' ||
+      typeof options.votingRights !== 'string' ||
+      typeof options.quorum !== 'string' ||
+      typeof options.revealPeriod !== 'string' ||
+      typeof options.commitPeriod !== 'string' ||
+      typeof options.vote !== 'string' ||
+      typeof options.salt !== 'string' ||
+      typeof options.numTokens !== 'string' ||
+      typeof options.prevPollID !== 'string'
+    ) {
+      throw new Error('Please specify all options to commitVote as strings.');
+    }
+
+    const plcr = await utils.getPLCRInstance();
+
+    await utils.as(options.actor, plcr.requestVotingRights, options.votingRights);
+    const receipt = await utils.as(options.actor, plcr.startPoll, options.quorum,
+      options.commitPeriod, options.revealPeriod);
+    const pollID = utils.getPollIDFromReceipt(receipt);
+    const secretHash = utils.createVoteHash(options.vote, options.salt);
+    await utils.as(options.actor, plcr.commitVote, pollID, secretHash, options.numTokens,
+      options.prevPollID);
+    return pollID;
+  },
 };
 
 module.exports = utils;
