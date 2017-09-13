@@ -59,10 +59,7 @@ const utils = {
       resolve();
     }))),
 
-  // launches poll and returns pollID as string
-  launchPoll: (voteQuorum, commitDuration, revealDuration) => utils.getPLCRInstance()
-    .then(vote => vote.startPoll(voteQuorum, commitDuration, revealDuration))
-    .then(result => result.logs[0].args.pollID),
+  getPollIDFromReceipt: receipt => receipt.logs[0].args.pollID,
 
   as: (actor, fn, ...args) => {
     function detectSendObject(potentialSendObj) {

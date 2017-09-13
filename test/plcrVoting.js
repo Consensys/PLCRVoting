@@ -101,7 +101,8 @@ contract('PLCRVoting', (accounts) => {
 
       const startingBalance = await token.balanceOf.call(alice);
       await utils.as(alice, plcr.requestVotingRights, 50);
-      const pollID = await utils.as(alice, utils.launchPoll, 50, 100, 100);
+      const receipt = await utils.as(alice, plcr.startPoll, 50, 100, 100);
+      const pollID = utils.getPollIDFromReceipt(receipt);
       const secretHash = utils.createVoteHash(1, 420);
       await utils.as(alice, plcr.commitVote, pollID, secretHash, 50, 0);
       await utils.increaseTime(201);
@@ -120,7 +121,8 @@ contract('PLCRVoting', (accounts) => {
 
         const startingBalance = await token.balanceOf.call(bob);
         await utils.as(bob, plcr.requestVotingRights, 50);
-        const pollID = await utils.as(bob, utils.launchPoll, 50, 100, 100);
+        const receipt = await utils.as(bob, plcr.startPoll, 50, 100, 100);
+        const pollID = utils.getPollIDFromReceipt(receipt);
         const secretHash = utils.createVoteHash(1, 420);
         await utils.as(bob, plcr.commitVote, pollID, secretHash, 50, 0);
         await utils.increaseTime(150);
@@ -225,7 +227,8 @@ contract('PLCRVoting', (accounts) => {
 
       const startingBalance = await token.balanceOf.call(bob);
       await utils.as(bob, plcr.requestVotingRights, 50);
-      const pollID = await utils.as(bob, utils.launchPoll, 50, 100, 100);
+      const receipt = await utils.as(bob, plcr.startPoll, 50, 100, 100);
+      const pollID = utils.getPollIDFromReceipt(receipt);
       const secretHash = utils.createVoteHash(1, 420);
       await utils.as(bob, plcr.commitVote, pollID, secretHash, 10, 0);
       await utils.as(bob, plcr.commitVote, pollID, secretHash, 20, 1);
@@ -253,7 +256,8 @@ contract('PLCRVoting', (accounts) => {
 
       await utils.as(alice, plcr.requestVotingRights, 50);
 
-      const pollID = await utils.as(alice, utils.launchPoll, 50, 100, 100);
+      const receipt = await utils.as(alice, plcr.startPoll, 50, 100, 100);
+      const pollID = utils.getPollIDFromReceipt(receipt);
       const secretHash = utils.createVoteHash(1, 420);
       const numTokens = 1;
       const insertPoint = await plcr.getInsertPointForNumTokens.call(alice, numTokens);
@@ -264,7 +268,8 @@ contract('PLCRVoting', (accounts) => {
     it('should reject a position that is not valid', async () => {
       const plcr = await utils.getPLCRInstance();
 
-      const pollID = await utils.as(alice, utils.launchPoll, 50, 100, 100);
+      const receipt = await utils.as(alice, plcr.startPoll, 50, 100, 100);
+      const pollID = utils.getPollIDFromReceipt(receipt);
       const secretHash = utils.createVoteHash(1, 420);
       const numTokens = 10;
       try {
@@ -388,7 +393,8 @@ contract('PLCRVoting', (accounts) => {
 
       await utils.as(alice, plcr.requestVotingRights, 50);
 
-      let pollID = await utils.as(alice, utils.launchPoll, 50, 100, 100);
+      let receipt = await utils.as(alice, plcr.startPoll, 50, 100, 100);
+      let pollID = utils.getPollIDFromReceipt(receipt);
       let secretHash = utils.createVoteHash(1, 420);
       let numTokens = 1;
       let insertPoint = await plcr.getInsertPointForNumTokens.call(alice, numTokens);
@@ -397,7 +403,8 @@ contract('PLCRVoting', (accounts) => {
 
       // { A: 1 }
 
-      pollID = await utils.as(alice, utils.launchPoll, 50, 100, 100);
+      receipt = await utils.as(alice, plcr.startPoll, 50, 100, 100);
+      pollID = utils.getPollIDFromReceipt(receipt);
       secretHash = utils.createVoteHash(1, 420);
       numTokens = 5;
       insertPoint = await plcr.getInsertPointForNumTokens.call(alice, numTokens);
@@ -406,7 +413,8 @@ contract('PLCRVoting', (accounts) => {
 
       // { A: 1, B: 5 }
 
-      pollID = await utils.as(alice, utils.launchPoll, 50, 100, 100);
+      receipt = await utils.as(alice, plcr.startPoll, 50, 100, 100);
+      pollID = utils.getPollIDFromReceipt(receipt);
       secretHash = utils.createVoteHash(1, 420);
       numTokens = 10;
       insertPoint = await plcr.getInsertPointForNumTokens.call(alice, numTokens);
@@ -415,7 +423,8 @@ contract('PLCRVoting', (accounts) => {
 
       // { A: 1, B: 5, C: 10 }
 
-      pollID = await utils.as(alice, utils.launchPoll, 50, 100, 100);
+      receipt = await utils.as(alice, plcr.startPoll, 50, 100, 100);
+      pollID = utils.getPollIDFromReceipt(receipt);
       secretHash = utils.createVoteHash(1, 420);
       numTokens = 3;
       insertPoint = await plcr.getInsertPointForNumTokens.call(alice, numTokens);
@@ -424,7 +433,8 @@ contract('PLCRVoting', (accounts) => {
 
       // { A: 1, D: 3, B: 5, C: 10 }
 
-      pollID = await utils.as(alice, utils.launchPoll, 50, 100, 100);
+      receipt = await utils.as(alice, plcr.startPoll, 50, 100, 100);
+      pollID = utils.getPollIDFromReceipt(receipt);
       secretHash = utils.createVoteHash(1, 420);
       numTokens = 7;
       insertPoint = await plcr.getInsertPointForNumTokens.call(alice, numTokens);
