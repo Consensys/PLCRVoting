@@ -4,6 +4,19 @@
 const BN = require('bn.js');
 const utils = require('./utils.js');
 
+function defaultOptions() {
+  return {
+    votingRights: '50',
+    quorum: '50',
+    commitPeriod: '100',
+    revealPeriod: '100',
+    vote: '1',
+    salt: '420',
+    numTokens: '20',
+    prevPollID: '0',
+  };
+}
+
 contract('PLCRVoting', (accounts) => {
   describe('Function: requestVotingRights', () => {
     const [alice, bob] = accounts;
@@ -98,16 +111,16 @@ contract('PLCRVoting', (accounts) => {
       'a poll has ended', async () => {
       const plcr = await utils.getPLCRInstance();
       const token = await utils.getERC20Token();
+      const options = defaultOptions();
+      options.actor = alice;
 
       const startingBalance = await token.balanceOf.call(alice);
-      await utils.as(alice, plcr.requestVotingRights, 50);
-      const receipt = await utils.as(alice, plcr.startPoll, 50, 100, 100);
-      const pollID = utils.getPollIDFromReceipt(receipt);
-      const secretHash = utils.createVoteHash(1, 420);
-      await utils.as(alice, plcr.commitVote, pollID, secretHash, 50, 0);
+      const pollID = await utils.startPollAndCommitVote(options);
+
       await utils.increaseTime(201);
       await utils.as(alice, plcr.rescueTokens, pollID);
       await utils.as(alice, plcr.withdrawVotingRights, 50);
+
       const finalBalance = await token.balanceOf.call(alice);
       assert.strictEqual(finalBalance.toString(10), startingBalance.toString(10),
         'Alice was not able to rescue unrevealed tokens for a poll which had ended');
@@ -117,14 +130,13 @@ contract('PLCRVoting', (accounts) => {
       async () => {
         const plcr = await utils.getPLCRInstance();
         const token = await utils.getERC20Token();
+        const options = defaultOptions();
+        options.actor = bob;
         const errMsg = 'Bob was able to withdraw unrevealed tokens before a poll ended';
 
         const startingBalance = await token.balanceOf.call(bob);
-        await utils.as(bob, plcr.requestVotingRights, 50);
-        const receipt = await utils.as(bob, plcr.startPoll, 50, 100, 100);
-        const pollID = utils.getPollIDFromReceipt(receipt);
-        const secretHash = utils.createVoteHash(1, 420);
-        await utils.as(bob, plcr.commitVote, pollID, secretHash, 50, 0);
+        const pollID = await utils.startPollAndCommitVote(options);
+
         await utils.increaseTime(150);
         try {
           await utils.as(bob, plcr.rescueTokens, pollID);
@@ -132,12 +144,14 @@ contract('PLCRVoting', (accounts) => {
         } catch (err) {
           assert(utils.isEVMException(err), err.toString());
         }
+
         try {
           await utils.as(bob, plcr.withdrawVotingRights, 50);
           assert(false, errMsg);
         } catch (err) {
           assert(utils.isEVMException(err), err.toString());
         }
+
         const finalBalance = await token.balanceOf.call(bob);
         assert.strictEqual(finalBalance.toString(10),
           startingBalance.sub(new BN('50', 10)).toString(10), errMsg);
@@ -148,20 +162,10 @@ contract('PLCRVoting', (accounts) => {
 contract('PLCRVoting', (accounts) => {
   describe('Function: commitVote', () => {
     const [alice, bob] = accounts;
-    const defaultOptions = {
-      actor: alice,
-      votingRights: '50',
-      quorum: '50',
-      revealPeriod: '100',
-      commitPeriod: '100',
-      vote: '1',
-      salt: '420',
-      numTokens: '50',
-      prevPollID: '0',
-    };
 
     it('should commit a vote for a poll', async () => {
-      const options = defaultOptions;
+      const options = defaultOptions();
+      options.actor = alice;
 
       const plcr = await utils.getPLCRInstance();
       const pollID = await utils.startPollAndCommitVote(options);
@@ -172,7 +176,8 @@ contract('PLCRVoting', (accounts) => {
     });
 
     it('should update a commit for a poll by changing the secretHash', async () => {
-      const options = defaultOptions;
+      const options = defaultOptions();
+      options.actor = alice;
       options.vote = '0';
 
       const plcr = await utils.getPLCRInstance();
@@ -194,13 +199,15 @@ contract('PLCRVoting', (accounts) => {
         const plcr = await utils.getPLCRInstance();
         const pollID = 1;
         const errMsg = 'Alice was able to commit to a poll after its commit period ended';
+        const options = defaultOptions();
+        options.vote = '0';
 
         await utils.increaseTime(101);
 
         const originalHash = await plcr.getCommitHash.call(alice, pollID);
-        const secretHash = utils.createVoteHash(1, 420);
+        const secretHash = utils.createVoteHash(options.vote, options.salt);
         try {
-          await utils.as(alice, plcr.commitVote, pollID, secretHash, 50, 0);
+          await utils.as(alice, plcr.commitVote, pollID, secretHash, options.numTokens, 0);
           assert(false, errMsg);
         } catch (err) {
           assert(utils.isEVMException(err), err.toString());
@@ -213,45 +220,40 @@ contract('PLCRVoting', (accounts) => {
     it('should not allow a user to commit for a poll which does not exist', async () => {
       const plcr = await utils.getPLCRInstance();
       const errMsg = 'Alice was able to commit to a poll which does not exist';
+      const options = defaultOptions();
 
-      await utils.as(alice, plcr.requestVotingRights, 40);
-      const secretHash = utils.createVoteHash(1, 420);
-      try {
-        await utils.as(alice, plcr.commitVote, 0, secretHash, 20, 1);
-        assert(false, errMsg);
-      } catch (err) {
-        assert(utils.isEVMException(err), err.toString());
-      }
+      const secretHash = utils.createVoteHash(options.vote, options.salt);
 
+      // The zero poll does not exist
       try {
-        await utils.as(alice, plcr.commitVote, 1, secretHash, 20, 1);
+        await utils.as(alice, plcr.commitVote, 0, secretHash, options.numTokens, 1);
         assert(false, errMsg);
       } catch (err) {
         assert(utils.isEVMException(err), err.toString());
       }
 
       const tokensCommitted = await plcr.getLockedTokens.call(alice);
-      assert.strictEqual(tokensCommitted.toNumber(10), 50, errMsg);
+      assert.strictEqual(tokensCommitted.toString(10), options.numTokens, errMsg);
     });
 
     it('should update a commit for a poll by changing the numTokens, and allow the user to ' +
        'withdraw all their tokens when the poll ends', async () => {
       const plcr = await utils.getPLCRInstance();
       const token = await utils.getERC20Token();
+      const options = defaultOptions();
+      options.actor = bob;
+      options.numTokens = '10';
 
       const startingBalance = await token.balanceOf.call(bob);
-      await utils.as(bob, plcr.requestVotingRights, 50);
-      const receipt = await utils.as(bob, plcr.startPoll, 50, 100, 100);
-      const pollID = utils.getPollIDFromReceipt(receipt);
-      const secretHash = utils.createVoteHash(1, 420);
-      await utils.as(bob, plcr.commitVote, pollID, secretHash, 10, 0);
-      await utils.as(bob, plcr.commitVote, pollID, secretHash, 20, 1);
+
+      const pollID = await utils.startPollAndCommitVote(options);
+      const secretHash = utils.createVoteHash(options.vote, options.salt);
+      await utils.as(bob, plcr.commitVote, pollID, secretHash, '20', 0);
 
       await utils.increaseTime(101);
 
-      await utils.as(bob, plcr.revealVote, pollID, 1, 420);
-
-      await utils.as(bob, plcr.withdrawVotingRights, 50);
+      await utils.as(bob, plcr.revealVote, pollID, options.vote, options.salt);
+      await utils.as(bob, plcr.withdrawVotingRights, options.votingRights);
 
       const finalBalance = await token.balanceOf.call(bob);
       assert.strictEqual(startingBalance.toString(10), finalBalance.toString(10),
@@ -288,6 +290,21 @@ contract('PLCRVoting', (accounts) => {
       const numTokens = 10;
       try {
         await utils.as(alice, plcr.commitVote, pollID, secretHash, numTokens, 0);
+        assert(false, 'Alice was able to unsort her DLL');
+      } catch (err) {
+        assert(utils.isEVMException(err), err.toString());
+      }
+    });
+
+    it('should reject a prevPollID that does not exist', async () => {
+      const plcr = await utils.getPLCRInstance();
+
+      const receipt = await utils.as(alice, plcr.startPoll, 50, 100, 100);
+      const pollID = utils.getPollIDFromReceipt(receipt);
+      const secretHash = utils.createVoteHash(1, 420);
+      const numTokens = 0;
+      try {
+        await utils.as(alice, plcr.commitVote, pollID, secretHash, numTokens, 100);
         assert(false, 'Alice was able to unsort her DLL');
       } catch (err) {
         assert(utils.isEVMException(err), err.toString());
