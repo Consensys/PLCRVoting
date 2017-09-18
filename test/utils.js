@@ -115,6 +115,11 @@ const utils = {
       options.prevPollID);
     return pollID;
   },
+
+  getVotesFor: async (pollID) => {
+    const poll = await utils.getPoll(pollID);
+    return poll[3];
+  },
 };
 
 module.exports = utils;
