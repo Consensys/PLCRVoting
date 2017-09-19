@@ -447,7 +447,6 @@ contract('PLCRVoting', () => {
 
 contract('PLCRVoting', () => {
   describe('Function: isPassed', () => {
-    it('should throw an error if the poll does not exist');
     it('should return true if the poll passed');
     it('should return false if the poll ended in a tie');
     it('should return false if the poll did not pass');
@@ -456,7 +455,6 @@ contract('PLCRVoting', () => {
 
 contract('PLCRVoting', () => {
   describe('Function: getTotalNumberOfTokensForWinningOption', () => {
-    it('should throw an error if the poll does not exist');
     it('should return the total number of votes for if the poll passed');
     it('should return the total number of votes against if the poll did not pass');
     it('should fail if the poll has not yet ended');
@@ -517,7 +515,6 @@ contract('PLCRVoting', (accounts) => {
 
 contract('PLCRVoting', () => {
   describe('Function: commitPeriodActive', () => {
-    it('should throw an error if the poll does not exist');
     it('should return true if the commit period is active');
     it('should return false if the commit period is not active');
   });
@@ -525,7 +522,6 @@ contract('PLCRVoting', () => {
 
 contract('PLCRVoting', () => {
   describe('Function: revealPeriodActive', () => {
-    it('should throw an error if the poll does not exist');
     it('should return true if the reveal period is active');
     it('should return false if the reveal period is not active');
   });
@@ -533,7 +529,6 @@ contract('PLCRVoting', () => {
 
 contract('PLCRVoting', () => {
   describe('Function: hasBeenRevealed', () => {
-    it('should throw an error if the poll does not exist');
     it('should return true if the user has already revealed for this poll');
     it('should return false if the user has not revealed for this poll');
   });
@@ -642,3 +637,11 @@ contract('PLCRVoting', () => {
     it('should generate a sha3 hash of the provided values');
   });
 });
+
+contract('PLCRVoting', () => {
+  describe('Function: doesExist', () => {
+    it('should return true if a poll with pollID exists');
+    it('should return false if a poll with pollID does not exist');
+  });
+});
+
