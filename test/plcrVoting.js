@@ -340,7 +340,6 @@ contract('PLCRVoting', (accounts) => {
       await utils.increaseTime(101); // commit period over. reveal period active.
 
       await utils.as(alice, plcr.revealVote, pollID, options.vote, options.salt);
-      await utils.as(alice, plcr.withdrawVotingRights, options.votingRights);
 
       const votesFor = await utils.getVotesFor(pollID);
       assert.strictEqual(options.numTokens, votesFor.toString(10),
@@ -356,7 +355,6 @@ contract('PLCRVoting', (accounts) => {
 
       try {
         await utils.as(alice, plcr.revealVote, pollID, options.vote, options.salt);
-        await utils.as(alice, plcr.withdrawVotingRights, options.votingRights);
         assert(false, 'should not have been able to reveal again');
       } catch (err) {
         assert(utils.isEVMException(err), err.toString());
@@ -377,7 +375,6 @@ contract('PLCRVoting', (accounts) => {
 
       try {
         await utils.as(bob, plcr.revealVote, pollID, '0', options.salt);
-        await utils.as(bob, plcr.withdrawVotingRights, options.votingRights);
         assert(false, 'should not have been able to reveal with a different vote option');
       } catch (err) {
         assert(utils.isEVMException(err), err.toString());
@@ -385,7 +382,6 @@ contract('PLCRVoting', (accounts) => {
 
       try {
         await utils.as(bob, plcr.revealVote, pollID, options.vote, '421');
-        await utils.as(bob, plcr.withdrawVotingRights, options.votingRights);
         assert(false, 'should not have been able to reveal with a different salt');
       } catch (err) {
         assert(utils.isEVMException(err), err.toString());
@@ -397,26 +393,32 @@ contract('PLCRVoting', (accounts) => {
       const options = defaultOptions();
       options.actor = alice;
 
-      // Poll has already ended
-      const pollID = '1';
-
-      try {
-        await utils.as(alice, plcr.revealVote, pollID, options.vote, options.salt);
-        assert(false, 'should not have been able to reveal after poll ended');
-      } catch (err) {
-        assert(utils.isEVMException(err), err.toString());
-      }
-
       // Fresh poll
       options.prevPollID = '1';
       options.votingRights = '20';
       const newPollID = await utils.startPollAndCommitVote(options);
 
       // reveal period is not active yet
+      const revealPeriodActive = await plcr.revealPeriodActive.call(newPollID);
+      assert.strictEqual(revealPeriodActive, false, 'reveal period should NOT be active');
+
       try {
         await utils.as(alice, plcr.revealVote, newPollID, options.vote, options.salt);
-        await utils.as(alice, plcr.withdrawVotingRights, options.votingRights);
         assert(false, 'should not have been able to reveal yet');
+      } catch (err) {
+        assert(utils.isEVMException(err), err.toString());
+      }
+
+      await utils.increaseTime(201);
+
+      // Poll has already ended
+      const pollID = '1';
+      const pollEnded = await plcr.pollEnded.call(pollID);
+      assert.strictEqual(pollEnded, true, 'poll should have ended.');
+
+      try {
+        await utils.as(alice, plcr.revealVote, pollID, options.vote, options.salt);
+        assert(false, 'should not have been able to reveal after poll ended');
       } catch (err) {
         assert(utils.isEVMException(err), err.toString());
       }
@@ -464,6 +466,7 @@ contract('PLCRVoting', () => {
   describe('Function: pollEnded', () => {
     it('should return true if the poll has ended');
     it('should return false if the poll has not ended');
+    it('should throw an error if the poll does not exist');
   });
 });
 
