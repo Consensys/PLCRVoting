@@ -165,8 +165,7 @@ contract('PLCRVoting', (accounts) => {
 
         try {
           await utils.as(bob, plcr.rescueTokens, '667');
-          // assert(false,
-          // 'should not have been able to call rescueTokens for a non-existant poll');
+          assert(false, 'should not have been able to call rescueTokens for a non-existant poll');
         } catch (err) {
           assert(utils.isEVMException(err), err.toString());
         }
@@ -507,7 +506,7 @@ contract('PLCRVoting', (accounts) => {
       options.actor = bob;
 
       try {
-        const ended = await plcr.pollEnded.call('9001');
+        await plcr.pollEnded.call('9001');
         assert(false, 'should have thrown error for non-existant poll #9001');
       } catch (err) {
         assert(utils.isEVMException(err), err.toString());
