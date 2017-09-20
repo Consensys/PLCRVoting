@@ -244,6 +244,8 @@ contract PLCRVoting {
     @return Boolean indication of whether polling period is over
     */
     function pollEnded(uint _pollID) constant public returns (bool ended) {
+        require(pollExists(_pollID));
+
         return isExpired(pollMap[_pollID].revealEndDate);
     }
 
@@ -254,6 +256,8 @@ contract PLCRVoting {
     @return Boolean indication of isCommitPeriodActive for target poll
     */
     function commitPeriodActive(uint _pollID) constant public returns (bool active) {
+        require(pollExists(_pollID));
+
         return !isExpired(pollMap[_pollID].commitEndDate);
     }
 
@@ -263,7 +267,9 @@ contract PLCRVoting {
     @param _pollID Integer identifier associated with target poll
     */
     function revealPeriodActive(uint _pollID) constant public returns (bool active) {
-         return !isExpired(pollMap[_pollID].revealEndDate) && !commitPeriodActive(_pollID);
+        require(pollExists(_pollID));
+
+        return !isExpired(pollMap[_pollID].revealEndDate) && !commitPeriodActive(_pollID);
     }
 
     /**
@@ -273,9 +279,28 @@ contract PLCRVoting {
     @return Boolean indication of whether user has already revealed
     */
     function hasBeenRevealed(address _voter, uint _pollID) constant public returns (bool revealed) {
+        require(pollExists(_pollID));
+
         uint prevID = dllMap[_voter].getPrev(_pollID);
         uint nextID = dllMap[_voter].getNext(_pollID);
+
         return (prevID == _pollID) && (nextID == _pollID);
+    }
+
+    /**
+    @dev Checks if a poll exists, throws if the provided poll is in an impossible state
+    @param _pollID The pollID whose existance is to be evaluated.
+    @return Boolean Indicates whether a poll exists for the provided pollID
+    */
+    function pollExists(uint _pollID) constant public returns (bool exists) {
+        uint commitEndDate = pollMap[_pollID].commitEndDate;
+        uint revealEndDate = pollMap[_pollID].revealEndDate;
+
+        assert(!(commitEndDate == 0 && revealEndDate != 0));
+        assert(!(commitEndDate != 0 && revealEndDate == 0));
+
+        if(commitEndDate == 0 || revealEndDate == 0) { return false; }
+        return true;
     }
 
     // ---------------------------
