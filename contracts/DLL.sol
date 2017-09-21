@@ -10,30 +10,30 @@ library DLL {
 		mapping(uint => Node) dll;
 	}
 
-	function getNext(Data storage self, uint curr) returns (uint) {
-		return self.dll[curr].next;
+	function getNext(Data storage self, uint _curr) returns (uint) {
+		return self.dll[_curr].next;
 	}
 
-	function getPrev(Data storage self, uint curr) returns (uint) {
-		return self.dll[curr].prev;
+	function getPrev(Data storage self, uint _curr) returns (uint) {
+		return self.dll[_curr].prev;
 	}
 
-	function insert(Data storage self, uint prev, uint curr, uint next) {
-		self.dll[curr].prev = prev;
-		self.dll[curr].next = next;
+	function insert(Data storage self, uint _prev, uint _curr, uint _next) {
+		self.dll[_curr].prev = _prev;
+		self.dll[_curr].next = _next;
 
-		self.dll[prev].next = curr;
-		self.dll[next].prev = curr;
+		self.dll[_prev].next = _curr;
+		self.dll[_next].prev = _curr;
 	}
 
-	function remove(Data storage self, uint curr) {
-		uint next = getNext(self, curr);
-		uint prev = getPrev(self, curr);
+	function remove(Data storage self, uint _curr) {
+		uint next = getNext(self, _curr);
+		uint prev = getPrev(self, _curr);
 
 		self.dll[next].prev = prev;
 		self.dll[prev].next = next;
 
-		self.dll[curr].next = curr;
-		self.dll[curr].prev = curr;
+		self.dll[_curr].next = _curr;
+		self.dll[_curr].prev = _curr;
 	}
 }
