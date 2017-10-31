@@ -13,7 +13,8 @@
     "plcr"
   ],
   "dependencies": {
-    "tokens": "0.0.3"
+    "tokens": "0.0.3",
+    "ascsdll": "0.0.1"
   },
   "license": "Apache 2.0"
 }

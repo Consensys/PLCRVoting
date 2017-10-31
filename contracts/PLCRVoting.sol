@@ -1,6 +1,6 @@
 pragma solidity ^0.4.8;
 import "tokens/HumanStandardToken.sol";
-import "./DLL.sol";
+import "ascsdll/ASCSDLL.sol";
 import "./AttributeStore.sol";
 
 /**
@@ -31,8 +31,8 @@ contract PLCRVoting {
     mapping(uint => Poll) public pollMap;
     uint pollNonce;
 
-    using DLL for DLL.Data;
-    mapping(address => DLL.Data) dllMap;
+    using ASCSDLL for ASCSDLL.Data;
+    mapping(address => ASCSDLL.Data) dllMap;
 
     using AttributeStore for AttributeStore.Data;
     AttributeStore.Data store;

@@ -6,7 +6,8 @@
     "compile": "truffle compile",
     "test": "truffle test",
     "fix": "eslint --fix",
-    "lint": "eslint"
+    "lint": "eslint",
+    "install": "truffle install"
   },
   "author": "Yorke Rhodes <yorke.rhodesiv@consensys.net>, Aspyn Palatnick <aspyn.palatnick@consensys.net>, Cem Ozer <cem.ozer@consensys.net>",
   "license": "ISC",
