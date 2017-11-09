@@ -16,7 +16,7 @@ module.exports = (deployer, network, accounts) => {
   deployer.link(DLL, PLCRVoting);
   deployer.link(AttributeStore, PLCRVoting);
 
-  if (network === 'development') {
+  if (network === 'test') {
     const tokenConf = {
       initialAmount: '1000',
       tokenName: 'TestToken',

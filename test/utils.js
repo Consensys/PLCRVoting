@@ -8,8 +8,8 @@ const HttpProvider = require('ethjs-provider-http');
 const EthQuery = require('ethjs-query');
 const EthRPC = require('ethjs-rpc');
 
-const ethRPC = new EthRPC(new HttpProvider('http://localhost:8545'));
-const ethQuery = new EthQuery(new HttpProvider('http://localhost:8545'));
+const ethRPC = new EthRPC(new HttpProvider('http://localhost:7545'));
+const ethQuery = new EthQuery(new HttpProvider('http://localhost:7545'));
 
 const utils = {
   // returns the solidity-sha3 output for VoteMap indexing

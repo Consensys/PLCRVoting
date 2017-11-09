@@ -1,0 +1,20 @@
+{
+  "authors": [
+    "Yorke Rhodes <yorke.rhodesiv@consensys.net>, Cem Ozer <cem.ozer@consensys.net>"
+  ],
+  "license": "MIT",
+  "description": "Automatically sorted, circularly sexy doubly linked list",
+  "keywords": [
+    "ethereum",
+    "data structures"
+  ],
+  "links": {},
+  "sources": [
+    "./contracts/ASCSDLL.sol",
+    "./contracts/Migrations.sol"
+  ],
+  "dependencies": {},
+  "manifest_version": 1,
+  "package_name": "ascsdll",
+  "version": "0.0.1"
+}
