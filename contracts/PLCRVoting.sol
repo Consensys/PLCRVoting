@@ -1,7 +1,7 @@
 pragma solidity ^0.4.8;
 import "tokens/HumanStandardToken.sol";
 import "dll/DLL.sol";
-import "./AttributeStore.sol";
+import "attrstore/AttributeStore.sol";
 
 /**
 @title Partial-Lock-Commit-Reveal Voting scheme with ERC20 tokens 
@@ -122,8 +122,8 @@ contract PLCRVoting {
 
         bytes32 UUID = attrUUID(msg.sender, _pollID);
 
-        store.attachAttribute(UUID, "numTokens", _numTokens);
-        store.attachAttribute(UUID, "commitHash", uint(_secretHash));
+        store.setAttribute(UUID, "numTokens", _numTokens);
+        store.setAttribute(UUID, "commitHash", uint(_secretHash));
 
         VoteCommitted(msg.sender, _pollID, _numTokens);
     }
