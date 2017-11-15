@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Voting smart contract system for use with ERC20 tokens",
   "scripts": {
-    "compile": "truffle compile",
+    "compile": "truffle install && truffle compile",
     "test": "truffle test",
     "fix": "eslint --fix",
     "lint": "eslint"
