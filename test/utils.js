@@ -120,6 +120,17 @@ const utils = {
     const poll = await utils.getPoll(pollID);
     return poll[3];
   },
+
+  defaultOptions: () => ({
+    votingRights: '50',
+    quorum: '50',
+    commitPeriod: '100',
+    revealPeriod: '100',
+    vote: '1',
+    salt: '420',
+    numTokens: '20',
+    prevPollID: '0',
+  }),
 };
 
 module.exports = utils;
