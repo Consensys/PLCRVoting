@@ -11,8 +11,8 @@
   "author": "Yorke Rhodes <yorke.rhodesiv@consensys.net>, Aspyn Palatnick <aspyn.palatnick@consensys.net>, Cem Ozer <cem.ozer@consensys.net>",
   "license": "ISC",
   "dependencies": {
+    "bignumber.js": "5.0.0",
     "bip39": "2.4.0",
-    "bn.js": "4.11.6",
     "ethereumjs-abi": "0.6.4",
     "ethereumjs-testrpc": "4.1.1",
     "ethereumjs-wallet": "0.6.0",
