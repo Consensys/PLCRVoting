@@ -44,20 +44,35 @@ const utils = {
   getPLCRInstance: () => PLCRVoting.deployed(),
 
   // increases time
-  increaseTime: seconds => new Promise((resolve, reject) => ethRPC.sendAsync({
-    method: 'evm_increaseTime',
-    params: [seconds],
-  }, (err) => {
-    if (err) reject(err);
-    resolve();
-  }))
-    .then(() => new Promise((resolve, reject) => ethRPC.sendAsync({
-      method: 'evm_mine',
-      params: [],
-    }, (err) => {
-      if (err) reject(err);
-      resolve();
-    }))),
+  increaseTime: (seconds) => {
+    if ((typeof seconds) !== 'number') {
+      throw new Error('Arguments to increaseTime must be of type number');
+    }
+
+    return new Promise((resolve, reject) =>
+      ethRPC.sendAsync(
+        {
+          method: 'evm_increaseTime',
+          params: [seconds],
+        }, (err) => {
+          if (err) reject(err);
+          resolve();
+        },
+      ),
+    ).then(() =>
+      new Promise((resolve, reject) =>
+        ethRPC.sendAsync(
+          {
+            method: 'evm_mine',
+            params: [],
+          }, (err) => {
+            if (err) reject(err);
+            resolve();
+          },
+        ),
+      ),
+    );
+  },
 
   getPollIDFromReceipt: receipt => receipt.logs[0].args.pollID,
 
