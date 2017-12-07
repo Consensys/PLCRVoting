@@ -1,10 +1,49 @@
 /* eslint-env mocha */
-/* global contract */
+/* global contract assert */
 
-contract('PLCRVoting', () => {
+const utils = require('./utils.js');
+
+contract('PLCRVoting', (accounts) => {
   describe('Function: commitPeriodActive', () => {
-    it('should return true if the commit period is active');
-    it('should return false if the commit period is not active');
+    const alice = accounts[0];
+
+    it('should return true if the commit period is active', async () => {
+      const plcr = await utils.getPLCRInstance();
+      const defaultOptions = utils.defaultOptions();
+
+      const pollID = utils.getPollIDFromReceipt(
+        await utils.as(alice, plcr.startPoll, defaultOptions.quorum,
+          defaultOptions.commitPeriod, defaultOptions.revealPeriod),
+      );
+
+      const commitPeriodActive = await plcr.commitPeriodActive.call(pollID);
+
+      assert.strictEqual(commitPeriodActive, true, 'The commit period did not begin on poll ' +
+        'instantiation');
+    });
+
+    it('should return false if the commit period is not active', async () => {
+      const plcr = await utils.getPLCRInstance();
+      const defaultOptions = utils.defaultOptions();
+
+      try {
+        await plcr.commitPeriodActive.call('420');
+      } catch (err) {
+        assert(utils.isEVMException(err), err.toString());
+      }
+
+      const pollID = utils.getPollIDFromReceipt(
+        await utils.as(alice, plcr.startPoll, defaultOptions.quorum,
+          defaultOptions.commitPeriod, defaultOptions.revealPeriod),
+      );
+
+      await utils.increaseTime(parseInt(defaultOptions.commitPeriod, 10) + 1);
+
+      const commitPeriodActive = await plcr.commitPeriodActive.call(pollID);
+
+      assert.strictEqual(commitPeriodActive, false,
+        'The commit period was active for a poll where it should have ended');
+    });
   });
 });
 
