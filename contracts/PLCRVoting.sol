@@ -9,6 +9,9 @@ import "attrstore/AttributeStore.sol";
 */
 contract PLCRVoting {
 
+    // ============
+    // EVENTS:
+    // ============
 
     event VoteCommitted(address voter, uint pollID, uint numTokens);
     event VoteRevealed(address voter, uint pollID, uint numTokens, uint choice);
@@ -16,8 +19,12 @@ contract PLCRVoting {
     event VotingRightsGranted(address voter, uint numTokens);
     event VotingRightsWithdrawn(address voter, uint numTokens);
 
-    /// maps user's address to voteToken balance
-    mapping(address => uint) public voteTokenBalance;
+    // ============
+    // DATA STRUCTURES:
+    // ============
+
+    using AttributeStore for AttributeStore.Data;
+    using DLL for DLL.Data;
 
     struct Poll {
         uint commitEndDate;     /// expiration date of commit period for poll
@@ -27,17 +34,19 @@ contract PLCRVoting {
         uint votesAgainst;      /// tally of votes countering proposal
     }
     
-    /// maps pollID to Poll struct
-    mapping(uint => Poll) public pollMap;
-    uint public pollNonce;
-
-    using DLL for DLL.Data;
-    mapping(address => DLL.Data) dllMap;
-
-    using AttributeStore for AttributeStore.Data;
-    AttributeStore.Data store;
+    // ============
+    // STATE VARIABLES:
+    // ============
 
     uint constant public INITIAL_POLL_NONCE = 0;
+    uint public pollNonce;
+
+    mapping(uint => Poll) public pollMap; // maps pollID to Poll struct
+    mapping(address => uint) public voteTokenBalance; // maps user's address to voteToken balance
+
+    mapping(address => DLL.Data) dllMap;
+    AttributeStore.Data store;
+
     HumanStandardToken public token;
 
     // ============
