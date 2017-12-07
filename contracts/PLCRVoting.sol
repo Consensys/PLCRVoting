@@ -29,7 +29,7 @@ contract PLCRVoting {
     
     /// maps pollID to Poll struct
     mapping(uint => Poll) public pollMap;
-    uint pollNonce;
+    uint public pollNonce;
 
     using DLL for DLL.Data;
     mapping(address => DLL.Data) dllMap;
@@ -37,12 +37,12 @@ contract PLCRVoting {
     using AttributeStore for AttributeStore.Data;
     AttributeStore.Data store;
 
+    uint constant public INITIAL_POLL_NONCE = 0;
+    HumanStandardToken public token;
+
     // ============
     // CONSTRUCTOR:
     // ============
-
-    uint constant INITIAL_POLL_NONCE = 0;
-    HumanStandardToken public token;
 
     /**
     @dev Initializes voteQuorum, commitDuration, revealDuration, and pollNonce in addition to token contract and trusted mapping
