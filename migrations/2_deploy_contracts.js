@@ -24,6 +24,9 @@ module.exports = (deployer, network, accounts) => {
       tokenSymbol: 'TEST',
     };
 
+    let plcr;
+    let token;
+
     deployer.deploy(
       HumanStandardToken,
       tokenConf.initialAmount,
@@ -35,11 +38,16 @@ module.exports = (deployer, network, accounts) => {
         PLCRVoting,
         HumanStandardToken.address,
       ))
-      .then(async () => {
-        const plcr = await PLCRVoting.deployed();
-        const token = HumanStandardToken.at(await plcr.token.call());
-
-        return Promise.all(
+      .then(() => PLCRVoting.deployed())
+      .then((_plcr) => {
+        plcr = _plcr;
+      })
+      .then(() => plcr.token.call())
+      .then((_token) => {
+        token = HumanStandardToken.at(_token);
+      })
+      .then(() => {
+        Promise.all(
           accounts.map(async (user) => {
             await token.transfer(user, 1000);
             await token.approve(plcr.address, 900, { from: user });
