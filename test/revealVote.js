@@ -69,7 +69,6 @@ contract('PLCRVoting', (accounts) => {
       options.actor = alice;
 
       // Fresh poll
-      options.prevPollID = '1';
       options.votingRights = '20';
       const newPollID = await utils.startPollAndCommitVote(options);
 
@@ -98,7 +97,18 @@ contract('PLCRVoting', (accounts) => {
         assert(utils.isEVMException(err), err.toString());
       }
     });
-    it('should fail for polls which do not exist');
+
+    it('should fail for polls which do not exist', async () => {
+      const plcr = await utils.getPLCRInstance();
+
+      try {
+        await utils.as(alice, plcr.revealVote, '420', '1', '420');
+      } catch (err) {
+        assert(utils.isEVMException(err), err.toString());
+        return;
+      }
+      assert.fail('Should not have been able to reveal for a non-existant poll');
+    });
   });
 });
 

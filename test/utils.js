@@ -113,13 +113,21 @@ const utils = {
       typeof options.commitPeriod !== 'string' ||
       typeof options.vote !== 'string' ||
       typeof options.salt !== 'string' ||
-      typeof options.numTokens !== 'string' ||
-      typeof options.prevPollID !== 'string'
+      typeof options.numTokens !== 'string'
     ) {
-      throw new Error('Please specify all options to commitVote as strings.');
+      throw new Error('Please specify all options to startPollAndCommitVote as strings.');
     }
 
     const plcr = await utils.getPLCRInstance();
+
+    let prevPollID;
+    if (typeof options.prevPollID === 'undefined') {
+      prevPollID = await plcr.getInsertPointForNumTokens.call(options.actor, options.numTokens);
+    } else if (typeof options.prevPollID === 'string') {
+      prevPollID = options.prevPollID;
+    } else {
+      throw new Error('Please specify all options to startPollAndCommitVote as strings.');
+    }
 
     await utils.as(options.actor, plcr.requestVotingRights, options.votingRights);
     const receipt = await utils.as(options.actor, plcr.startPoll, options.quorum,
@@ -127,7 +135,7 @@ const utils = {
     const pollID = utils.getPollIDFromReceipt(receipt);
     const secretHash = utils.createVoteHash(options.vote, options.salt);
     await utils.as(options.actor, plcr.commitVote, pollID, secretHash, options.numTokens,
-      options.prevPollID);
+      prevPollID);
     return pollID;
   },
 
@@ -144,7 +152,6 @@ const utils = {
     vote: '1',
     salt: '420',
     numTokens: '20',
-    prevPollID: '0',
   }),
 };
 

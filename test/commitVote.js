@@ -30,8 +30,12 @@ contract('PLCRVoting', (accounts) => {
 
       const originalHash = await plcr.getCommitHash.call(alice, pollID);
       const secretHash = utils.createVoteHash(options.vote, options.salt);
+      const prevPollID =
+        await plcr.getInsertPointForNumTokens.call(options.actor, options.numTokens);
+
       await utils.as(alice, plcr.commitVote, pollID, secretHash, options.numTokens,
-        options.prevPollID);
+        prevPollID);
+
       const storedHash = await plcr.getCommitHash.call(alice, pollID);
 
       assert.notEqual(originalHash, storedHash, errMsg);
