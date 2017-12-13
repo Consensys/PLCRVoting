@@ -18,7 +18,7 @@ module.exports = (deployer, network, accounts) => {
 
   if (network === 'test') {
     const tokenConf = {
-      initialAmount: '1000',
+      initialAmount: '10000',
       tokenName: 'TestToken',
       decimalUnits: '0',
       tokenSymbol: 'TEST',
@@ -41,8 +41,8 @@ module.exports = (deployer, network, accounts) => {
 
         return Promise.all(
           accounts.map(async (user) => {
-            await token.transfer(user, 100);
-            await token.approve(plcr.address, 90, { from: user });
+            await token.transfer(user, 1000);
+            await token.approve(plcr.address, 900, { from: user });
           }),
         );
       });
