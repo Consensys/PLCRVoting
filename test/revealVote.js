@@ -2,26 +2,28 @@
 /* global contract assert */
 
 const utils = require('./utils.js');
+const BN = require('bignumber.js');
 
 contract('PLCRVoting', (accounts) => {
   describe('Function: revealVote', () => {
-    const [alice, bob] = accounts;
+    const [alice] = accounts;
+
     it('should reveal a vote for a poll', async () => {
       const plcr = await utils.getPLCRInstance();
       const options = utils.defaultOptions();
       options.actor = alice;
 
       const pollID = await utils.startPollAndCommitVote(options);
-      await utils.increaseTime(101); // commit period over. reveal period active.
 
-      await utils.as(alice, plcr.revealVote, pollID, options.vote, options.salt);
+      await utils.increaseTime(new BN(options.commitPeriod, 10).add(new BN('1', 10)).toNumber(10));
+      await utils.as(options.actor, plcr.revealVote, pollID, options.vote, options.salt);
 
       const votesFor = await utils.getVotesFor(pollID);
-      assert.strictEqual(options.numTokens, votesFor.toString(10),
-        'votesFor should be equal to numTokens');
+      const errMsg = 'votesFor should be equal to numTokens';
+      assert.strictEqual(options.numTokens, votesFor.toString(10), errMsg);
     });
 
-    it('should fail if the user has already revealed for this poll', async () => {
+    it('should fail if the user has already revealed for some poll', async () => {
       const plcr = await utils.getPLCRInstance();
       const options = utils.defaultOptions();
       options.actor = alice;
@@ -30,84 +32,102 @@ contract('PLCRVoting', (accounts) => {
 
       try {
         await utils.as(alice, plcr.revealVote, pollID, options.vote, options.salt);
-        assert(false, 'should not have been able to reveal again');
       } catch (err) {
         assert(utils.isEVMException(err), err.toString());
-      }
 
-      const votesFor = await utils.getVotesFor(pollID);
-      assert.strictEqual(options.numTokens, votesFor.toString(10),
-        'votesFor should be equal to numTokens');
+        const votesFor = await utils.getVotesFor(pollID);
+        assert.strictEqual(options.numTokens, votesFor.toString(10),
+          'votesFor should be equal to numTokens');
+        return;
+      }
+      assert(false, 'the same vote was revealed twice');
     });
 
-    it('should fail if the provided salt or hash do not match those committed', async () => {
-      const plcr = await utils.getPLCRInstance();
-      const options = utils.defaultOptions();
-      options.actor = bob;
-
-      const pollID = await utils.startPollAndCommitVote(options);
-      await utils.increaseTime(101); // commit period over. reveal period active.
-
-      try {
-        await utils.as(bob, plcr.revealVote, pollID, '0', options.salt);
-        assert(false, 'should not have been able to reveal with a different vote option');
-      } catch (err) {
-        assert(utils.isEVMException(err), err.toString());
-      }
-
-      try {
-        await utils.as(bob, plcr.revealVote, pollID, options.vote, '421');
-        assert(false, 'should not have been able to reveal with a different salt');
-      } catch (err) {
-        assert(utils.isEVMException(err), err.toString());
-      }
-    });
-
-    it('should fail if the reveal period is not active or the poll has ended', async () => {
+    it('should fail if the provided vote does not match that committed', async () => {
       const plcr = await utils.getPLCRInstance();
       const options = utils.defaultOptions();
       options.actor = alice;
 
-      // Fresh poll
-      options.votingRights = '20';
-      const newPollID = await utils.startPollAndCommitVote(options);
-
-      // reveal period is not active yet
-      const revealPeriodActive = await plcr.revealPeriodActive.call(newPollID);
-      assert.strictEqual(revealPeriodActive, false, 'reveal period should NOT be active');
+      const pollID = await utils.startPollAndCommitVote(options);
+      await utils.increaseTime(new BN(options.commitPeriod, 10).add(new BN('1', 10)).toNumber(10));
 
       try {
-        await utils.as(alice, plcr.revealVote, newPollID, options.vote, options.salt);
-        assert(false, 'should not have been able to reveal yet');
+        await utils.as(options.actor, plcr.revealVote, pollID, options.vote.concat('1'),
+          options.salt);
       } catch (err) {
         assert(utils.isEVMException(err), err.toString());
+        return;
       }
+      assert(false, 'should not have been able to reveal with a different vote option');
+    });
 
-      await utils.increaseTime(201);
+    it('should fail if the provided salt does not match that committed', async () => {
+      const plcr = await utils.getPLCRInstance();
+      const options = utils.defaultOptions();
+      options.actor = alice;
 
-      // Poll has already ended
-      const pollID = '1';
+      const pollID = await utils.startPollAndCommitVote(options);
+      await utils.increaseTime(new BN(options.commitPeriod, 10).add(new BN('1', 10)).toNumber(10));
+
+      try {
+        await utils.as(options.actor, plcr.revealVote, pollID, options.vote,
+          options.salt.concat('1'));
+      } catch (err) {
+        assert(utils.isEVMException(err), err.toString());
+        return;
+      }
+      assert(false, 'should not have been able to reveal with a different salt');
+    });
+
+    it('should fail if the reveal period has not begun', async () => {
+      const plcr = await utils.getPLCRInstance();
+      const options = utils.defaultOptions();
+      options.actor = alice;
+
+      const pollID = await utils.startPollAndCommitVote(options);
+
+      try {
+        await utils.as(alice, plcr.revealVote, pollID, options.vote, options.salt);
+      } catch (err) {
+        assert(utils.isEVMException(err), err.toString());
+        return;
+      }
+      assert(false, 'should not have been able to reveal early');
+    });
+
+    it('should fail if the reveal period has ended', async () => {
+      const plcr = await utils.getPLCRInstance();
+      const options = utils.defaultOptions();
+      options.actor = alice;
+
+      const pollID = await utils.startPollAndCommitVote(options);
+      await utils.increaseTime(new BN(options.commitPeriod, 10).toNumber(10));
+      await utils.increaseTime(new BN(options.revealPeriod).add(new BN('1', 10)).toNumber(10));
+
       const pollEnded = await plcr.pollEnded.call(pollID);
       assert.strictEqual(pollEnded, true, 'poll should have ended.');
 
       try {
         await utils.as(alice, plcr.revealVote, pollID, options.vote, options.salt);
-        assert(false, 'should not have been able to reveal after poll ended');
-      } catch (err) {
-        assert(utils.isEVMException(err), err.toString());
-      }
-    });
-
-    it('should fail for polls which do not exist', async () => {
-      const plcr = await utils.getPLCRInstance();
-
-      try {
-        await utils.as(alice, plcr.revealVote, '420', '1', '420');
       } catch (err) {
         assert(utils.isEVMException(err), err.toString());
         return;
       }
-      assert.fail('Should not have been able to reveal for a non-existant poll');
+      assert(false, 'should not have been able to reveal after poll ended');
+    });
+
+    it('should fail for polls which do not exist', async () => {
+      const plcr = await utils.getPLCRInstance();
+      const options = utils.defaultOptions();
+      options.actor = alice;
+
+      try {
+        await utils.as(options.actor, plcr.revealVote, '420', options.vote, options.salt);
+      } catch (err) {
+        assert(utils.isEVMException(err), err.toString());
+        return;
+      }
+      assert(false, 'Should not have been able to reveal for a non-existant poll');
     });
   });
 });
