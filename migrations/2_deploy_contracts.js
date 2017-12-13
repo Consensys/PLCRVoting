@@ -46,14 +46,12 @@ module.exports = (deployer, network, accounts) => {
       .then((_token) => {
         token = HumanStandardToken.at(_token);
       })
-      .then(() => {
-        Promise.all(
-          accounts.map(async (user) => {
-            await token.transfer(user, 1000);
-            await token.approve(plcr.address, 900, { from: user });
-          }),
-        );
-      });
+      .then(() => Promise.all(
+        accounts.map(async (user) => {
+          await token.transfer(user, 1000);
+          await token.approve(plcr.address, 900, { from: user });
+        }),
+      ));
   } else {
     const conf = JSON.parse(fs.readFileSync('conf/config.json'));
     deployer.deploy(PLCRVoting, conf.token);
