@@ -153,6 +153,15 @@ const utils = {
     salt: '420',
     numTokens: '20',
   }),
+
+  commitVote: async (pollID, voteOption, tokensArg, salt, voter) => {
+    const plcr = await utils.getPLCRInstance();
+    const hash = utils.createVoteHash(voteOption, salt);
+    await utils.as(voter, plcr.requestVotingRights, tokensArg);
+
+    const prevPollID = await plcr.getInsertPointForNumTokens.call(voter, tokensArg);
+    await utils.as(voter, plcr.commitVote, pollID, hash, tokensArg, prevPollID);
+  },
 };
 
 module.exports = utils;
