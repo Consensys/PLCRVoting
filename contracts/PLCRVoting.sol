@@ -203,12 +203,21 @@ contract PLCRVoting {
     @param _revealDuration Length of desired reveal period in seconds
     */
     function startPoll(uint _voteQuorum, uint _commitDuration, uint _revealDuration) public returns (uint pollID) {
+        require(_voteQuorum <= 100);
+        
+        uint commitEndDate = block.timestamp + _commitDuration;
+        uint revealEndDate = commitEndDate + _revealDuration;
+        
+        // Prevent overflows
+        require(commitEndDate >= block.timestamp);
+        require(revealEndDate >= commitEndDate);
+        
         pollNonce = pollNonce + 1;
 
         pollMap[pollNonce] = Poll({
             voteQuorum: _voteQuorum,
-            commitEndDate: block.timestamp + _commitDuration,
-            revealEndDate: block.timestamp + _commitDuration + _revealDuration,
+            commitEndDate: commitEndDate,
+            revealEndDate: revealEndDate,
             votesFor: 0,
             votesAgainst: 0
         });

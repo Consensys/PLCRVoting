@@ -100,9 +100,17 @@ const utils = {
     return fn(...args, sendObject);
   },
 
-  isEVMException(err) {
-    return err.toString().includes('invalid opcode');
-  },
+  isEVMException: err => (
+    utils.isInvalidOpcode(err) || utils.isRevert(err)
+  ),
+
+  isInvalidOpcode: err => (
+    err.toString().includes('invalid opcode')
+  ),
+
+  isRevert: err => (
+    err.toString().includes('revert')
+  ),
 
   startPollAndCommitVote: async (options) => {
     if (
