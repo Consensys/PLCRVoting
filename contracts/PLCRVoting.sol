@@ -189,7 +189,9 @@ contract PLCRVoting {
         bytes32 winnerHash = keccak256(winningChoice, _salt);
         bytes32 commitHash = getCommitHash(_voter, _pollID);
 
-        return (winnerHash == commitHash) ? getNumTokens(_voter, _pollID) : 0;
+        require(winnerHash == commitHash);
+
+        return getNumTokens(_voter, _pollID);
     }
 
     // ==================
