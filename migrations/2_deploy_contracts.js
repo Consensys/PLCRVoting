@@ -1,7 +1,7 @@
 /* global artifacts */
 
 const PLCRVoting = artifacts.require('./PLCRVoting.sol');
-const HumanStandardToken = artifacts.require('./HumanStandardToken.sol');
+const EIP20 = artifacts.require('tokens/eip20/EIP20.sol');
 const DLL = artifacts.require('./DLL.sol');
 const AttributeStore = artifacts.require('./AttributeStore.sol');
 
@@ -28,7 +28,7 @@ module.exports = (deployer, network, accounts) => {
     let token;
 
     deployer.deploy(
-      HumanStandardToken,
+      EIP20,
       tokenConf.initialAmount,
       tokenConf.tokenName,
       tokenConf.decimalUnits,
@@ -36,7 +36,7 @@ module.exports = (deployer, network, accounts) => {
     )
       .then(() => deployer.deploy(
         PLCRVoting,
-        HumanStandardToken.address,
+        EIP20.address,
       ))
       .then(() => PLCRVoting.deployed())
       .then((_plcr) => {
@@ -44,7 +44,7 @@ module.exports = (deployer, network, accounts) => {
       })
       .then(() => plcr.token.call())
       .then((_token) => {
-        token = HumanStandardToken.at(_token);
+        token = EIP20.at(_token);
       })
       .then(() => Promise.all(
         accounts.map(async (user) => {

@@ -13,7 +13,7 @@
     "plcr"
   ],
   "dependencies": {
-    "tokens": "0.0.3",
+    "tokens": "1.0.0",
     "dll": "1.0.0",
     "attrstore": "1.0.0"
   },
