@@ -101,7 +101,7 @@ const utils = {
   },
 
   isEVMException(err) {
-    return err.toString().includes('invalid opcode');
+    return err.toString().includes('revert');
   },
 
   startPollAndCommitVote: async (options) => {
