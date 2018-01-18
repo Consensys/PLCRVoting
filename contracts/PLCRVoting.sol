@@ -1,5 +1,5 @@
 pragma solidity ^0.4.8;
-import "tokens/HumanStandardToken.sol";
+import "tokens/eip20/EIP20.sol";
 import "dll/DLL.sol";
 import "attrstore/AttributeStore.sol";
 
@@ -47,7 +47,7 @@ contract PLCRVoting {
     mapping(address => DLL.Data) dllMap;
     AttributeStore.Data store;
 
-    HumanStandardToken public token;
+    EIP20 public token;
 
     // ============
     // CONSTRUCTOR:
@@ -58,7 +58,7 @@ contract PLCRVoting {
     @param _tokenAddr The address where the ERC20 token contract is deployed
     */
     function PLCRVoting(address _tokenAddr) public {
-        token = HumanStandardToken(_tokenAddr);
+        token = EIP20(_tokenAddr);
         pollNonce = INITIAL_POLL_NONCE;
     }
 
@@ -189,7 +189,9 @@ contract PLCRVoting {
         bytes32 winnerHash = keccak256(winningChoice, _salt);
         bytes32 commitHash = getCommitHash(_voter, _pollID);
 
-        return (winnerHash == commitHash) ? getNumTokens(_voter, _pollID) : 0;
+        require(winnerHash == commitHash);
+
+        return getNumTokens(_voter, _pollID);
     }
 
     // ==================
@@ -299,10 +301,7 @@ contract PLCRVoting {
     function hasBeenRevealed(address _voter, uint _pollID) constant public returns (bool revealed) {
         require(pollExists(_pollID));
 
-        uint prevID = dllMap[_voter].getPrev(_pollID);
-        uint nextID = dllMap[_voter].getNext(_pollID);
-
-        return (prevID == _pollID) && (nextID == _pollID);
+        return !dllMap[_voter].contains(_pollID);
     }
 
     /**
