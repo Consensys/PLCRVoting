@@ -4,7 +4,7 @@
 const utils = require('./utils.js');
 
 contract('PLCRVoting', (accounts) => {
-  const [alice] = accounts;
+  const [alice, bob] = accounts;
 
   describe('Function: hasBeenRevealed', () => {
     it('should fail if the poll does not exist', async () => {
@@ -18,6 +18,20 @@ contract('PLCRVoting', (accounts) => {
     });
     it('should return true if the user has already revealed for this poll');
     it('should return false if the user has not revealed for this poll');
+    it('should return false if the user never commit-voted in this poll', async () => {
+      const plcr = await utils.getPLCRInstance();
+      const options = utils.defaultOptions();
+      options.actor = alice;
+
+      const pollID = await utils.startPollAndCommitVote(options);
+
+      try {
+        await plcr.hasBeenRevealed(bob, pollID);
+        assert(false, 'should have failed for non-committed vote');
+      } catch (err) {
+        assert(utils.isEVMException(err), err.toString());
+      }
+    });
   });
 });
 
