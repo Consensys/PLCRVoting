@@ -29,8 +29,8 @@ contract PLCRVoting {
     struct Poll {
         uint commitEndDate;     /// expiration date of commit period for poll
         uint revealEndDate;     /// expiration date of reveal period for poll
-        uint voteQuorum;	      /// number of votes required for a proposal to pass
-        uint votesFor;		      /// tally of votes supporting proposal
+        uint voteQuorum;        /// number of votes required for a proposal to pass
+        uint votesFor;          /// tally of votes supporting proposal
         uint votesAgainst;      /// tally of votes countering proposal
     }
     
