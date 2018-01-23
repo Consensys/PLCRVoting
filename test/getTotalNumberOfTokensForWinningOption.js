@@ -7,7 +7,7 @@ contract('PLCRVoting', (accounts) => {
   const [alice, bob, cat] = accounts;
 
   describe('Function: getTotalNumberOfTokensForWinningOption', () => {
-    it('should return the total number of votes for if the poll passed', async () => {
+    it('should return the total number of votesFor if the poll passed', async () => {
       const plcr = await utils.getPLCRInstance();
       const token = await utils.getERC20Token();
       const options = utils.defaultOptions();
@@ -41,7 +41,7 @@ contract('PLCRVoting', (accounts) => {
       );
     });
 
-    it('should return the total number of votes against if the poll did not pass', async () => {
+    it('should return the total number of votesAgainst if the poll did not pass', async () => {
       const plcr = await utils.getPLCRInstance();
       const token = await utils.getERC20Token();
       const options = utils.defaultOptions();
