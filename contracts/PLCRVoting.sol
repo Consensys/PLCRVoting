@@ -54,10 +54,21 @@ contract PLCRVoting {
     // ============
 
     /**
-    @dev Initializes voteQuorum, commitDuration, revealDuration, and pollNonce in addition to token contract and trusted mapping
-    @param _tokenAddr The address where the ERC20 token contract is deployed
+    @dev uses the setup function to initialize PLCR by specifying the token used for voting
+    @param _tokenAddr The address of the ERC20 token to be used for voting
     */
     function PLCRVoting(address _tokenAddr) public {
+        setup(_tokenAddr);
+    }
+
+    /**
+    @dev initializes the contract by spcifying the token used for voting. Can be called by proxy
+    contracts to initialize their state.
+    @param _tokenAddr The address of the ERC20 token to be used for voting
+    */
+    function setup(address _tokenAddr) public {
+        require(address(token) == 0);
+
         token = EIP20(_tokenAddr);
         pollNonce = INITIAL_POLL_NONCE;
     }
