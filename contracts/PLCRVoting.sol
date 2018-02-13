@@ -38,6 +38,8 @@ contract PLCRVoting {
     // STATE VARIABLES:
     // ============
 
+    PLCRVoting masterCopy; // THIS MUST ALWAYS BE THE FIRST STATE VARIABLE DECLARED!!!!!!
+
     uint constant public INITIAL_POLL_NONCE = 0;
     uint public pollNonce;
 
