@@ -336,7 +336,10 @@ contract PLCRVoting {
     @return Bytes32 hash property attached to target poll 
     */
     function getCommitHash(address _voter, uint _pollID) constant public returns (bytes32 commitHash) { 
-        return bytes32(store.getAttribute(attrUUID(_voter, _pollID), "commitHash"));    
+        bytes32 hash = bytes32(store.getAttribute(attrUUID(_voter, _pollID), "commitHash"));
+        // Assuming the hash cannot accidentally be 0
+        require(hash != 0);
+        return hash;
     } 
 
     /**
