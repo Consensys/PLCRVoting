@@ -2,6 +2,7 @@
 /* global contract assert */
 
 const utils = require('./utils.js');
+const BN = require('bignumber.js');
 
 contract('PLCRVoting', (accounts) => {
   describe('Function: getNumPassingTokens', () => {
@@ -16,18 +17,18 @@ contract('PLCRVoting', (accounts) => {
       const startingBalance = await token.balanceOf.call(alice);
       const pollID = await utils.startPollAndCommitVote(options);
 
-      await utils.increaseTime(101);
+      await utils.increaseTime(new BN(options.commitPeriod, 10).add(new BN('1', 10)).toNumber(10));
 
       const middleBalance = await token.balanceOf.call(alice);
-      await utils.as(alice, plcr.revealVote, pollID, '1', options.salt);
+      await utils.as(alice, plcr.revealVote, pollID, options.vote, options.salt);
 
-      await utils.increaseTime(101);
+      await utils.increaseTime(new BN(options.revealPeriod, 10).add(new BN('1', 10)).toNumber(10));
 
       const npt = await utils.as(alice, plcr.getNumPassingTokens, alice, pollID, options.salt);
       // const finalBalance = await token.balanceOf.call(alice);
-      assert.strictEqual(npt.toString(10), '40', 'alices numTokens should be the winner. no one else voted');
+      assert.strictEqual(npt.toString(10), options.numTokens, 'alices numTokens should be the winner. no one else voted');
       assert.strictEqual(startingBalance.sub(middleBalance).toString(10),
-        '50', 'Should have 50 votingRights',
+        options.votingRights, 'Should have 50 votingRights',
       );
     });
 
@@ -40,7 +41,7 @@ contract('PLCRVoting', (accounts) => {
       const startingBalance = await token.balanceOf.call(bob);
       const pollID = await utils.startPollAndCommitVote(options);
 
-      await utils.increaseTime(101);
+      await utils.increaseTime(new BN(options.commitPeriod, 10).add(new BN('1', 10)).toNumber(10));
 
       const middleBalance = await token.balanceOf.call(bob);
       await utils.as(bob, plcr.revealVote, pollID, options.vote, options.salt);
@@ -54,7 +55,7 @@ contract('PLCRVoting', (accounts) => {
 
       assert.strictEqual(
         startingBalance.sub(middleBalance).toString(10),
-        '50', 'Should have 50 votingRights',
+        options.votingRights, 'Should have 50 votingRights',
       );
     });
 
@@ -66,7 +67,7 @@ contract('PLCRVoting', (accounts) => {
 
       const startingBalance = await token.balanceOf.call(cat);
       const pollID = await utils.startPollAndCommitVote(options);
-      await utils.increaseTime(101);
+      await utils.increaseTime(new BN(options.commitPeriod, 10).add(new BN('1', 10)).toNumber(10));
 
       try {
         await utils.as(cat, plcr.getNumPassingTokens, cat, pollID, options.salt);
@@ -78,7 +79,7 @@ contract('PLCRVoting', (accounts) => {
       const middleBalance = await token.balanceOf.call(cat);
 
       await utils.as(cat, plcr.revealVote, pollID, options.vote, options.salt);
-      await utils.increaseTime(101);
+      await utils.increaseTime(new BN(options.revealPeriod, 10).add(new BN('1', 10)).toNumber(10));
 
       try {
         await utils.as(cat, plcr.getNumPassingTokens, cat, pollID, options.salt);
@@ -88,7 +89,7 @@ contract('PLCRVoting', (accounts) => {
 
       assert.strictEqual(
         startingBalance.sub(middleBalance).toString(10),
-        '50', 'Should have 50 votingRights',
+        options.votingRights, 'Should have 50 votingRights',
       );
     });
 
@@ -118,14 +119,14 @@ contract('PLCRVoting', (accounts) => {
         elephantOptions.numTokens, elephantOptions.salt, elephant);
 
       // Commit period ends / Reveal period begins
-      await utils.increaseTime(101);
+      await utils.increaseTime(new BN(options.commitPeriod, 10).add(new BN('1', 10)).toNumber(10));
 
       // Reveal votes for both parties
       await utils.as(dog, plcr.revealVote, pollID, options.vote, options.salt);
       await utils.as(elephant, plcr.revealVote, pollID, elephantOptions.vote, elephantOptions.salt);
 
       // Reveal period ends
-      await utils.increaseTime(101);
+      await utils.increaseTime(new BN(options.revealPeriod, 10).add(new BN('1', 10)).toNumber(10));
 
       try {
         await utils.as(dog, plcr.getNumPassingTokens, dog, pollID, options.salt);
@@ -135,7 +136,7 @@ contract('PLCRVoting', (accounts) => {
 
       assert.strictEqual(
         startingBalance.sub(middleBalance).toString(10),
-        '50', 'Should have 50 votingRights',
+        options.votingRights, 'Should have 50 votingRights',
       );
     });
   });
