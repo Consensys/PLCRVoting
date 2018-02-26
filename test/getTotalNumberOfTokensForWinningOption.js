@@ -2,6 +2,7 @@
 /* global contract assert */
 
 const utils = require('./utils.js');
+const BN = require('bignumber.js');
 
 contract('PLCRVoting', (accounts) => {
   const [alice, bob, cat] = accounts;
@@ -17,11 +18,11 @@ contract('PLCRVoting', (accounts) => {
       const startingBalance = await token.balanceOf.call(alice);
       const pollID = await utils.startPollAndCommitVote(options);
 
-      await utils.increaseTime(101);
+      await utils.increaseTime(new BN(options.commitPeriod, 10).add(new BN('1', 10)).toNumber(10));
 
       await utils.as(alice, plcr.revealVote, pollID, options.vote, options.salt);
 
-      await utils.increaseTime(101);
+      await utils.increaseTime(new BN(options.revealPeriod, 10).add(new BN('1', 10)).toNumber(10));
 
       const totalNumTokensForWinning = await utils.as(
         alice, plcr.getTotalNumberOfTokensForWinningOption, pollID,
@@ -29,7 +30,7 @@ contract('PLCRVoting', (accounts) => {
 
       assert.strictEqual(
         totalNumTokensForWinning.toString(10),
-        '40',
+        options.numTokens,
         'should have returned the correct numTokens',
       );
 
@@ -51,11 +52,11 @@ contract('PLCRVoting', (accounts) => {
       const startingBalance = await token.balanceOf.call(alice);
       const pollID = await utils.startPollAndCommitVote(options);
       await utils.commitVote(pollID, '0', '60', '9000', bob);
-      await utils.increaseTime(101);
+      await utils.increaseTime(new BN(options.commitPeriod, 10).add(new BN('1', 10)).toNumber(10));
 
       await utils.as(alice, plcr.revealVote, pollID, options.vote, options.salt);
       await utils.as(bob, plcr.revealVote, pollID, '0', '9000');
-      await utils.increaseTime(101);
+      await utils.increaseTime(new BN(options.revealPeriod, 10).add(new BN('1', 10)).toNumber(10));
 
       const totalNumTokensForWinning = await utils.as(
         alice, plcr.getTotalNumberOfTokensForWinningOption, pollID,
@@ -84,7 +85,7 @@ contract('PLCRVoting', (accounts) => {
 
       const startingBalance = await token.balanceOf.call(cat);
       const pollID = await utils.startPollAndCommitVote(options);
-      await utils.increaseTime(101);
+      await utils.increaseTime(new BN(options.commitPeriod, 10).add(new BN('1', 10)).toNumber(10));
 
       try {
         await utils.as(

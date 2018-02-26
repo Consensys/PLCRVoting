@@ -19,7 +19,7 @@ contract('PLCRVoting', (accounts) => {
       const numTokens = await utils.as(alice, plcr.getNumTokens, alice, pollID);
       assert.strictEqual(
         numTokens.toString(10),
-        '40',
+        options.numTokens,
         'should have 40 numTokens',
       );
 
