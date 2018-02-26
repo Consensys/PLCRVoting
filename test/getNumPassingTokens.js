@@ -58,7 +58,7 @@ contract('PLCRVoting', (accounts) => {
       );
     });
 
-    it('should fail if the voter queried has not yer revealed', async () => {
+    it('should fail if the voter queried has not yet revealed', async () => {
       const plcr = await utils.getPLCRInstance();
       const token = await utils.getERC20Token();
       const options = utils.defaultOptions();
@@ -127,13 +127,11 @@ contract('PLCRVoting', (accounts) => {
       // Reveal period ends
       await utils.increaseTime(101);
 
-      const npt = await utils.as(dog, plcr.getNumPassingTokens, dog, pollID, options.salt);
-
-      assert.strictEqual(
-        npt.toString(10),
-        '0',
-        'should have returned zero since dog voted with less numTokens',
-      );
+      try {
+        await utils.as(dog, plcr.getNumPassingTokens, dog, pollID, options.salt);
+      } catch (err) {
+        assert(utils.isEVMException(err), err.toString());
+      }
 
       assert.strictEqual(
         startingBalance.sub(middleBalance).toString(10),
