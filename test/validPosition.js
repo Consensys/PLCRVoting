@@ -18,7 +18,7 @@ contract('PLCRVoting', (accounts) => {
       const secretHash = utils.createVoteHash(1, 420);
       const numTokens = 1;
       const insertPoint = await plcr.getInsertPointForNumTokens.call(alice, numTokens);
-      assert(insertPoint.toString(10), '0', errMsg); // after root
+      assert.strictEqual(insertPoint.toString(10), '0', errMsg); // after root
       await utils.as(alice, plcr.commitVote, pollID, secretHash, numTokens, insertPoint);
     });
 
