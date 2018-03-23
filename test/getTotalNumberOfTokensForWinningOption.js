@@ -45,26 +45,43 @@ contract('PLCRVoting', (accounts) => {
     it('should return the total number of votesAgainst if the poll did not pass', async () => {
       const plcr = await utils.getPLCRInstance();
       const token = await utils.getERC20Token();
+
+      // alice options
       const options = utils.defaultOptions();
       options.actor = alice;
       options.numTokens = '40';
+      options.vote = '1';
+      options.salt = '420';
 
+      // bob options
+      const bobOptions = utils.defaultOptions();
+      bobOptions.actor = bob;
+      bobOptions.numTokens = '60';
+      bobOptions.vote = '0';
+      bobOptions.salt = '9000';
+
+      // alice votes
       const startingBalance = await token.balanceOf.call(alice);
       const pollID = await utils.startPollAndCommitVote(options);
-      await utils.commitVote(pollID, '0', '60', '9000', bob);
+
+      // bob votes
+      await utils.commitVote(pollID, bobOptions.vote, bobOptions.numTokens, bobOptions.salt, bob);
       await utils.increaseTime(new BN(options.commitPeriod, 10).add(new BN('1', 10)).toNumber(10));
 
+      // alice & bob reveal
       await utils.as(alice, plcr.revealVote, pollID, options.vote, options.salt);
-      await utils.as(bob, plcr.revealVote, pollID, '0', '9000');
+      await utils.as(bob, plcr.revealVote, pollID, bobOptions.vote, bobOptions.salt);
       await utils.increaseTime(new BN(options.revealPeriod, 10).add(new BN('1', 10)).toNumber(10));
 
+      // alice checks total numTokens for winning option
       const totalNumTokensForWinning = await utils.as(
         alice, plcr.getTotalNumberOfTokensForWinningOption, pollID,
       );
 
+      // numTokens should be bob's numTokens
       assert.strictEqual(
         totalNumTokensForWinning.toString(10),
-        '60',
+        bobOptions.numTokens,
         'should have returned bobs numTokens',
       );
 
