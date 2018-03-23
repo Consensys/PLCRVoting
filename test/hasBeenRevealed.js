@@ -17,7 +17,7 @@ contract('PLCRVoting', (accounts) => {
       }
     });
     it('should return true if the user has already revealed for this poll');
-    it('should return false if the user has not revealed for this poll');
+    it('should return false if the user has not revealed for this poll, even if it is expired');
     it('should return false if the user never commit-voted in this poll', async () => {
       const plcr = await utils.getPLCRInstance();
       const options = utils.defaultOptions();
