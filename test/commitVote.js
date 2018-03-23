@@ -5,7 +5,7 @@ const utils = require('./utils.js');
 
 contract('PLCRVoting', (accounts) => {
   describe('Function: commitVote', () => {
-    const [alice, bob] = accounts;
+    const [alice, bob, cat] = accounts;
 
     it('should commit a vote for a poll', async () => {
       const options = utils.defaultOptions();
@@ -106,6 +106,46 @@ contract('PLCRVoting', (accounts) => {
       const finalBalance = await token.balanceOf.call(bob);
       assert.strictEqual(startingBalance.toString(10), finalBalance.toString(10),
         'Bob locked tokens by changing his commit');
+    });
+
+    it('should allow a user to vote multiple times in the same poll with increasing numTokens', async () => {
+      const plcr = await utils.getPLCRInstance();
+
+      // options 1
+      const options1 = utils.defaultOptions();
+      options1.actor = cat;
+      options1.numTokens = '20';
+
+      // pollID for the 
+      const pollID = await utils.startPollAndCommitVote(options1);
+
+      try {
+        // options 2
+        const options2 = utils.defaultOptions();
+        options2.actor = cat;
+        options2.numTokens = '21';
+
+        // commitVote 2
+        const hash2 = utils.createVoteHash(options2.vote, options2.salt);
+        const prevPollID2 = (await plcr.getInsertPointForNumTokens.call(
+          cat, options2.numTokens)).toString(10);
+        await utils.as(cat, plcr.commitVote, pollID, hash2,
+          options2.numTokens, prevPollID2);
+
+        // options 3
+        const options3 = utils.defaultOptions();
+        options3.actor = cat;
+        options3.numTokens = '22';
+
+        // commitVote 3
+        const hash3 = utils.createVoteHash(options3.vote, options3.salt);
+        const prevPollID3 = (await plcr.getInsertPointForNumTokens.call(
+          cat, options3.numTokens)).toString(10);
+        await utils.as(cat, plcr.commitVote, pollID, hash3,
+          options3.numTokens, prevPollID3);
+      } catch (err) {
+        assert(false, 'should have been able to commit multiple votes with increasing numTokens');
+      }
     });
   });
 });
