@@ -1,10 +1,20 @@
 /* eslint-env mocha */
-/* global contract */
+/* global contract assert */
+
+const BigNumber = require('bignumber.js');
+const utils = require('./utils.js');
 
 contract('PLCRVoting', () => {
-  describe('Function: pollNonce', () => {
-    it('should initialize the pollNonce to zero');
-    it('should properly increment the pollNonce before a new poll is created');
+  describe('Property: uint pollNonce', () => {
+    it('should initialize the pollNonce to zero', async () => {
+      const expectedPollNonce = BigNumber(0);
+      const plcr = await utils.getPLCRInstance();
+      const initialPollNonce = await plcr.pollNonce.call();
+
+      assert.isOk(
+        expectedPollNonce.eq(initialPollNonce),
+        'Incorrect poll nonce returned',
+      );
+    });
   });
 });
-
