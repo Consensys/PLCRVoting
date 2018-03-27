@@ -97,9 +97,6 @@ contract('PLCRVoting', (accounts) => {
         returnedCommitEndDate,
         returnedRevealEndDate,
         returnedQuorum,
-        /* eslint no-unused-vars: 0 */
-        ...rest
-        /* eslint no-unused-vars: 1 */
       ] = poll;
 
       const blockTimestamp = await utils.getBlockTimestamp();
@@ -145,9 +142,6 @@ contract('PLCRVoting', (accounts) => {
           returnedCommitEndDate,
           returnedRevealEndDate,
           returnedQuorum,
-          /* eslint no-unused-vars: 0 */
-          ...rest
-          /* eslint no-unused-vars: 1 */
         ] = poll;
 
         const blockTimestamp = await utils.getBlockTimestamp();
