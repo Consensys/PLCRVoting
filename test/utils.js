@@ -105,6 +105,7 @@ const utils = {
   },
 
   startPollAndCommitVote: async (options) => {
+    // Assert that all option types are strings
     if (
       typeof options.actor !== 'string' ||
       typeof options.votingRights !== 'string' ||
@@ -120,22 +121,32 @@ const utils = {
 
     const plcr = await utils.getPLCRInstance();
 
+    // Request voting rights on behalf of the actor
+    await utils.as(options.actor, plcr.requestVotingRights, options.votingRights);
+
+    // Create a new poll and grab the pollID
+    const receipt = await utils.as(options.actor, plcr.startPoll, options.quorum,
+      options.commitPeriod, options.revealPeriod);
+    const pollID = utils.getPollIDFromReceipt(receipt);
+
+    // Compute a secret hash to commit
+    const secretHash = utils.createVoteHash(options.vote, options.salt);
+
+    // Compute the insertion point for the commit
     let prevPollID;
     if (typeof options.prevPollID === 'undefined') {
-      prevPollID = await plcr.getInsertPointForNumTokens.call(options.actor, options.numTokens);
+      prevPollID = await plcr.getInsertPointForNumTokens.call(options.actor,
+        options.numTokens, pollID);
     } else if (typeof options.prevPollID === 'string') {
       prevPollID = options.prevPollID;
     } else {
       throw new Error('Please specify all options to startPollAndCommitVote as strings.');
     }
 
-    await utils.as(options.actor, plcr.requestVotingRights, options.votingRights);
-    const receipt = await utils.as(options.actor, plcr.startPoll, options.quorum,
-      options.commitPeriod, options.revealPeriod);
-    const pollID = utils.getPollIDFromReceipt(receipt);
-    const secretHash = utils.createVoteHash(options.vote, options.salt);
+    // Commit the computed secret hash at the computed insert point
     await utils.as(options.actor, plcr.commitVote, pollID, secretHash, options.numTokens,
       prevPollID);
+
     return pollID;
   },
 

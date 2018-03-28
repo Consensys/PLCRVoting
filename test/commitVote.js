@@ -31,7 +31,7 @@ contract('PLCRVoting', (accounts) => {
       const originalHash = await plcr.getCommitHash.call(alice, pollID);
       const secretHash = utils.createVoteHash(options.vote, options.salt);
       const prevPollID =
-        await plcr.getInsertPointForNumTokens.call(options.actor, options.numTokens);
+        await plcr.getInsertPointForNumTokens.call(options.actor, options.numTokens, pollID);
 
       await utils.as(alice, plcr.commitVote, pollID, secretHash, options.numTokens,
         prevPollID);
