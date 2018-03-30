@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "description": "Voting smart contract system for use with ERC20 tokens",
   "scripts": {
-    "compile": "truffle install && truffle compile",
+    "install": "truffle install",
+    "compile": "truffle compile",
     "test": "npm run lint ./ && truffle test",
     "fix": "eslint --fix",
     "lint": "eslint",
@@ -21,7 +22,7 @@
     "ethjs-query": "0.2.6",
     "ethjs-rpc": "0.1.5",
     "ethjs-util": "0.1.4",
-    "truffle": "4.0.4",
+    "truffle": "4.1.5",
     "truffle-hdwallet-provider": "0.0.3"
   },
   "devDependencies": {
