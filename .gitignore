@@ -3,4 +3,6 @@ node_modules/*
 installed_contracts/*
 secrets.json
 *.swp
+coverage/
+coverage.json
 

@@ -5,6 +5,7 @@
   "scripts": {
     "install": "truffle install",
     "compile": "truffle compile",
+    "coverage": "./node_modules/.bin/solidity-coverage",
     "test": "npm run lint ./ && truffle test",
     "fix": "eslint --fix",
     "lint": "eslint",
@@ -28,6 +29,7 @@
   "devDependencies": {
     "eslint": "4.4.1",
     "eslint-config-airbnb-base": "11.3.1",
-    "eslint-plugin-import": "2.7.0"
+    "eslint-plugin-import": "2.7.0",
+    "solidity-coverage": "0.4.15"
   }
 }
