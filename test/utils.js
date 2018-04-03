@@ -155,6 +155,11 @@ const utils = {
     return poll[3];
   },
 
+  getVotesAgainst: async (pollID) => {
+    const poll = await utils.getPoll(pollID);
+    return poll[4];
+  },
+
   defaultOptions: () => ({
     votingRights: '50',
     quorum: '50',
