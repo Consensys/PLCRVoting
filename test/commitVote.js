@@ -107,6 +107,49 @@ contract('PLCRVoting', (accounts) => {
       assert.strictEqual(startingBalance.toString(10), finalBalance.toString(10),
         'Bob locked tokens by changing his commit');
     });
+
+    it('should revert if the voter\'s voteTokenBalance is less than numTokens', async () => {
+      const options = utils.defaultOptions();
+      options.actor = alice;
+      options.numTokens = '1000000';
+
+      const plcr = await utils.getPLCRInstance();
+
+      const pollID = '8';
+
+      const secretHash = utils.createVoteHash(options.vote, options.salt);
+      const prevPollID =
+        await plcr.getInsertPointForNumTokens.call(options.actor, options.numTokens, pollID);
+
+      try {
+        await utils.as(alice, plcr.commitVote, pollID, secretHash, options.numTokens, prevPollID);
+      } catch (err) {
+        assert(utils.isEVMException(err), err.toString());
+        return;
+      }
+      assert(false, 'voter was able to commit more tokens than their balance');
+    });
+
+    it('should revert if pollID is 0', async () => {
+      const options = utils.defaultOptions();
+      options.actor = alice;
+      options.numTokens = '1';
+
+      const plcr = await utils.getPLCRInstance();
+
+      const pollID = '0';
+
+      const secretHash = utils.createVoteHash(options.vote, options.salt);
+      const prevPollID =
+        await plcr.getInsertPointForNumTokens.call(options.actor, options.numTokens, pollID);
+
+      try {
+        await utils.as(alice, plcr.commitVote, pollID, secretHash, options.numTokens, prevPollID);
+      } catch (err) {
+        assert(utils.isEVMException(err), err.toString());
+        return;
+      }
+      assert(false, 'vote commited in poll with pollID 0');
+    });
   });
 });
-

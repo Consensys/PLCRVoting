@@ -129,6 +129,42 @@ contract('PLCRVoting', (accounts) => {
       }
       assert(false, 'Should not have been able to reveal for a non-existant poll');
     });
+
+    it('should revert if the voter has not commited a vote for the provided poll', async () => {
+      const plcr = await utils.getPLCRInstance();
+      const options = utils.defaultOptions();
+      options.actor = alice;
+
+      const receipt = await utils.as(options.actor, plcr.startPoll, options.quorum,
+        options.commitPeriod, options.revealPeriod);
+      const pollID = utils.getPollIDFromReceipt(receipt);
+
+      await utils.increaseTime(new BN(options.commitPeriod, 10).add(new BN('1', 10)).toNumber(10));
+
+      try {
+        await utils.as(options.actor, plcr.revealVote, pollID, options.vote, options.salt);
+      } catch (err) {
+        assert(utils.isEVMException(err), err.toString());
+        return;
+      }
+      assert(false, 'user was able to reveal a vote without commiting first');
+    });
+
+    it('should be able to reveal an against vote', async () => {
+      const plcr = await utils.getPLCRInstance();
+      const options = utils.defaultOptions();
+      options.actor = alice;
+      options.vote = '0';
+
+      const pollID = await utils.startPollAndCommitVote(options);
+
+      await utils.increaseTime(new BN(options.commitPeriod, 10).add(new BN('1', 10)).toNumber(10));
+      await utils.as(options.actor, plcr.revealVote, pollID, options.vote, options.salt);
+
+      const votesAgainst = await utils.getVotesAgainst(pollID);
+      const errMsg = 'votesAgainst should be equal to numTokens';
+      assert.strictEqual(options.numTokens, votesAgainst.toString(10), errMsg);
+    });
   });
 });
 
