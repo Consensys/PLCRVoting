@@ -115,8 +115,21 @@ contract('PLCRVoting', (accounts) => {
 
       const plcr = await utils.getPLCRInstance();
 
-      const pollID = '8';
+      // verify that the voter doesn't have enough tokens
+      const balance = await plcr.voteTokenBalance.call(options.actor);
+      assert(balance.toNumber() < Number(options.numTokens),
+        'voter\'s balance is not less than numTokens');
 
+      // start a poll
+      const receipt = await utils.as(options.actor, plcr.startPoll, options.quorum,
+        options.commitPeriod, options.revealPeriod);
+      const pollID = utils.getPollIDFromReceipt(receipt);
+
+      // verify that the commit period is active
+      const isActive = await plcr.commitPeriodActive(pollID);
+      assert(isActive, 'poll\'s commit period is not active');
+
+      // try to commit a vote
       const secretHash = utils.createVoteHash(options.vote, options.salt);
       const prevPollID =
         await plcr.getInsertPointForNumTokens.call(options.actor, options.numTokens, pollID);
