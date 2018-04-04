@@ -109,16 +109,13 @@ contract('PLCRVoting', (accounts) => {
     });
 
     it('should revert if the voter\'s voteTokenBalance is less than numTokens', async () => {
+      const plcr = await utils.getPLCRInstance();
       const options = utils.defaultOptions();
       options.actor = alice;
-      options.numTokens = '1000000';
 
-      const plcr = await utils.getPLCRInstance();
-
-      // verify that the voter doesn't have enough tokens
+      // calculate a number of tokens greater than the balance
       const balance = await plcr.voteTokenBalance.call(options.actor);
-      assert(balance.toNumber() < Number(options.numTokens),
-        'voter\'s balance is not less than numTokens');
+      options.numTokens = balance.add('1').toString();
 
       // start a poll
       const receipt = await utils.as(options.actor, plcr.startPoll, options.quorum,
