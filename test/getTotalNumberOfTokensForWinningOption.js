@@ -22,7 +22,7 @@ contract('PLCRVoting', (accounts) => {
       await utils.increaseTime(new BN(options.revealPeriod, 10).add(new BN('1', 10)).toNumber(10));
 
       // make sure poll passed
-      const isPassed = await plcr.isPassed(pollID);
+      const isPassed = await plcr.isPassed.call(pollID);
       assert.strictEqual(isPassed, true, 'poll has not passed!');
 
       // check the number of tokens
@@ -51,7 +51,7 @@ contract('PLCRVoting', (accounts) => {
       await utils.increaseTime(new BN(options.revealPeriod, 10).add(new BN('1', 10)).toNumber(10));
 
       // make sure poll did not pass
-      const isPassed = await plcr.isPassed(pollID);
+      const isPassed = await plcr.isPassed.call(pollID);
       assert.strictEqual(isPassed, false, 'poll has passed');
 
       // check the number of tokens
