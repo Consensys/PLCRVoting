@@ -93,7 +93,7 @@ contract('PLCRVoting', (accounts) => {
       await utils.increaseTime(new BN(options.revealPeriod, 10).add(new BN('1', 10)).toNumber(10));
 
       const isPassed = await plcr.isPassed.call(pollID);
-      assert.strictEqual(isPassed, false, 'isPassed should have returned false for a passing poll');
+      assert.strictEqual(isPassed, false, 'isPassed should have returned false for a poll that did not pass');
     });
 
     it('should revert if the poll has not ended', async () => {

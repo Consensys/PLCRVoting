@@ -71,7 +71,7 @@ contract('PLCRVoting', (accounts) => {
       options.actor = alice;
       options.vote = '1';
 
-      // make a poll and commit and reveal a vote
+      // make a poll and commit a vote
       const plcr = await utils.getPLCRInstance();
       const pollID = await utils.startPollAndCommitVote(options);
 
