@@ -104,7 +104,7 @@ const utils = {
     return err.toString().includes('revert');
   },
 
-  startPollAndCommitVote: async (options) => {
+  validOptions: (options) => {
     // Assert that all option types are strings
     if (
       typeof options.actor !== 'string' ||
@@ -116,6 +116,15 @@ const utils = {
       typeof options.salt !== 'string' ||
       typeof options.numTokens !== 'string'
     ) {
+      return false;
+    }
+
+    return true;
+  },
+
+  startPollAndCommitVote: async (options) => {
+    // Assert that all option types are strings
+    if (!utils.validOptions(options)) {
       throw new Error('Please specify all options to startPollAndCommitVote as strings.');
     }
 
@@ -148,6 +157,36 @@ const utils = {
       prevPollID);
 
     return pollID;
+  },
+
+  commitAs: async (pollID, options) => {
+    // Assert that all option types are strings
+    if (!utils.validOptions(options)) {
+      throw new Error('Please specify all options to startPollAndCommitVote as strings.');
+    }
+
+    const plcr = await utils.getPLCRInstance();
+
+    // Request voting rights on behalf of the actor
+    await utils.as(options.actor, plcr.requestVotingRights, options.votingRights);
+
+    // Compute a secret hash to commit
+    const secretHash = utils.createVoteHash(options.vote, options.salt);
+
+    // Compute the insertion point for the commit
+    let prevPollID;
+    if (typeof options.prevPollID === 'undefined') {
+      prevPollID = await plcr.getInsertPointForNumTokens.call(options.actor,
+        options.numTokens, pollID);
+    } else if (typeof options.prevPollID === 'string') {
+      prevPollID = options.prevPollID;
+    } else {
+      throw new Error('Please specify all options to commitAs as strings.');
+    }
+
+    // Commit the computed secret hash at the computed insert point
+    await utils.as(options.actor, plcr.commitVote, pollID, secretHash, options.numTokens,
+      prevPollID);
   },
 
   getVotesFor: async (pollID) => {
