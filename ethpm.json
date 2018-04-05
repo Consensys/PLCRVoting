@@ -1,6 +1,6 @@
 {
   "package_name": "plcrvoting",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "PLCR voting for ERC20 tokens",
   "authors": [
     "Yorke Rhodes",
