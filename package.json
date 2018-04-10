@@ -1,5 +1,5 @@
 {
-  "name": "tokenPLCRvoting",
+  "name": "plcrvoting",
   "version": "0.0.1",
   "description": "Voting smart contract system for use with ERC20 tokens",
   "scripts": {
