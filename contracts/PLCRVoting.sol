@@ -14,11 +14,11 @@ contract PLCRVoting {
     // EVENTS:
     // ============
 
-    event _VoteCommitted(uint indexed pollID, uint numTokens);
-    event _VoteRevealed(uint indexed pollID, uint numTokens, uint votesFor, uint votesAgainst, uint indexed choice);
-    event _PollCreated(uint voteQuorum, uint commitEndDate, uint revealEndDate, uint indexed pollID);
-    event _VotingRightsGranted(uint numTokens);
-    event _VotingRightsWithdrawn(uint numTokens);
+    event _VoteCommitted(uint indexed pollID, uint numTokens, address indexed msgSender);
+    event _VoteRevealed(uint indexed pollID, uint numTokens, uint votesFor, uint votesAgainst, uint indexed choice, address indexed msgSender);
+    event _PollCreated(uint voteQuorum, uint commitEndDate, uint revealEndDate, uint indexed pollID, address indexed msgSender);
+    event _VotingRightsGranted(uint numTokens, address msgSender);
+    event _VotingRightsWithdrawn(uint numTokens, address msgSender);
     event _TokensRescued(uint indexed pollID, address indexed voter);
 
     // ============
@@ -80,7 +80,7 @@ contract PLCRVoting {
         require(token.balanceOf(msg.sender) >= _numTokens);
         voteTokenBalance[msg.sender] += _numTokens;
         require(token.transferFrom(msg.sender, this, _numTokens));
-        _VotingRightsGranted(_numTokens);
+        _VotingRightsGranted(_numTokens, msg.sender);
     }
 
     /**
@@ -92,7 +92,7 @@ contract PLCRVoting {
         require(availableTokens >= _numTokens);
         voteTokenBalance[msg.sender] -= _numTokens;
         require(token.transfer(msg.sender, _numTokens));
-        _VotingRightsWithdrawn(_numTokens);
+        _VotingRightsWithdrawn(_numTokens, msg.sender);
     }
 
     /**
@@ -140,7 +140,7 @@ contract PLCRVoting {
         store.setAttribute(UUID, "commitHash", uint(_secretHash));
 
         pollMap[_pollID].didCommit[msg.sender] = true;
-        _VoteCommitted(_pollID, _numTokens);
+        _VoteCommitted(_pollID, _numTokens, msg.sender);
     }
 
     /**
@@ -182,7 +182,7 @@ contract PLCRVoting {
         dllMap[msg.sender].remove(_pollID); // remove the node referring to this vote upon reveal
         pollMap[_pollID].didReveal[msg.sender] = true;
 
-        _VoteRevealed(_pollID, numTokens, pollMap[_pollID].votesFor, pollMap[_pollID].votesAgainst, _voteOption);
+        _VoteRevealed(_pollID, numTokens, pollMap[_pollID].votesFor, pollMap[_pollID].votesAgainst, _voteOption, msg.sender);
     }
 
     /**
@@ -227,7 +227,7 @@ contract PLCRVoting {
             votesAgainst: 0
         });
 
-        _PollCreated(_voteQuorum, commitEndDate, revealEndDate, pollNonce);
+        _PollCreated(_voteQuorum, commitEndDate, revealEndDate, pollNonce, msg.sender);
         return pollNonce;
     }
 
