@@ -294,6 +294,30 @@ contract PLCRVoting {
     }
 
     /**
+    @dev Checks if user has committed for specified poll
+    @param _voter Address of user to check against
+    @param _pollID Integer identifier associated with target poll
+    @return Boolean indication of whether user has committed
+    */
+    function didCommit(address _voter, uint _pollID) constant public returns (bool committed) {
+        require(pollExists(_pollID));
+
+        return pollMap[_pollID].didCommit[_voter];
+    }
+
+    /**
+    @dev Checks if user has revealed for specified poll
+    @param _voter Address of user to check against
+    @param _pollID Integer identifier associated with target poll
+    @return Boolean indication of whether user has revealed
+    */
+    function didReveal(address _voter, uint _pollID) constant public returns (bool revealed) {
+        require(pollExists(_pollID));
+
+        return pollMap[_pollID].didReveal[_voter];
+    }
+
+    /**
     @dev Checks if a poll exists
     @param _pollID The pollID whose existance is to be evaluated.
     @return Boolean Indicates whether a poll exists for the provided pollID
