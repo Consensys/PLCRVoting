@@ -19,6 +19,7 @@ contract PLCRVoting {
     event _PollCreated(uint voteQuorum, uint commitEndDate, uint revealEndDate, uint indexed pollID);
     event _VotingRightsGranted(uint numTokens);
     event _VotingRightsWithdrawn(uint numTokens);
+    event _TokensRescued(uint indexed pollID, address indexed msgSender);
 
     // ============
     // DATA STRUCTURES:
@@ -103,6 +104,7 @@ contract PLCRVoting {
         require(dllMap[msg.sender].contains(_pollID));
 
         dllMap[msg.sender].remove(_pollID);
+        _TokensRescued(_pollID, msg.sender);
     }
 
     // =================
