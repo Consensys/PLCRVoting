@@ -19,7 +19,7 @@ contract PLCRVoting {
     event _PollCreated(uint voteQuorum, uint commitEndDate, uint revealEndDate, uint indexed pollID);
     event _VotingRightsGranted(uint numTokens);
     event _VotingRightsWithdrawn(uint numTokens);
-    event _TokensRescued(uint indexed pollID, address indexed msgSender);
+    event _TokensRescued(uint indexed pollID, address indexed voter);
 
     // ============
     // DATA STRUCTURES:
