@@ -14,11 +14,11 @@ contract PLCRVoting {
     // EVENTS:
     // ============
 
-    event _VoteCommitted(uint indexed pollID, uint numTokens, address indexed msgSender);
-    event _VoteRevealed(uint indexed pollID, uint numTokens, uint votesFor, uint votesAgainst, uint indexed choice, address indexed msgSender);
-    event _PollCreated(uint voteQuorum, uint commitEndDate, uint revealEndDate, uint indexed pollID, address indexed msgSender);
-    event _VotingRightsGranted(uint numTokens, address msgSender);
-    event _VotingRightsWithdrawn(uint numTokens, address msgSender);
+    event _VoteCommitted(uint indexed pollID, uint numTokens, address indexed voter);
+    event _VoteRevealed(uint indexed pollID, uint numTokens, uint votesFor, uint votesAgainst, uint indexed choice, address indexed voter);
+    event _PollCreated(uint voteQuorum, uint commitEndDate, uint revealEndDate, uint indexed pollID, address indexed voter);
+    event _VotingRightsGranted(uint numTokens, address indexed voter);
+    event _VotingRightsWithdrawn(uint numTokens, address indexed voter);
     event _TokensRescued(uint indexed pollID, address indexed voter);
 
     // ============
