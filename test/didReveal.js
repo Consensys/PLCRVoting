@@ -6,14 +6,14 @@ const BN = require('bignumber.js');
 
 contract('PLCRVoting', (accounts) => {
   describe('Function: didReveal', () => {
-    const [alice, bob] = accounts;
+    const [alice] = accounts;
 
     it('should return true for a poll that a voter has revealed', async () => {
       const plcr = await utils.getPLCRInstance();
       const options = utils.defaultOptions();
       options.actor = alice;
 
-      // alice commits
+      // alice starts poll & commits
       const pollID = await utils.startPollAndCommitVote(options);
       await utils.increaseTime(new BN(options.commitPeriod, 10).add(new BN('1', 10)).toNumber(10));
 
@@ -31,7 +31,7 @@ contract('PLCRVoting', (accounts) => {
       const options = utils.defaultOptions();
       options.actor = alice;
 
-      // alice commits
+      // alice starts poll & commits
       const pollID = await utils.startPollAndCommitVote(options);
 
       // didReveal(alice, pollID)
@@ -40,39 +40,27 @@ contract('PLCRVoting', (accounts) => {
       assert.strictEqual(actual, expected, 'should have returned false because alice committed but did NOT reveal');
     });
 
-    it('should return false for a poll that a voter has NOT committed NOR revealed', async () => {
+    it('should return false for a poll that a voter has NEITHER committed NOR revealed', async () => {
       const plcr = await utils.getPLCRInstance();
       const options = utils.defaultOptions();
-      options.actor = alice;
 
-      // alice commits
-      const pollID = await utils.startPollAndCommitVote(options);
-      await utils.increaseTime(new BN(options.commitPeriod, 10).add(new BN('1', 10)).toNumber(10));
+      // start poll
+      const receipt = await plcr.startPoll(options.quorum,
+        options.commitPeriod, options.revealPeriod);
+      const pollID = utils.getPollIDFromReceipt(receipt);
 
-      // alice reveals
-      await utils.as(options.actor, plcr.revealVote, pollID, options.vote, options.salt);
-
-      // didReveal(bob, pollID)
-      const actual = await plcr.didReveal.call(bob, pollID.toString());
+      // didReveal(alice, pollID)
+      const actual = await plcr.didReveal.call(alice, pollID.toString());
       const expected = false;
-      assert.strictEqual(actual, expected, 'should have returned false because bob did NOT reveal');
+      assert.strictEqual(actual, expected, 'should have returned false because alice did NOT reveal');
     });
 
     it('should revert for a poll that doesnt exist', async () => {
       const plcr = await utils.getPLCRInstance();
-      const options = utils.defaultOptions();
-      options.actor = alice;
-
-      // alice commits
-      const pollID = await utils.startPollAndCommitVote(options);
-      await utils.increaseTime(new BN(options.commitPeriod, 10).add(new BN('1', 10)).toNumber(10));
-
-      // alice reveals
-      await utils.as(options.actor, plcr.revealVote, pollID, options.vote, options.salt);
 
       try {
-        // didReveal(alice, pollID + 420420420)
-        await plcr.didReveal.call(options.actor, pollID.add('420420420').toString());
+        // didReveal(alice, 420420420)
+        await plcr.didReveal.call(alice, '420420420');
       } catch (err) {
         assert(utils.isEVMException(err), err.toString());
         return;
