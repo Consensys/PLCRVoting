@@ -108,7 +108,7 @@ contract('PLCRVoting', (accounts) => {
         'Bob locked tokens by changing his commit');
     });
 
-    it('should revert if the voter\'s voteTokenBalance is less than numTokens', async () => {
+    it('should request for voting rights if voteTokenBalance is less than numTokens', async () => {
       const plcr = await utils.getPLCRInstance();
       const options = utils.defaultOptions();
       options.actor = alice;
@@ -134,10 +134,8 @@ contract('PLCRVoting', (accounts) => {
       try {
         await utils.as(alice, plcr.commitVote, pollID, secretHash, options.numTokens, prevPollID);
       } catch (err) {
-        assert(utils.isEVMException(err), err.toString());
-        return;
+        assert(false, 'voter should have been able to commit more tokens than their balance');
       }
-      assert(false, 'voter was able to commit more tokens than their balance');
     });
 
     it('should revert if pollID is 0', async () => {
