@@ -118,7 +118,7 @@ contract PLCRVoting {
     @param _numTokens The number of tokens to be committed towards the target poll
     @param _prevPollID The ID of the poll that the user has voted the maximum number of tokens in which is still less than or equal to numTokens
     */
-    function commitVote(uint _pollID, bytes32 _secretHash, uint _numTokens, uint _prevPollID) external {
+    function commitVote(uint _pollID, bytes32 _secretHash, uint _numTokens, uint _prevPollID) public {
         require(commitPeriodActive(_pollID));
 
         // if msg.sender doesn't have enough voting rights,
@@ -151,6 +151,25 @@ contract PLCRVoting {
 
         pollMap[_pollID].didCommit[msg.sender] = true;
         emit _VoteCommitted(_pollID, _numTokens, msg.sender);
+    }
+
+    /**
+    @notice                 Commits votes using hashes of choices and secret salts to conceal votes until reveal
+    @param _pollIDs         Array of integer identifiers associated with target polls
+    @param _secretHashes    Array of commit keccak256 hashes of voter's choices and salts (tightly packed in this order)
+    @param _numsTokens      Array of numbers of tokens to be committed towards the target polls
+    @param _prevPollIDs     Array of IDs of the polls that the user has voted the maximum number of tokens in which is still less than or equal to numTokens
+    */
+    function commitVotes(uint[] _pollIDs, bytes32[] _secretHashes, uint[] _numsTokens, uint[] _prevPollIDs) external {
+        // make sure the array lengths are all the same
+        require(_pollIDs.length == _secretHashes.length);
+        require(_pollIDs.length == _numsTokens.length);
+        require(_pollIDs.length == _prevPollIDs.length);
+
+        // loop through arrays, committing each individual vote values
+        for (uint i = 0; i < _pollIDs.length; i++) {
+            commitVote(_pollIDs[i], _secretHashes[i], _numsTokens[i], _prevPollIDs[i]);
+        }
     }
 
     /**
