@@ -174,7 +174,7 @@ contract PLCRVoting {
     @param _voteOption Vote choice used to generate commitHash for associated poll
     @param _salt Secret number used to generate commitHash for associated poll
     */
-    function revealVote(uint _pollID, uint _voteOption, uint _salt) external {
+    function revealVote(uint _pollID, uint _voteOption, uint _salt) public {
         // Make sure the reveal period is active
         require(revealPeriodActive(_pollID));
         require(pollMap[_pollID].didCommit[msg.sender]);                         // make sure user has committed a vote for this poll
@@ -193,6 +193,23 @@ contract PLCRVoting {
         pollMap[_pollID].didReveal[msg.sender] = true;
 
         emit _VoteRevealed(_pollID, numTokens, pollMap[_pollID].votesFor, pollMap[_pollID].votesAgainst, _voteOption, msg.sender);
+    }
+
+    /**
+    @notice             Reveals multiple votes with choices and secret salts used in generating commitHashes to attribute committed tokens
+    @param _pollIDs     Array of integer identifiers associated with target polls
+    @param _voteOptions Array of vote choices used to generate commitHashes for associated polls
+    @param _salts       Array of secret numbers used to generate commitHashes for associated polls
+    */
+    function revealVotes(uint[] _pollIDs, uint[] _voteOptions, uint[] _salts) external {
+        // make sure the array lengths are all the same
+        require(_pollIDs.length == _voteOptions.length);
+        require(_pollIDs.length == _salts.length);
+
+        // loop through arrays, revealing each individual vote values
+        for (uint i = 0; i < _pollIDs.length; i++) {
+            revealVote(_pollIDs[i], _voteOptions[i], _salts[i]);
+        }
     }
 
     /**
