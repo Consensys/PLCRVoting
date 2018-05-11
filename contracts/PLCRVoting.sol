@@ -80,7 +80,7 @@ contract PLCRVoting {
         require(token.balanceOf(msg.sender) >= _numTokens);
         voteTokenBalance[msg.sender] += _numTokens;
         require(token.transferFrom(msg.sender, this, _numTokens));
-        _VotingRightsGranted(_numTokens, msg.sender);
+        emit _VotingRightsGranted(_numTokens, msg.sender);
     }
 
     /**
@@ -92,7 +92,7 @@ contract PLCRVoting {
         require(availableTokens >= _numTokens);
         voteTokenBalance[msg.sender] -= _numTokens;
         require(token.transfer(msg.sender, _numTokens));
-        _VotingRightsWithdrawn(_numTokens, msg.sender);
+        emit _VotingRightsWithdrawn(_numTokens, msg.sender);
     }
 
     /**
@@ -104,7 +104,7 @@ contract PLCRVoting {
         require(dllMap[msg.sender].contains(_pollID));
 
         dllMap[msg.sender].remove(_pollID);
-        _TokensRescued(_pollID, msg.sender);
+        emit _TokensRescued(_pollID, msg.sender);
     }
 
     // =================
@@ -150,7 +150,7 @@ contract PLCRVoting {
         store.setAttribute(UUID, "commitHash", uint(_secretHash));
 
         pollMap[_pollID].didCommit[msg.sender] = true;
-        _VoteCommitted(_pollID, _numTokens, msg.sender);
+        emit _VoteCommitted(_pollID, _numTokens, msg.sender);
     }
 
     /**
@@ -192,7 +192,7 @@ contract PLCRVoting {
         dllMap[msg.sender].remove(_pollID); // remove the node referring to this vote upon reveal
         pollMap[_pollID].didReveal[msg.sender] = true;
 
-        _VoteRevealed(_pollID, numTokens, pollMap[_pollID].votesFor, pollMap[_pollID].votesAgainst, _voteOption, msg.sender);
+        emit _VoteRevealed(_pollID, numTokens, pollMap[_pollID].votesFor, pollMap[_pollID].votesAgainst, _voteOption, msg.sender);
     }
 
     /**
@@ -237,7 +237,7 @@ contract PLCRVoting {
             votesAgainst: 0
         });
 
-        _PollCreated(_voteQuorum, commitEndDate, revealEndDate, pollNonce, msg.sender);
+        emit _PollCreated(_voteQuorum, commitEndDate, revealEndDate, pollNonce, msg.sender);
         return pollNonce;
     }
 
