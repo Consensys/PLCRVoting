@@ -76,7 +76,7 @@ contract PLCRVoting {
     @dev Assumes that msg.sender has approved voting contract to spend on their behalf
     @param _numTokens The number of votingTokens desired in exchange for ERC20 tokens
     */
-    function requestVotingRights(uint _numTokens) external {
+    function requestVotingRights(uint _numTokens) public {
         require(token.balanceOf(msg.sender) >= _numTokens);
         voteTokenBalance[msg.sender] += _numTokens;
         require(token.transferFrom(msg.sender, this, _numTokens));
@@ -120,8 +120,18 @@ contract PLCRVoting {
     */
     function commitVote(uint _pollID, bytes32 _secretHash, uint _numTokens, uint _prevPollID) external {
         require(commitPeriodActive(_pollID));
-        require(voteTokenBalance[msg.sender] >= _numTokens); // prevent user from overspending
-        require(_pollID != 0);                // prevent user from committing to zero node placeholder
+
+        // if msg.sender doesn't have enough voting rights,
+        // request for enough voting rights
+        if (voteTokenBalance[msg.sender] < _numTokens) {
+            uint remainder = _numTokens - voteTokenBalance[msg.sender];
+            requestVotingRights(remainder);
+        }
+
+        // make sure msg.sender has enough voting rights
+        require(voteTokenBalance[msg.sender] >= _numTokens);
+        // prevent user from committing to zero node placeholder
+        require(_pollID != 0);
 
         // Check if _prevPollID exists in the user's DLL or if _prevPollID is 0
         require(_prevPollID == 0 || dllMap[msg.sender].contains(_prevPollID));
