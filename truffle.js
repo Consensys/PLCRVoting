@@ -26,6 +26,11 @@ module.exports = {
       gas: 4700000,
       gasPrice: 20000000000,
     },
+    debug: {
+      host: 'localhost',
+      port: 8545,
+      network_id: '*',
+    },
     // config for solidity-coverage
     coverage: {
       host: 'localhost',

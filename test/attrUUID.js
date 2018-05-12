@@ -1,13 +1,22 @@
 /* eslint-env mocha */
-/* global contract assert */
+/* global contract assert artifacts */
 
-const utils = require('./utils.js');
+const PLCRVoting = artifacts.require('./PLCRVoting.sol');
+const PLCRFactory = artifacts.require('./PLCRFactory.sol');
+
 const abi = require('ethereumjs-abi');
 
 contract('PLCRVoting', (accounts) => {
   describe('Function: attrUUID', () => {
+    let plcr;
+
+    before(async () => {
+      const plcrFactory = await PLCRFactory.deployed();
+      const receipt = await plcrFactory.newPLCRWithToken('1000', 'TestToken', '0', 'TEST');
+      plcr = PLCRVoting.at(receipt.logs[0].args.plcr);
+    });
+
     it('should generate the keccak256 hash of the provided values', async () => {
-      const plcr = await utils.getPLCRInstance();
       const alice = accounts[0];
 
       const attrUUID = await plcr.attrUUID.call(alice, '420');
@@ -18,7 +27,6 @@ contract('PLCRVoting', (accounts) => {
     });
 
     it('should generate divergent keccak256 hashes of divergent values', async () => {
-      const plcr = await utils.getPLCRInstance();
       const alice = accounts[0];
 
       const attrUUID0 = await plcr.attrUUID.call(alice, '420');

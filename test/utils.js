@@ -37,8 +37,7 @@ const utils = {
     .then(tokenAddr => EIP20.at(tokenAddr)),
 
   // returns poll instance
-  getPoll: pollID => utils.getPLCRInstance()
-    .then(instance => instance.pollMap.call(pollID)),
+  getPoll: (pollID, plcr) => plcr.pollMap.call(pollID),
 
   // returns deployed vote contract
   getPLCRInstance: () => PLCRVoting.deployed(),
@@ -122,13 +121,11 @@ const utils = {
     return true;
   },
 
-  startPollAndCommitVote: async (options) => {
+  startPollAndCommitVote: async (options, plcr) => {
     // Assert that all option types are strings
     if (!utils.validOptions(options)) {
       throw new Error('Please specify all options to startPollAndCommitVote as strings.');
     }
-
-    const plcr = await utils.getPLCRInstance();
 
     // Request voting rights on behalf of the actor
     await utils.as(options.actor, plcr.requestVotingRights, options.votingRights);
@@ -159,13 +156,11 @@ const utils = {
     return pollID;
   },
 
-  commitAs: async (pollID, options) => {
+  commitAs: async (pollID, options, plcr) => {
     // Assert that all option types are strings
     if (!utils.validOptions(options)) {
       throw new Error('Please specify all options to startPollAndCommitVote as strings.');
     }
-
-    const plcr = await utils.getPLCRInstance();
 
     // Request voting rights on behalf of the actor
     await utils.as(options.actor, plcr.requestVotingRights, options.votingRights);
@@ -189,13 +184,13 @@ const utils = {
       prevPollID);
   },
 
-  getVotesFor: async (pollID) => {
-    const poll = await utils.getPoll(pollID);
+  getVotesFor: async (pollID, plcr) => {
+    const poll = await utils.getPoll(pollID, plcr);
     return poll[3];
   },
 
-  getVotesAgainst: async (pollID) => {
-    const poll = await utils.getPoll(pollID);
+  getVotesAgainst: async (pollID, plcr) => {
+    const poll = await utils.getPoll(pollID, plcr);
     return poll[4];
   },
 

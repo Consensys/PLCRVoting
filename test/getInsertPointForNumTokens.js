@@ -1,17 +1,37 @@
 /* eslint-env mocha */
-/* global contract assert */
+/* global contract assert artifacts */
+
+const PLCRVoting = artifacts.require('./PLCRVoting.sol');
+const PLCRFactory = artifacts.require('./PLCRFactory.sol');
+const EIP20 = artifacts.require('tokens/eip20/EIP20.sol');
 
 const utils = require('./utils.js');
 
 contract('PLCRVoting', (accounts) => {
   describe('Function: getInsertPointForNumTokens', () => {
     const [alice] = accounts;
+    let plcr;
+    let token;
+
+    before(async () => {
+      const plcrFactory = await PLCRFactory.deployed();
+      const receipt = await plcrFactory.newPLCRWithToken('10000', 'TestToken', '0', 'TEST');
+
+      plcr = PLCRVoting.at(receipt.logs[0].args.plcr);
+      token = EIP20.at(receipt.logs[0].args.token);
+
+      await Promise.all(
+        accounts.map(async (user) => {
+          await token.transfer(user, 1000);
+          await token.approve(plcr.address, 1000, { from: user });
+        }),
+      );
+    });
 
     it('should return the correct insert point for a new node in a DLL', async () => {
       // Create { A: 1, B: 5, C: 10 }
       // Then insert { A: 1, D: 3, B: 5, C: 10 }
       // And then { A: 1, D: 3, B: 5, E: 7, C: 10 }
-      const plcr = await utils.getPLCRInstance();
       const errMsg = 'Did not get proper insertion point';
 
       await utils.as(alice, plcr.requestVotingRights, 50);
@@ -71,7 +91,6 @@ contract('PLCRVoting', (accounts) => {
       it('should return 0 for getInsertPoint when updating the starting node to a smaller value', async () => {
         // { A: 1, D: 3, B: 5, E: 7, C: 10 }
         // { 1: 1, 4: 3, 2: 5, 5: 7, 3: 10 }
-        const plcr = await utils.getPLCRInstance();
         const errMsg = 'Did not get proper insertion point';
         const pollID = '1';
 
@@ -85,7 +104,6 @@ contract('PLCRVoting', (accounts) => {
       it('should return 0 for getInsertPoint when updating the starting node to the same value', async () => {
         // { A: 1, D: 3, B: 5, E: 7, C: 10 }
         // { 1: 1, 4: 3, 2: 5, 5: 7, 3: 10 }
-        const plcr = await utils.getPLCRInstance();
         const errMsg = 'Did not get proper insertion point';
         const pollID = '1';
 
@@ -99,7 +117,6 @@ contract('PLCRVoting', (accounts) => {
       it('should return 0 for getInsertPoint when updating the starting node to a greater value', async () => {
         // { A: 1, D: 3, B: 5, E: 7, C: 10 }
         // { 1: 1, 4: 3, 2: 5, 5: 7, 3: 10 }
-        const plcr = await utils.getPLCRInstance();
         const errMsg = 'Did not get proper insertion point';
         const pollID = '1';
 
@@ -115,7 +132,6 @@ contract('PLCRVoting', (accounts) => {
       it('should return 4 for getInsertPoint when updating a middle node to a smaller value', async () => {
         // { A: 1, D: 3, B: 5, E: 7, C: 10 }
         // { 1: 1, 4: 3, 2: 5, 5: 7, 3: 10 }
-        const plcr = await utils.getPLCRInstance();
         const errMsg = 'Did not get proper insertion point';
         const pollID = '2';
 
@@ -129,7 +145,6 @@ contract('PLCRVoting', (accounts) => {
       it('should return 4 for getInsertPoint when updating a middle node to the same value', async () => {
         // { A: 1, D: 3, B: 5, E: 7, C: 10 }
         // { 1: 1, 4: 3, 2: 5, 5: 7, 3: 10 }
-        const plcr = await utils.getPLCRInstance();
         const errMsg = 'Did not get proper insertion point';
         const pollID = '2';
 
@@ -143,7 +158,6 @@ contract('PLCRVoting', (accounts) => {
       it('should return 4 for getInsertPoint when updating a middle node to a greater value', async () => {
         // { A: 1, D: 3, B: 5, E: 7, C: 10 }
         // { 1: 1, 4: 3, 2: 5, 5: 7, 3: 10 }
-        const plcr = await utils.getPLCRInstance();
         const errMsg = 'Did not get proper insertion point';
         const pollID = '2';
 
@@ -159,7 +173,6 @@ contract('PLCRVoting', (accounts) => {
       it('should return 5 for getInsertPoint when updating the last node to a smaller value', async () => {
         // { A: 1, D: 3, B: 5, E: 7, C: 10 }
         // { 1: 1, 4: 3, 2: 5, 5: 7, 3: 10 }
-        const plcr = await utils.getPLCRInstance();
         const errMsg = 'Did not get proper insertion point';
         const pollID = '3';
 
@@ -173,7 +186,6 @@ contract('PLCRVoting', (accounts) => {
       it('should return 5 for getInsertPoint when updating the last node to the same value', async () => {
         // { A: 1, D: 3, B: 5, E: 7, C: 10 }
         // { 1: 1, 4: 3, 2: 5, 5: 7, 3: 10 }
-        const plcr = await utils.getPLCRInstance();
         const errMsg = 'Did not get proper insertion point';
         const pollID = '3';
 
@@ -187,7 +199,6 @@ contract('PLCRVoting', (accounts) => {
       it('should return 5 for getInsertPoint when updating the last node to a greater value', async () => {
         // { A: 1, D: 3, B: 5, E: 7, C: 10 }
         // { 1: 1, 4: 3, 2: 5, 5: 7, 3: 10 }
-        const plcr = await utils.getPLCRInstance();
         const errMsg = 'Did not get proper insertion point';
         const pollID = '3';
 

@@ -24,7 +24,7 @@
     "ethjs-rpc": "0.1.5",
     "ethjs-util": "0.1.4",
     "truffle": "4.1.8",
-    "truffle-hdwallet-provider": "0.0.5"
+    "truffle-hdwallet-provider": "0.0.3"
   },
   "devDependencies": {
     "eslint": "4.4.1",

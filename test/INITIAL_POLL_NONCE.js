@@ -1,13 +1,20 @@
 /* eslint-env mocha */
-/* global contract assert */
+/* global contract assert artifacts */
 
-const utils = require('./utils.js');
+const PLCRVoting = artifacts.require('./PLCRVoting.sol');
+const PLCRFactory = artifacts.require('./PLCRFactory.sol');
 
 contract('PLCRVoting', () => {
   describe('Function: INITIAL_POLL_NONCE', () => {
-    it('should be zero', async () => {
-      const plcr = await utils.getPLCRInstance();
+    let plcr;
 
+    before(async () => {
+      const plcrFactory = await PLCRFactory.deployed();
+      const receipt = await plcrFactory.newPLCRWithToken('1000', 'TestToken', '0', 'TEST');
+      plcr = PLCRVoting.at(receipt.logs[0].args.plcr);
+    });
+
+    it('should be zero', async () => {
       assert.strictEqual((await plcr.INITIAL_POLL_NONCE.call()).toString(10), '0',
         'The INITIAL_POLL_NONCE was not initialized to zero');
     });
