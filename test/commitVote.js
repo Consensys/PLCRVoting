@@ -1,18 +1,38 @@
 /* eslint-env mocha */
-/* global contract assert */
+/* global contract assert artifacts */
+
+const PLCRVoting = artifacts.require('./PLCRVoting.sol');
+const PLCRFactory = artifacts.require('./PLCRFactory.sol');
+const EIP20 = artifacts.require('tokens/eip20/EIP20.sol');
 
 const utils = require('./utils.js');
 
 contract('PLCRVoting', (accounts) => {
   describe('Function: commitVote', () => {
     const [alice, bob] = accounts;
+    let plcr;
+    let token;
+
+    before(async () => {
+      const plcrFactory = await PLCRFactory.deployed();
+      const receipt = await plcrFactory.newPLCRWithToken('10000', 'TestToken', '0', 'TEST');
+
+      plcr = PLCRVoting.at(receipt.logs[0].args.plcr);
+      token = EIP20.at(receipt.logs[0].args.token);
+
+      await Promise.all(
+        accounts.map(async (user) => {
+          await token.transfer(user, 1000);
+          await token.approve(plcr.address, 1000, { from: user });
+        }),
+      );
+    });
 
     it('should commit a vote for a poll', async () => {
       const options = utils.defaultOptions();
       options.actor = alice;
 
-      const plcr = await utils.getPLCRInstance();
-      const pollID = await utils.startPollAndCommitVote(options);
+      const pollID = await utils.startPollAndCommitVote(options, plcr);
       const secretHash = utils.createVoteHash(options.vote, options.salt);
       const storedHash = await plcr.getCommitHash.call(options.actor, pollID.toString(10));
 
@@ -24,7 +44,6 @@ contract('PLCRVoting', (accounts) => {
       options.actor = alice;
       options.vote = '0';
 
-      const plcr = await utils.getPLCRInstance();
       const errMsg = 'Alice was not able to update her commit';
       const pollID = '1';
 
@@ -44,7 +63,6 @@ contract('PLCRVoting', (accounts) => {
 
     it('should not allow a user to commit in a poll for which the commit period has ended',
       async () => {
-        const plcr = await utils.getPLCRInstance();
         const pollID = 1;
         const errMsg = 'Alice was able to commit to a poll after its commit period ended';
         const options = utils.defaultOptions();
@@ -66,7 +84,6 @@ contract('PLCRVoting', (accounts) => {
       });
 
     it('should not allow a user to commit for a poll which does not exist', async () => {
-      const plcr = await utils.getPLCRInstance();
       const errMsg = 'Alice was able to commit to a poll which does not exist';
       const options = utils.defaultOptions();
 
@@ -86,15 +103,13 @@ contract('PLCRVoting', (accounts) => {
 
     it('should update a commit for a poll by changing the numTokens, and allow the user to ' +
        'withdraw all their tokens when the poll ends', async () => {
-      const plcr = await utils.getPLCRInstance();
-      const token = await utils.getERC20Token();
       const options = utils.defaultOptions();
       options.actor = bob;
       options.numTokens = '10';
 
       const startingBalance = await token.balanceOf.call(bob);
 
-      const pollID = await utils.startPollAndCommitVote(options);
+      const pollID = await utils.startPollAndCommitVote(options, plcr);
       const secretHash = utils.createVoteHash(options.vote, options.salt);
       await utils.as(bob, plcr.commitVote, pollID, secretHash, '20', 0);
 
@@ -109,7 +124,6 @@ contract('PLCRVoting', (accounts) => {
     });
 
     it('should request for voting rights if voteTokenBalance is less than numTokens', async () => {
-      const plcr = await utils.getPLCRInstance();
       const options = utils.defaultOptions();
       options.actor = alice;
 
@@ -147,8 +161,6 @@ contract('PLCRVoting', (accounts) => {
       const options = utils.defaultOptions();
       options.actor = alice;
       options.numTokens = '1';
-
-      const plcr = await utils.getPLCRInstance();
 
       const pollID = '0';
 

@@ -1,5 +1,9 @@
 /* eslint-env mocha */
-/* global contract assert */
+/* global contract assert artifacts */
+
+const PLCRVoting = artifacts.require('./PLCRVoting.sol');
+const PLCRFactory = artifacts.require('./PLCRFactory.sol');
+const EIP20 = artifacts.require('tokens/eip20/EIP20.sol');
 
 const utils = require('./utils.js');
 const BN = require('bignumber.js');
@@ -7,6 +11,23 @@ const BN = require('bignumber.js');
 contract('PLCRVoting', (accounts) => {
   describe('Function: isPassed', () => {
     const [alice, bob] = accounts;
+    let plcr;
+    let token;
+
+    before(async () => {
+      const plcrFactory = await PLCRFactory.deployed();
+      const receipt = await plcrFactory.newPLCRWithToken('10000', 'TestToken', '0', 'TEST');
+
+      plcr = PLCRVoting.at(receipt.logs[0].args.plcr);
+      token = EIP20.at(receipt.logs[0].args.token);
+
+      await Promise.all(
+        accounts.map(async (user) => {
+          await token.transfer(user, 1000);
+          await token.approve(plcr.address, 1000, { from: user });
+        }),
+      );
+    });
 
     it('should return true if the poll passed', async () => {
       const options = utils.defaultOptions();
@@ -14,8 +35,7 @@ contract('PLCRVoting', (accounts) => {
       options.vote = '1';
 
       // make a poll and commit a vote for
-      const plcr = await utils.getPLCRInstance();
-      const pollID = await utils.startPollAndCommitVote(options);
+      const pollID = await utils.startPollAndCommitVote(options, plcr);
       await utils.increaseTime(new BN(options.commitPeriod, 10).add(new BN('1', 10)).toNumber(10));
 
       await utils.as(options.actor, plcr.revealVote, pollID, options.vote, options.salt);
@@ -26,7 +46,6 @@ contract('PLCRVoting', (accounts) => {
     });
 
     it('should return false if the poll ended in a tie', async () => {
-      const plcr = await utils.getPLCRInstance();
       const aliceOptions = utils.defaultOptions();
       aliceOptions.actor = alice;
       aliceOptions.vote = '0';
@@ -43,8 +62,8 @@ contract('PLCRVoting', (accounts) => {
       const pollID = utils.getPollIDFromReceipt(receipt);
 
       // commit for each voter
-      await utils.commitAs(pollID, aliceOptions);
-      await utils.commitAs(pollID, bobOptions);
+      await utils.commitAs(pollID, aliceOptions, plcr);
+      await utils.commitAs(pollID, bobOptions, plcr);
       await utils.increaseTime(new BN(options.commitPeriod, 10).add(new BN('1', 10)).toNumber(10));
 
       // reveal for each voter
@@ -59,7 +78,6 @@ contract('PLCRVoting', (accounts) => {
     });
 
     it('should return false if the nobody voted', async () => {
-      const plcr = await utils.getPLCRInstance();
       const options = utils.defaultOptions();
       options.actor = alice;
 
@@ -85,8 +103,7 @@ contract('PLCRVoting', (accounts) => {
       options.vote = '0';
 
       // make a poll and commit a vote against
-      const plcr = await utils.getPLCRInstance();
-      const pollID = await utils.startPollAndCommitVote(options);
+      const pollID = await utils.startPollAndCommitVote(options, plcr);
       await utils.increaseTime(new BN(options.commitPeriod, 10).add(new BN('1', 10)).toNumber(10));
 
       await utils.as(options.actor, plcr.revealVote, pollID, options.vote, options.salt);
@@ -103,8 +120,7 @@ contract('PLCRVoting', (accounts) => {
       options.vote = '0';
 
       // make a poll and commit
-      const plcr = await utils.getPLCRInstance();
-      const pollID = await utils.startPollAndCommitVote(options);
+      const pollID = await utils.startPollAndCommitVote(options, plcr);
 
       // call before reveal end date
       try {

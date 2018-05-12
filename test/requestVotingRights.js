@@ -1,15 +1,33 @@
 /* eslint-env mocha */
-/* global contract assert */
+/* global contract assert artifacts */
+
+const PLCRVoting = artifacts.require('./PLCRVoting.sol');
+const PLCRFactory = artifacts.require('./PLCRFactory.sol');
+const EIP20 = artifacts.require('tokens/eip20/EIP20.sol');
 
 const utils = require('./utils.js');
 
 contract('PLCRVoting', (accounts) => {
   describe('Function: requestVotingRights', () => {
     const [alice, bob] = accounts;
+    let plcr;
+    let token;
+
+    before(async () => {
+      const plcrFactory = await PLCRFactory.deployed();
+      const factoryReceipt = await plcrFactory.newPLCRWithToken('1000', 'TestToken', '0', 'TEST');
+      plcr = PLCRVoting.at(factoryReceipt.logs[0].args.plcr);
+      token = EIP20.at(factoryReceipt.logs[0].args.token);
+
+      await Promise.all(
+        accounts.map(async (user) => {
+          await token.transfer(user, 100);
+          await token.approve(plcr.address, 100, { from: user });
+        }),
+      );
+    });
 
     it('should grant voting rights for 10 tokens', async () => {
-      const plcr = await utils.getPLCRInstance();
-
       await utils.as(alice, plcr.requestVotingRights, '10');
 
       const voteTokenBalance = await plcr.voteTokenBalance.call(alice);
@@ -18,8 +36,6 @@ contract('PLCRVoting', (accounts) => {
     });
 
     it('should grant voting rights for 25 more tokens', async () => {
-      const plcr = await utils.getPLCRInstance();
-
       await utils.as(alice, plcr.requestVotingRights, '25');
 
       const voteTokenBalance = await plcr.voteTokenBalance.call(alice);
@@ -28,7 +44,6 @@ contract('PLCRVoting', (accounts) => {
     });
 
     it('should not grant voting rights for more tokens than the user has', async () => {
-      const plcr = await utils.getPLCRInstance();
       const errMsg = 'Alice was able to acquire more voting rights than she has tokens';
 
       try {
@@ -45,7 +60,6 @@ contract('PLCRVoting', (accounts) => {
 
     it('should not grant voting rights for more tokens than the user has approved ' +
        'plcr for', async () => {
-      const plcr = await utils.getPLCRInstance();
       const errMsg = 'Bob was able to acquire more voting rights than he had approved the PLCR for';
 
       try {

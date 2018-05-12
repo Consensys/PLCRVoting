@@ -1,21 +1,41 @@
 /* eslint-env mocha */
-/* global contract assert */
+/* global contract assert artifacts */
+
+const PLCRVoting = artifacts.require('./PLCRVoting.sol');
+const PLCRFactory = artifacts.require('./PLCRFactory.sol');
+const EIP20 = artifacts.require('tokens/eip20/EIP20.sol');
 
 const utils = require('./utils.js');
 const BN = require('bignumber.js');
 
 contract('PLCRVoting', (accounts) => {
-  const [alice] = accounts;
-
   describe('Function: getTotalNumberOfTokensForWinningOption', () => {
+    const [alice] = accounts;
+    let plcr;
+    let token;
+
+    before(async () => {
+      const plcrFactory = await PLCRFactory.deployed();
+      const receipt = await plcrFactory.newPLCRWithToken('10000', 'TestToken', '0', 'TEST');
+
+      plcr = PLCRVoting.at(receipt.logs[0].args.plcr);
+      token = EIP20.at(receipt.logs[0].args.token);
+
+      await Promise.all(
+        accounts.map(async (user) => {
+          await token.transfer(user, 1000);
+          await token.approve(plcr.address, 1000, { from: user });
+        }),
+      );
+    });
+
     it('should return the total number of votes for if the poll passed', async () => {
       const options = utils.defaultOptions();
       options.actor = alice;
       options.vote = '1';
 
       // make a poll and commit and reveal a "for" vote
-      const plcr = await utils.getPLCRInstance();
-      const pollID = await utils.startPollAndCommitVote(options);
+      const pollID = await utils.startPollAndCommitVote(options, plcr);
       await utils.increaseTime(new BN(options.commitPeriod, 10).add(new BN('1', 10)).toNumber(10));
 
       await utils.as(options.actor, plcr.revealVote, pollID, options.vote, options.salt);
@@ -28,7 +48,7 @@ contract('PLCRVoting', (accounts) => {
       // check the number of tokens
       // votesFor === tokens === options.numTokens
       const tokens = await plcr.getTotalNumberOfTokensForWinningOption.call(pollID);
-      const votesFor = await utils.getVotesFor(pollID);
+      const votesFor = await utils.getVotesFor(pollID, plcr);
 
       assert.strictEqual(tokens.toString(), options.numTokens,
         'number of winning tokens were not equal to commited tokens');
@@ -43,8 +63,7 @@ contract('PLCRVoting', (accounts) => {
       options.vote = '0';
 
       // make a poll and commit and reveal an "against" vote
-      const plcr = await utils.getPLCRInstance();
-      const pollID = await utils.startPollAndCommitVote(options);
+      const pollID = await utils.startPollAndCommitVote(options, plcr);
       await utils.increaseTime(new BN(options.commitPeriod, 10).add(new BN('1', 10)).toNumber(10));
 
       await utils.as(options.actor, plcr.revealVote, pollID, options.vote, options.salt);
@@ -57,7 +76,7 @@ contract('PLCRVoting', (accounts) => {
       // check the number of tokens
       // votesAgainst === tokens === options.numTokens
       const tokens = await plcr.getTotalNumberOfTokensForWinningOption.call(pollID);
-      const votesAgainst = await utils.getVotesAgainst(pollID);
+      const votesAgainst = await utils.getVotesAgainst(pollID, plcr);
 
       assert.strictEqual(tokens.toString(), options.numTokens,
         'number of winning tokens were not equal to commited tokens');
@@ -72,8 +91,7 @@ contract('PLCRVoting', (accounts) => {
       options.vote = '1';
 
       // make a poll and commit a vote
-      const plcr = await utils.getPLCRInstance();
-      const pollID = await utils.startPollAndCommitVote(options);
+      const pollID = await utils.startPollAndCommitVote(options, plcr);
 
       try {
         await plcr.getTotalNumberOfTokensForWinningOption.call(pollID);
