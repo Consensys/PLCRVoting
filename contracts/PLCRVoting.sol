@@ -124,12 +124,12 @@ contract PLCRVoting {
         // if msg.sender doesn't have enough voting rights,
         // request for enough voting rights
         if (voteTokenBalance[msg.sender] < _numTokens) {
-            uint remainder = _numTokens - voteTokenBalance[msg.sender];
+            uint remainder = _numTokens.sub(voteTokenBalance[msg.sender]);
             requestVotingRights(remainder);
         }
 
         // make sure msg.sender has enough voting rights
-        require(voteTokenBalance[msg.sender] >= _numTokens);
+        assert(voteTokenBalance[msg.sender] >= _numTokens);
         // prevent user from committing to zero node placeholder
         require(_pollID != 0);
 
