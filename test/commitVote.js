@@ -114,8 +114,8 @@ contract('PLCRVoting', (accounts) => {
       options.actor = alice;
 
       // calculate a number of tokens greater than the balance
-      const balance = await plcr.voteTokenBalance.call(options.actor);
-      options.numTokens = balance.add('1').toString();
+      const startingBalance = await plcr.voteTokenBalance.call(options.actor);
+      options.numTokens = startingBalance.add('1').toString();
 
       // start a poll
       const receipt = await utils.as(options.actor, plcr.startPoll, options.quorum,
@@ -136,6 +136,11 @@ contract('PLCRVoting', (accounts) => {
       } catch (err) {
         assert(false, 'voter should have been able to commit more tokens than their balance');
       }
+
+      // verify that the ending votingRights balance was increased
+      const endingBalance = await plcr.voteTokenBalance.call(options.actor);
+      assert(endingBalance.toString(), startingBalance.add('1').toString(),
+        'ending balance should have been the starting balance + 1');
     });
 
     it('should revert if pollID is 0', async () => {
