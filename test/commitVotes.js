@@ -31,11 +31,7 @@ contract('PLCRVoting', (accounts) => {
       const secretHashes = [secretHash];
       const numsTokens = [options.numTokens];
       const prevPollIDs = [prevPollID];
-      try {
-        await utils.as(alice, plcr.commitVotes, pollIDs, secretHashes, numsTokens, prevPollIDs);
-      } catch (err) {
-        assert(false, 'voter should have been able to commit an array of 1 vote');
-      }
+      await utils.as(alice, plcr.commitVotes, pollIDs, secretHashes, numsTokens, prevPollIDs);
     });
 
     it('should commit an array of 2 votes for 2 polls', async () => {
@@ -61,20 +57,39 @@ contract('PLCRVoting', (accounts) => {
       assert(isActive1, 'poll1\'s commit period is not active');
       assert(isActive2, 'poll2\'s commit period is not active');
 
-      // commit an array of 2 votes
-      const secretHash1 = utils.createVoteHash(options1.vote, options1.salt);
-      const prevPollID1 =
+      // Alice's secretHashes & prevPollIDs
+      const secretHash1a = utils.createVoteHash(options1.vote, options1.salt);
+      const secretHash1b = utils.createVoteHash(options1.vote, options1.salt);
+      const prevPollID1a =
         await plcr.getInsertPointForNumTokens.call(options1.actor, options1.numTokens, pollID1);
-      const secretHash2 = utils.createVoteHash(options2.vote, options2.salt);
-      const prevPollID2 =
+      const prevPollID1b =
+        await plcr.getInsertPointForNumTokens.call(options1.actor, options1.numTokens, pollID2);
+
+      // Bob's secretHashes & prevPollIDs
+      const secretHash2a = utils.createVoteHash(options2.vote, options2.salt);
+      const secretHash2b = utils.createVoteHash(options2.vote, options2.salt);
+      const prevPollID2a =
+        await plcr.getInsertPointForNumTokens.call(options2.actor, options2.numTokens, pollID1);
+      const prevPollID2b =
         await plcr.getInsertPointForNumTokens.call(options2.actor, options2.numTokens, pollID2);
 
+      // Array of poll IDs
       const pollIDs = [pollID1, pollID2];
-      const secretHashes = [secretHash1, secretHash2];
-      const numsTokens = [options1.numTokens, options2.numTokens];
-      const prevPollIDs = [prevPollID1, prevPollID2];
+
+      // Alice's array of: secretHashes, numsTokens, prevPollIDs
+      const secretHashes1 = [secretHash1a, secretHash1b];
+      const numsTokens1 = [options1.numTokens, options1.numTokens];
+      const prevPollIDs1 = [prevPollID1a, prevPollID1b];
+
+      // Bob's array of: secretHashes, numsTokens, prevPollIDs
+      const secretHashes2 = [secretHash2a, secretHash2b];
+      const numsTokens2 = [options2.numTokens, options2.numTokens];
+      const prevPollIDs2 = [prevPollID2a, prevPollID2b];
+
+      // commit an array of 2 votes as Alice and 2 as Bob
       try {
-        await utils.as(alice, plcr.commitVotes, pollIDs, secretHashes, numsTokens, prevPollIDs);
+        await utils.as(alice, plcr.commitVotes, pollIDs, secretHashes1, numsTokens1, prevPollIDs1);
+        await utils.as(bob, plcr.commitVotes, pollIDs, secretHashes2, numsTokens2, prevPollIDs2);
       } catch (err) {
         assert(false, 'voter should have been able to commit an array of 2 votes');
       }
