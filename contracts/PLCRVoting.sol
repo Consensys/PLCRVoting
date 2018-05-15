@@ -129,7 +129,7 @@ contract PLCRVoting {
         }
 
         // make sure msg.sender has enough voting rights
-        assert(voteTokenBalance[msg.sender] >= _numTokens);
+        require(voteTokenBalance[msg.sender] >= _numTokens);
         // prevent user from committing to zero node placeholder
         require(_pollID != 0);
 
