@@ -1,15 +1,34 @@
 /* eslint-env mocha */
-/* global contract assert */
+/* global contract assert artifacts */
+
+const PLCRVoting = artifacts.require('./PLCRVoting.sol');
+const PLCRFactory = artifacts.require('./PLCRFactory.sol');
+const EIP20 = artifacts.require('tokens/eip20/EIP20.sol');
 
 const utils = require('./utils.js');
 
 contract('PLCRVoting', (accounts) => {
   describe('Function: commitVotes', () => {
     const [alice, bob] = accounts;
+    let plcr;
+    let token;
+
+    before(async () => {
+      const plcrFactory = await PLCRFactory.deployed();
+      const receipt = await plcrFactory.newPLCRWithToken('10000', 'TestToken', '0', 'TEST');
+
+      plcr = PLCRVoting.at(receipt.logs[0].args.plcr);
+      token = EIP20.at(receipt.logs[0].args.token);
+
+      await Promise.all(
+        accounts.map(async (user) => {
+          await token.transfer(user, 1000);
+          await token.approve(plcr.address, 1000, { from: user });
+        }),
+      );
+    });
 
     it('should commit an array of 1 vote for 1 poll', async () => {
-      const plcr = await utils.getPLCRInstance();
-
       const options = utils.defaultOptions();
       options.actor = alice;
 
@@ -35,8 +54,6 @@ contract('PLCRVoting', (accounts) => {
     });
 
     it('should commit an array of 2 votes for 2 polls', async () => {
-      const plcr = await utils.getPLCRInstance();
-
       const options1 = utils.defaultOptions();
       options1.actor = alice;
       const options2 = utils.defaultOptions();
