@@ -1,6 +1,51 @@
 # Partial-Lock Commit-Reveal Voting
 [ ![Codeship Status for ConsenSys/PLCRVoting](https://app.codeship.com/projects/e58babc0-7647-0135-1b40-3a2518fac0ae/status?branch=master)](https://app.codeship.com/projects/244454)
 
+PLCRVoting is an Ethereum smart contract and a platform for token-weight voting on a blockchain. 
+
+## core steps (+ pseudocode)
+
+1. acquire voting contract's intrinsic token
+
+1. `token.approve(voting)`: approve the voting contract, setting an allowance and enabling token transactions with the voting contract
+
+1. `plcr.requestVotingRights(tokens)`: transfer tokens to the voting contract. the voting contract must have control over voting tokens (to be locked during commit stages)
+
+1. `plcr.commitVote(poll, secret, tokens)`: commit tokens and a secret-containing vote to a poll. such tokens are "locked" (not-withdrawable) until the commit period ends
+
+1. `plcr.revealVote(poll, keys)`: reveal the hidden contents of a committed vote. this confirms the secret commit's validity, effectively announcing the voter's choice, and increasing the number of total votes in favor of that choice.
+
+1. `tcr.claimReward(poll, key)`: retrieve token rewards for voting among the winning side (the majority bloc of voters for that poll's ruling)
+
+## core terminology
+
+**voting rights**: tokens that are being controlled by the voting contract. not a part of your account's balance anymore. non-withdrawable; however, you are able to and are highly encouraged to use those same "locked" tokens to vote in multiple polls at the same time (hence "partial-lock")
+
+**commit-reveal voting**: voting that takes place using 2 separate chronologic time periods
+
+- **commit stage**: time period where user can submit secret vote & lock tokens along with the vote
+- **reveal stage**: time period where user can unlock their secret vote, confirming the vote's token-weight and option
+
+**votesFor** / **votesAgainst**: vote resolution is binary (1/0, or "for"/"against"). semantically they reference the Candidate i.e. `votesFor` represent tokens voted in **support** for the candidate, while `votesAgainst` represent tokens voted in **opposition** to the candidate
+
+---
+
+## Tools, tips, strategies, idiosyncrasies
+
+#### Forgot to reveal and locked your tokens?
+
+- if you do not reveal a committed vote (perhaps by forgetting to send the transaction or by losing the secret vote contents) you can still retrieve/rescue those tokens which are locked by invoking `plcr.rescueTokens()`. those tokens will not count toward the poll's outcome, as the reveal period must have ended by this point to proceed. they are unlocked and made available to be withdrawn if/when you desire to do so.
+
+#### Save money & time when curating in multiple polls at a time
+
+- PLCRVoting v1.1 supports multi-commit and multi-reveal. if you have more than 1 poll you wish to commit/reveal for, you can save money and time by consolidating the values of the multiple transactions and send the consolidated data
+
+---
+
+## DEPRECATED BELOW THIS SECTION
+
+---
+
 ## Summary
 
 Smart contract for voting on the Ethereum blockchain
@@ -31,113 +76,3 @@ The reveal stage is the period during which any user who has committed to a poll
 #### Poll Ended
 
 Once the reveal stage of a poll finishes, all voting for the poll has finished. All tokens that were  At this point, anybody can check what the results of the poll are. Also, one can check how many tokens in agreement with the poll outcome one were committed by a given address. This is useful if some outside entity wanted to issue rewards or incentives to those who vote in agreement with the poll outcome. 
-
-
-# API
-
-## Reference
-
-PLCRVoting
-* [Constructor](#plcrvoting)
-* [Token Interface](#token-interface)
-    * [requestVotingRights](#requestvotingrights)
-    * [withdrawVotingRights](#withdrawvotingrights)
-    * [rescueTokens](#rescuetokens)
-    * [getLockedTokens](getlockedtokens)
-* [Voting Interface](#voting-interface)
-    * [startPoll](#startpoll)
-    * [isPassed](#ispassed)
-## Constructor
-
-### PLCRVoting
-```jsx
-address tokenAddr = 0xABC;
-PLCRVoting plcr = new PLCRVoting(tokenAddr);
-```
-
-Constructs PLCR scheme to use ERC20 token deployed at `tokenAddr`
-
-## Token Interface
-
-### requestVotingRights
-
-```jsx
-uint numTokens = 100;
-plcr.requestVotingRights(numTokens);
-``` 
-   
-Exchanges `numTokens` ERC20 tokens for `numTokens` voting rights
-
-### withdrawVotingRights
-
-```jsx
-uint numTokens = 100;
-plcr.withdrawVotingRights(numTokens);
-``` 
-   
-Withdraws `numTokens` voting rights back to `numTokens` ERC20 tokens
-
-### rescueTokens
-
-```jsx
-uint pollID = 777;
-plcr.rescueTokens(pollID);
-```
-
-Rescues by unlocking votes committed to poll labelled by `pollID` that were never revealed
-* requires that the poll labelled by `pollID` has ended
-
-## Voting Interface
-
-### commitVote
-
-```jsx
-uint choice = 1;
-uint randromSalt = 54321;
-bytes32 secretHash = sha3(choice, randomSalt);
-uint pollID = 777;
-uint prevID = 555;
-uint numTokens = 100;
-plcr.commitVote(pollID, secretHash, numTokens, prevID);
-```
-   
-Commits `numTokens` votes to poll labelled with `pollID` for choice hidden beneath `secretHash`
-* requires that the committed tokens at poll labelled with `prevID` < `numTokens` < the committed tokens at `nextID` (computed within by getting next of `prevID`)
-* requires that the poll labelled by `pollID` is in the configured commit period
-
-### revealVote
-
-```jsx
-uint pollID = 777;
-uint salt = randomSalt;
-uint voteOption = choice;
-plcr.revealVote(pollID, salt, voteOption);
-```
-
-Attributes `numTokens` votes for option `voteOption` committed to poll labelled by `pollID`, and unlocks these votes for withdrawal
-* requires that `salt` and `voteOption` match salt and choice used to generate committed `secretHash`
-* requires that the poll labelled by `pollID` is in the configured reveal period
-
-## Polling Interface
-
-### startPoll
-
-```jsx
-uint quorum = 50;
-uint commitDuration = 100;
-uint revealDuration = 100;
-uint pollID = plcr.startPoll(quorum, commitDuration, revealDuration);
-```
-
-Generates a poll labelled by `pollID` requiring a percentage majority of `quorum` configuring `commitDuration` and `revealDuration`
-* requires that the `msg.sender` is the deployer (owner) of the `plcr` instance
-
-### isPassed
-
-```jsx
-uint pollID = 777;
-plcr.isPassed(pollID);
-```
-
-Indicates whether a poll labelled by `pollID` has been approved
-* requires that the poll labelled by `pollID` has ended
