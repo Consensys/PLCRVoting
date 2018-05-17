@@ -23,6 +23,11 @@ contract PLCRFactory {
     proxyFactory = new ProxyFactory();
   }
 
+  /*
+  @dev deploys and initializes a new PLCRVoting contract that consumes a token at an address
+  supplied by the user.
+  @param _token an EIP20 token to be consumed by the new PLCR contract
+  */
   function newPLCRBYOToken(EIP20 _token) public returns (PLCRVoting) {
     PLCR memory plcr = PLCR({
       creator: msg.sender,
@@ -36,7 +41,15 @@ contract PLCRFactory {
 
     return plcr.plcr;
   }
-
+  
+  /*
+  @dev deploys and initializes a new PLCRVoting contract and an EIP20 to be consumed by the PLCR's
+  initializer.
+  @param _supply the total number of tokens to mint in the EIP20 contract
+  @param _name the name of the new EIP20 token
+  @param _decimals the decimal precision to be used in rendering balances in the EIP20 token
+  @param _symbol the symbol of the new EIP20 token
+  */
   function newPLCRWithToken(
     uint _supply,
     string _name,
@@ -49,9 +62,10 @@ contract PLCRFactory {
       plcr: PLCRVoting(proxyFactory.createProxy(canonizedPLCR, ""))
     });
 
-    plcr.token.transfer(msg.sender, _supply);
-
     plcr.plcr.init(plcr.token);
+
+    // Give all the tokens to the PLCR creator
+    plcr.token.transfer(plcr.creator, _supply);
 
     emit newPLCR(plcr.creator, plcr.token, plcr.plcr);
 
