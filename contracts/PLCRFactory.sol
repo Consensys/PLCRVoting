@@ -21,8 +21,8 @@ contract PLCRFactory {
 
   mapping(uint => PLCR) public plcrs;
 
-  constructor(PLCRVoting _canonicalPLCR) {
-    canonizedPLCR = _canonicalPLCR;
+  constructor() {
+    canonizedPLCR = new PLCRVoting();
 
     pf = new ProxyFactory();
 
