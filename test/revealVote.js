@@ -118,7 +118,7 @@ contract('PLCRVoting', (accounts) => {
       await utils.increaseTime(new BN(options.commitPeriod, 10).toNumber(10));
       await utils.increaseTime(new BN(options.revealPeriod).add(new BN('1', 10)).toNumber(10));
 
-      const pollEnded = await plcr.pollEnded.call(pollID, plcr);
+      const pollEnded = await plcr.pollEnded.call(pollID);
       assert.strictEqual(pollEnded, true, 'poll should have ended.');
 
       try {
