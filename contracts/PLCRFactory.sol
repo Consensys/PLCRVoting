@@ -6,7 +6,7 @@ import "./ProxyFactory.sol";
 
 contract PLCRFactory {
 
-  event newPLCR(address creator, EIP20 token, address plcr, uint plcrNonce);
+  event newPLCR(address creator, EIP20 token, address plcr);
 
   struct PLCR {
     address creator;
@@ -14,34 +14,27 @@ contract PLCRFactory {
     PLCRVoting plcr;
   }
 
-  uint plcrNonce;
-
-  ProxyFactory pf;
+  ProxyFactory proxyFactory;
   PLCRVoting canonizedPLCR;
 
-  mapping(uint => PLCR) public plcrs;
-
+  /// @dev constructor deploys a new canonical PLCRVoting contract and a proxyFactory.
   constructor() {
     canonizedPLCR = new PLCRVoting();
-
-    pf = new ProxyFactory();
-
-    plcrNonce = 0;
+    proxyFactory = new ProxyFactory();
   }
 
-  function newPLCRBYOToken(EIP20 _token) public returns (uint) {
-    PLCR storage plcr = plcrs[plcrNonce];
+  function newPLCRBYOToken(EIP20 _token) public returns (PLCRVoting) {
+    PLCR memory plcr = PLCR({
+      creator: msg.sender,
+      token: _token,
+      plcr: PLCRVoting(proxyFactory.createProxy(canonizedPLCR, ""))
+    });
 
-    plcr.creator = msg.sender;
-    plcr.token = _token;
+    plcr.plcr.init(plcr.token);
 
-    plcr.plcr = PLCRVoting(pf.createProxy(canonizedPLCR, ""));
-    plcr.plcr.init(_token);
+    emit newPLCR(plcr.creator, plcr.token, plcr.plcr);
 
-    emit newPLCR(plcr.creator, plcr.token, plcr.plcr, plcrNonce);
-
-    plcrNonce++;
-    return plcrNonce - 1;
+    return plcr.plcr;
   }
 
   function newPLCRWithToken(
@@ -49,20 +42,20 @@ contract PLCRFactory {
     string _name,
     uint8 _decimals,
     string _symbol
-  ) public returns (uint) {
-    PLCR storage plcr = plcrs[plcrNonce];
+  ) public returns (PLCRVoting) {
+    PLCR memory plcr = PLCR({
+      creator: msg.sender,
+      token: new EIP20(_supply, _name, _decimals, _symbol),
+      plcr: PLCRVoting(proxyFactory.createProxy(canonizedPLCR, ""))
+    });
 
-    plcr.creator = msg.sender;
-    plcr.token = new EIP20(_supply, _name, _decimals, _symbol);
     plcr.token.transfer(msg.sender, _supply);
 
-    plcr.plcr = PLCRVoting(pf.createProxy(canonizedPLCR, ""));
     plcr.plcr.init(plcr.token);
 
-    emit newPLCR(plcr.creator, plcr.token, plcr.plcr, plcrNonce);
+    emit newPLCR(plcr.creator, plcr.token, plcr.plcr);
 
-    plcrNonce++;
-    return plcrNonce - 1;
+    return plcr.plcr;
   }
 }
 
