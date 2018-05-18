@@ -1,21 +1,21 @@
 # Partial-Lock Commit-Reveal Voting
 [ ![Codeship Status for ConsenSys/PLCRVoting](https://app.codeship.com/projects/e58babc0-7647-0135-1b40-3a2518fac0ae/status?branch=master)](https://app.codeship.com/projects/244454)
 
-PLCRVoting is an Ethereum smart contract and a platform for token-weight voting on a blockchain. 
+PLCRVoting is an Ethereum smart contract used as a platform for token-weight voting on a blockchain. 
 
-## core steps (+ pseudocode)
+## quickstart: core steps (& pseudocode)
 
 1. acquire voting contract's intrinsic token
 
-1. `token.approve(voting)`: approve the voting contract, setting an allowance and enabling token transactions with the voting contract
+1. `token.approve(voting)`: approve the voting contract, setting an allowance and enabling ERC20 transactions with the voting contract
 
-1. `plcr.requestVotingRights(tokens)`: transfer tokens to the voting contract. the voting contract must have control over voting tokens (to be locked during commit stages)
+1. `plcr.requestVotingRights(tokens)`: transfer tokens to the voting contract. in order to be able to lock and unlock tokens during periods, the voting contract must have control over voting tokens
 
-1. `plcr.commitVote(poll, secret, tokens)`: commit tokens and a secret-containing vote to a poll. such tokens are "locked" (not-withdrawable) until the commit period ends
+1. `plcr.commitVote(poll, secret, tokens)`: commit tokens and a secret hash that "hides" the vote choice to a poll. tokens are "locked" (not-withdrawable) until the commit period ends
 
-1. `plcr.revealVote(poll, keys)`: reveal the hidden contents of a committed vote. this confirms the secret commit's validity, effectively announcing the voter's choice, and increasing the number of total votes in favor of that choice.
+1. `plcr.revealVote(poll, keys)`: reveal the hidden contents of a committed vote. this confirms the secret commit's validity, effectively announcing the voter's choice, and increasing the number of total votes toward that choice.
 
-1. `tcr.claimReward(poll, key)`: retrieve token rewards for voting among the winning side (the majority bloc of voters for that poll's ruling)
+1. `tcr.claimReward(poll, key)`: claim reward tokens for voting with the winning side (the majority bloc of voters for that poll's ruling)
 
 ## core terminology
 
