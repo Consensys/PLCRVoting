@@ -6,11 +6,13 @@
 
 ## Summary
 
-PLCR voting an an efficient system for token-weighted voting on the Ethereum blockchain.
+PLCR voting an an efficient system for token-weighted voting on the Ethereum blockchain
 
 PLCR voting enables a user to participate in **multiple polls simultaneously** with their tokens while preventing double-voting of tokens within polls
 
-PLCR voting allows users to withdraw (at any time) the maximum number of tokens which are NOT being actively used for voting
+PLCR voting allows users to withdraw (at any time) the maximum number of tokens which are not actively used voting
+
+PLCR voting (in it's current implementation) **does not stake tokens** -- voting in the losing party of a poll does not result in a loss of one's tokens
 
 ---
 
@@ -26,6 +28,10 @@ PLCR voting allows users to withdraw (at any time) the maximum number of tokens 
 **locked tokens**: during a poll's commit stage, committed tokens are "locked" (not-withdrawable) until the user either (1) reveals their vote or (2) rescues their tokens (more on this later)
 
 **partial-lock**: although committed tokens are locked, you are able to and are highly encouraged to use those same "locked" tokens to commit votes in multiple polls at the same time
+
+**majority bloc**: the group of voters who voted with a greater aggregate number of tokens
+
+**minority bloc**: the group of voters who voted with a lesser aggregate number of tokens
 
 * note: the total number of locked tokens is equivalent to the greatest number of tokens that a user committed (in any poll) which have not been unlocked
 
@@ -56,10 +62,12 @@ PLCR voting allows users to withdraw (at any time) the maximum number of tokens 
 
 1.  `plcr.revealVote(poll, keys)`: reveal the hidden contents of a committed vote. this confirms the secret commit's validity and increases the number of total votes toward the user's vote option
 
-1.  `tcr.updateStatus(poll)`: ping the contract that initiated the poll. tally the `votesFor` and `votesAgainst`, resolve the challenge and transfer tokens accordingly
+1.  `tcr.updateStatus(poll)`: ping the contract that initiated the poll. tally the `votesFor` and `votesAgainst`, resolve the challenge, and transfer tokens accordingly
 
     * if the applicant won, challenger is auto-transferred the challenge reward
     * if the applicant won, the challenge reward is added to the Listing's deposit stake, available to be withdrawn using `tcr.withdraw()`
+    * voter reward is made available to be claimed
+    * NOTICE: challenge reward is different from voter reward. challenge reward goes to either: the applicant or the challenger, and is equal to the special dispensation percentage \* staked deposit of the opponent (min deposit). voter reward goes to the majority bloc of voters who voted for a poll
 
 1.  `tcr.claimReward(poll, key)`: claim reward tokens for voting with the winning side (the majority bloc of voters for that poll's ruling). increasing the user's `voteTokenBalance` (voting rights)
 
@@ -84,3 +92,15 @@ PLCR voting allows users to withdraw (at any time) the maximum number of tokens 
 * during the commit stage: although users' vote options are hidden (using a random salt), the number of tokens with which the user voted in the poll is emitted with the transaction and available to other users
 
 * a user can only have 1 valid commit per poll. a re-committed vote will effectively delete the former commit
+
+* voting in polls does not risk losing voting rights. if you vote in the minority bloc of a poll, you do not lose any tokens. yes, PLCR voting (in it's current implementation) does not stake tokens!
+
+#### Goals
+
+**Tactical goal**: increase the number of tokens one owns
+
+* vote in every poll, vote with the majority
+
+**Strategic goal**: increase the value of those tokens one owns
+
+* vote judiciously to make the system more valuable
