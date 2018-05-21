@@ -97,12 +97,23 @@ contract PLCRVoting {
     @dev Unlocks tokens locked in unrevealed vote where poll has ended
     @param _pollID Integer identifier associated with the target poll
     */
-    function rescueTokens(uint _pollID) external {
+    function rescueTokens(uint _pollID) public {
         require(isExpired(pollMap[_pollID].revealEndDate));
         require(dllMap[msg.sender].contains(_pollID));
 
         dllMap[msg.sender].remove(_pollID);
         emit _TokensRescued(_pollID, msg.sender);
+    }
+
+    /**
+    @dev Unlocks tokens locked in unrevealed votes where polls have ended
+    @param _pollIDs Array of integer identifiers associated with the target polls
+    */
+    function rescueTokensMultiPolls(uint[] _pollIDs) public {
+        // loop through arrays, rescuing tokens from all
+        for (uint i = 0; i < _pollIDs.length; i++) {
+            rescueTokens(_pollIDs[i]);
+        }
     }
 
     // =================
