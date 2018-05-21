@@ -130,14 +130,18 @@ contract PLCRVoting {
         require(voteTokenBalance[msg.sender] >= _numTokens);
         // prevent user from committing to zero node placeholder
         require(_pollID != 0);
+        // prevent user from committing a secretHash of 0
+        require(_secretHash != 0);
 
         // Check if _prevPollID exists in the user's DLL or if _prevPollID is 0
         require(_prevPollID == 0 || dllMap[msg.sender].contains(_prevPollID));
 
         uint nextPollID = dllMap[msg.sender].getNext(_prevPollID);
 
-        // if nextPollID is equal to _pollID, _pollID is being updated,
-        nextPollID = (nextPollID == _pollID) ? dllMap[msg.sender].getNext(_pollID) : nextPollID;
+        // edge case: in-place update
+        if (nextPollID == _pollID) {
+            nextPollID = dllMap[msg.sender].getNext(_pollID);
+        }
 
         require(validPosition(_prevPollID, nextPollID, msg.sender, _numTokens));
         dllMap[msg.sender].insert(_prevPollID, _pollID, nextPollID);
