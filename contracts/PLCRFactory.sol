@@ -6,16 +6,10 @@ import "./ProxyFactory.sol";
 
 contract PLCRFactory {
 
-  event newPLCR(address creator, EIP20 token, address plcr);
+  event newPLCR(address creator, EIP20 token, PLCRVoting plcr);
 
-  struct PLCR {
-    address creator;
-    EIP20 token;
-    PLCRVoting plcr;
-  }
-
-  ProxyFactory proxyFactory;
-  PLCRVoting canonizedPLCR;
+  ProxyFactory public proxyFactory;
+  PLCRVoting public canonizedPLCR;
 
   /// @dev constructor deploys a new canonical PLCRVoting contract and a proxyFactory.
   constructor() {
@@ -29,17 +23,12 @@ contract PLCRFactory {
   @param _token an EIP20 token to be consumed by the new PLCR contract
   */
   function newPLCRBYOToken(EIP20 _token) public returns (PLCRVoting) {
-    PLCR memory plcr = PLCR({
-      creator: msg.sender,
-      token: _token,
-      plcr: PLCRVoting(proxyFactory.createProxy(canonizedPLCR, ""))
-    });
+    PLCRVoting plcr = PLCRVoting(proxyFactory.createProxy(canonizedPLCR, ""));
+    plcr.init(_token);
 
-    plcr.plcr.init(plcr.token);
+    emit newPLCR(msg.sender, _token, plcr);
 
-    emit newPLCR(plcr.creator, plcr.token, plcr.plcr);
-
-    return plcr.plcr;
+    return plcr;
   }
   
   /*
@@ -56,20 +45,17 @@ contract PLCRFactory {
     uint8 _decimals,
     string _symbol
   ) public returns (PLCRVoting) {
-    PLCR memory plcr = PLCR({
-      creator: msg.sender,
-      token: new EIP20(_supply, _name, _decimals, _symbol),
-      plcr: PLCRVoting(proxyFactory.createProxy(canonizedPLCR, ""))
-    });
+    // Create a new token and give all the tokens to the PLCR creator
+    EIP20 token = new EIP20(_supply, _name, _decimals, _symbol);
+    token.transfer(msg.sender, _supply);
 
-    plcr.plcr.init(plcr.token);
+    // Create and initialize a new PLCR contract
+    PLCRVoting plcr = PLCRVoting(proxyFactory.createProxy(canonizedPLCR, ""));
+    plcr.init(token);
 
-    // Give all the tokens to the PLCR creator
-    plcr.token.transfer(plcr.creator, _supply);
+    emit newPLCR(msg.sender, token, plcr);
 
-    emit newPLCR(plcr.creator, plcr.token, plcr.plcr);
-
-    return plcr.plcr;
+    return plcr;
   }
 }
 
