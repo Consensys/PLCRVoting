@@ -4,15 +4,18 @@
 const PLCRFactory = artifacts.require('./PLCRFactory.sol');
 const PLCRVoting = artifacts.require('./PLCRVoting.sol');
 
-contract('PLCRFactory', (accounts) => {
-  describe('Function: newPLCRWithToken', () => {
+contract('PLCRFactory', () => {
+  describe('Malicious actions', () => {
     let plcrFactory;
 
     before(async () => {
       plcrFactory = await PLCRFactory.deployed();
     });
 
-    it('should deploy and initialize a new PLCRVoting contract and token', async () => {
+    it('should not overwrite storage in proxy PLCRs when storage is changed in the canonical ' +
+      'PLCR contract', async () => {
+      const canonizedPLCR = PLCRVoting.at(await plcrFactory.canonizedPLCR.call());
+
       const tokenParams = {
         supply: '1000',
         name: 'TEST',
@@ -22,14 +25,13 @@ contract('PLCRFactory', (accounts) => {
       const receipt = await plcrFactory.newPLCRWithToken(tokenParams.supply, tokenParams.name,
         tokenParams.decimals, tokenParams.symbol);
 
-      const creator = receipt.logs[0].args.creator;
       const token = receipt.logs[0].args.token;
       const plcr = PLCRVoting.at(receipt.logs[0].args.plcr);
 
+      await canonizedPLCR.init(2666);
+
       const plcrToken = await plcr.token.call();
 
-      assert.strictEqual(creator, accounts[0], 'the creator emitted in the newPLCR event ' +
-        'not correspond to the one which sent the creation transaction');
       assert.strictEqual(plcrToken, token, 'the token attached to the PLCR contract does ' +
         'not correspond to the one emitted in the newPLCR event');
     });
