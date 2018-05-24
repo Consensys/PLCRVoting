@@ -4,6 +4,12 @@
 
 [Detailed walkthrough](https://medium.com/metax-publication/a-walkthrough-of-plcr-voting-in-solidity-92420bd5b87c)
 
+Mainnet factory: [0xdf9c10e2e9bb8968b908261d38860b1a038cc2ef](https://etherscan.io/address/0xdf9c10e2e9bb8968b908261d38860b1a038cc2ef#code)
+
+Rinkeby factory: [0x5edd7268c6a0d2f171789d8385e95cdbb16ab735](https://rinkeby.etherscan.io/address/0x5edd7268c6a0d2f171789d8385e95cdbb16ab735#code)
+
+EPM: [plcr-revival](https://www.ethpm.com/registry/packages/49)
+
 ## Summary
 
 PLCR voting an an efficient system for token-weighted voting on the Ethereum blockchain
