@@ -59,7 +59,7 @@ contract PLCRVoting {
     @param _token The address where the ERC20 token contract is deployed
     */
     function init(address _token) public {
-        require(_token != 0 && address(token) == 0);
+        require(_token != address(0) && address(token) == address(0));
 
         token = EIP20Interface(_token);
         pollNonce = INITIAL_POLL_NONCE;
