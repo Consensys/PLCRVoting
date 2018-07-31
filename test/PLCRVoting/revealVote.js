@@ -176,6 +176,20 @@ contract('PLCRVoting', (accounts) => {
       const errMsg = 'votesAgainst should be equal to numTokens';
       assert.strictEqual(options.numTokens, votesAgainst.toString(10), errMsg);
     });
+
+    it('should emit the correct salt when a voter reveals a vote', async () => {
+      const options = utils.defaultOptions();
+      options.actor = alice;
+
+      const pollID = await utils.startPollAndCommitVote(options, plcr);
+
+      await utils.increaseTime(new BN(options.commitPeriod, 10).add(new BN('1', 10)).toNumber(10));
+      const receipt = await utils.as(options.actor,
+        plcr.revealVote, pollID, options.vote, options.salt);
+
+      assert.strictEqual(receipt.logs[0].args.salt.toString(), options.salt,
+        'should have emitted the correct salt when revealing a vote');
+    });
   });
 });
 
