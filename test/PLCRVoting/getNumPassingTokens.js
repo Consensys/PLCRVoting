@@ -41,8 +41,7 @@ contract('PLCRVoting', (accounts) => {
         await utils.as(options.actor, plcr.revealVote, pollID, options.vote, options.salt);
         await utils.increaseTime(new BN(options.revealPeriod, 10).add(new BN('1', 10)).toNumber(10));
 
-        const passingTokens = await plcr.getNumPassingTokens
-          .call(options.actor, pollID, options.salt);
+        const passingTokens = await plcr.getNumPassingTokens.call(options.actor, pollID);
 
         assert.strictEqual(passingTokens.toString(), options.numTokens,
           'number of winning tokens were not equal to commited tokens');
@@ -59,8 +58,7 @@ contract('PLCRVoting', (accounts) => {
         await utils.as(options.actor, plcr.revealVote, pollID, options.vote, options.salt);
         await utils.increaseTime(new BN(options.revealPeriod, 10).add(new BN('1', 10)).toNumber(10));
 
-        const passingTokens = await plcr.getNumPassingTokens
-          .call(options.actor, pollID, options.salt);
+        const passingTokens = await plcr.getNumPassingTokens.call(options.actor, pollID);
 
         assert.strictEqual(passingTokens.toString(), options.numTokens,
           'number of winning tokens were not equal to commited tokens');
@@ -77,7 +75,7 @@ contract('PLCRVoting', (accounts) => {
 
       // call before reveal end date
       try {
-        await plcr.getNumPassingTokens.call(options.actor, pollID, options.salt);
+        await plcr.getNumPassingTokens.call(options.actor, pollID);
       } catch (err) {
         assert(utils.isEVMException(err), err.toString());
         return;
@@ -105,37 +103,12 @@ contract('PLCRVoting', (accounts) => {
 
       // call
       try {
-        await plcr.getNumPassingTokens.call(options.actor, pollID, options.salt);
+        await plcr.getNumPassingTokens.call(options.actor, pollID);
       } catch (err) {
         assert(utils.isEVMException(err), err.toString());
         return;
       }
       assert(false, 'was able to call getNumPassingTokens on a poll without revealing a vote');
-    });
-
-    it('should revert if the calculated commitHash does not match the original', async () => {
-      const options = utils.defaultOptions();
-      options.actor = alice;
-      options.vote = '0';
-
-      // commit and reveal a vote
-      const pollID = await utils.startPollAndCommitVote(options, plcr);
-      await utils.increaseTime(new BN(options.commitPeriod, 10).add('1').toNumber(10));
-
-      await utils.as(options.actor, plcr.revealVote, pollID, options.vote, options.salt);
-      await utils.increaseTime(new BN(options.revealPeriod, 10).add(new BN('1', 10)).toNumber(10));
-
-      // call with some other salt
-      const salt = '1776';
-      assert.notStrictEqual(salt, options.salt);
-
-      try {
-        await plcr.getNumPassingTokens.call(options.actor, pollID, salt);
-      } catch (err) {
-        assert(utils.isEVMException(err), err.toString());
-        return;
-      }
-      assert(false, 'was able to call getNumPassingTokens with a bad salt');
     });
 
     it('should return 0 if the queried tokens were committed to the minority bloc');
