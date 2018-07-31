@@ -35,8 +35,9 @@ contract PLCRVoting {
         uint voteQuorum;	    /// number of votes required for a proposal to pass
         uint votesFor;		    /// tally of votes supporting proposal
         uint votesAgainst;      /// tally of votes countering proposal
-        mapping(address => bool) didCommit;  /// indicates whether an address committed a vote for this poll
+        mapping(address => bool) didCommit;   /// indicates whether an address committed a vote for this poll
         mapping(address => bool) didReveal;   /// indicates whether an address revealed a vote for this poll
+        mapping(address => uint) voteOptions; /// stores the voteOption of an address that revealed
     }
 
     // ============
@@ -223,6 +224,7 @@ contract PLCRVoting {
 
         dllMap[msg.sender].remove(_pollID); // remove the node referring to this vote upon reveal
         pollMap[_pollID].didReveal[msg.sender] = true;
+        pollMap[_pollID].voteOptions[msg.sender] = _voteOption;
 
         emit _VoteRevealed(_pollID, numTokens, pollMap[_pollID].votesFor, pollMap[_pollID].votesAgainst, _voteOption, msg.sender, _salt);
     }
@@ -245,19 +247,18 @@ contract PLCRVoting {
     }
 
     /**
-    @param _pollID Integer identifier associated with target poll
-    @param _salt Arbitrarily chosen integer used to generate secretHash
-    @return correctVotes Number of tokens voted for winning option
+    @param _voter           Address of voter who voted in the majority bloc
+    @param _pollID          Integer identifier associated with target poll
+    @return correctVotes    Number of tokens voted for winning option
     */
-    function getNumPassingTokens(address _voter, uint _pollID, uint _salt) public constant returns (uint correctVotes) {
+    function getNumPassingTokens(address _voter, uint _pollID) public constant returns (uint correctVotes) {
         require(pollEnded(_pollID));
         require(pollMap[_pollID].didReveal[_voter]);
 
         uint winningChoice = isPassed(_pollID) ? 1 : 0;
-        bytes32 winnerHash = keccak256(abi.encodePacked(winningChoice, _salt));
-        bytes32 commitHash = getCommitHash(_voter, _pollID);
+        uint voterVoteOption = pollMap[_pollID].voteOptions[_voter];
 
-        require(winnerHash == commitHash);
+        require(voterVoteOption == winningChoice, "Voter revealed, but not in the majority");
 
         return getNumTokens(_voter, _pollID);
     }
@@ -441,28 +442,28 @@ contract PLCRVoting {
     */
     function getInsertPointForNumTokens(address _voter, uint _numTokens, uint _pollID)
     constant public returns (uint prevNode) {
-      // Get the last node in the list and the number of tokens in that node
-      uint nodeID = getLastNode(_voter);
-      uint tokensInNode = getNumTokens(_voter, nodeID);
+        // Get the last node in the list and the number of tokens in that node
+        uint nodeID = getLastNode(_voter);
+        uint tokensInNode = getNumTokens(_voter, nodeID);
 
-      // Iterate backwards through the list until reaching the root node
-      while(nodeID != 0) {
-        // Get the number of tokens in the current node
-        tokensInNode = getNumTokens(_voter, nodeID);
-        if(tokensInNode <= _numTokens) { // We found the insert point!
-          if(nodeID == _pollID) {
-            // This is an in-place update. Return the prev node of the node being updated
+        // Iterate backwards through the list until reaching the root node
+        while(nodeID != 0) {
+            // Get the number of tokens in the current node
+            tokensInNode = getNumTokens(_voter, nodeID);
+            if(tokensInNode <= _numTokens) { // We found the insert point!
+                if(nodeID == _pollID) {
+                    // This is an in-place update. Return the prev node of the node being updated
+                    nodeID = dllMap[_voter].getPrev(nodeID);
+                }
+                // Return the insert point
+                return nodeID; 
+            }
+            // We did not find the insert point. Continue iterating backwards through the list
             nodeID = dllMap[_voter].getPrev(nodeID);
-          }
-          // Return the insert point
-          return nodeID; 
         }
-        // We did not find the insert point. Continue iterating backwards through the list
-        nodeID = dllMap[_voter].getPrev(nodeID);
-      }
 
-      // The list is empty, or a smaller value than anything else in the list is being inserted
-      return nodeID;
+        // The list is empty, or a smaller value than anything else in the list is being inserted
+        return nodeID;
     }
 
     // ----------------
