@@ -211,7 +211,7 @@ contract PLCRVoting {
         require(revealPeriodActive(_pollID));
         require(pollMap[_pollID].didCommit[msg.sender]);                         // make sure user has committed a vote for this poll
         require(!pollMap[_pollID].didReveal[msg.sender]);                        // prevent user from revealing multiple times
-        require(keccak256(_voteOption, _salt) == getCommitHash(msg.sender, _pollID)); // compare resultant hash from inputs to original commitHash
+        require(keccak256(abi.encodePacked(_voteOption, _salt)) == getCommitHash(msg.sender, _pollID)); // compare resultant hash from inputs to original commitHash
 
         uint numTokens = getNumTokens(msg.sender, _pollID);
 
@@ -254,7 +254,7 @@ contract PLCRVoting {
         require(pollMap[_pollID].didReveal[_voter]);
 
         uint winningChoice = isPassed(_pollID) ? 1 : 0;
-        bytes32 winnerHash = keccak256(winningChoice, _salt);
+        bytes32 winnerHash = keccak256(abi.encodePacked(winningChoice, _salt));
         bytes32 commitHash = getCommitHash(_voter, _pollID);
 
         require(winnerHash == commitHash);
@@ -484,6 +484,6 @@ contract PLCRVoting {
     @return UUID Hash which is deterministic from _user and _pollID
     */
     function attrUUID(address _user, uint _pollID) public pure returns (bytes32 UUID) {
-        return keccak256(_user, _pollID);
+        return keccak256(abi.encodePacked(_user, _pollID));
     }
 }
