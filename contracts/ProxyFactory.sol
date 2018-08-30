@@ -45,7 +45,7 @@ contract ProxyFactory {
             proxyAddresses[i] = createProxyImpl(_target, _data);
         }
 
-        ProxiesDeployed(proxyAddresses, _target);
+        emit ProxiesDeployed(proxyAddresses, _target);
     }
 
     function createProxy(address _target, bytes _data)
@@ -54,7 +54,7 @@ contract ProxyFactory {
     {
         proxyContract = createProxyImpl(_target, _data);
 
-        ProxyDeployed(proxyContract, _target);
+        emit ProxyDeployed(proxyContract, _target);
     }
     
     function createProxyImpl(address _target, bytes _data)
