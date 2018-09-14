@@ -1,6 +1,6 @@
 /* global artifacts */
 
-const EIP20 = artifacts.require('tokens/eip20/EIP20.sol');
+const EIP20 = artifacts.require('openzeppelin-solidity/contracts/token/ERC20/ERC20.sol');
 const PLCRVoting = artifacts.require('./PLCRVoting.sol');
 
 const abi = require('ethereumjs-abi');

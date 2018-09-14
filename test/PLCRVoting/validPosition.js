@@ -3,7 +3,7 @@
 
 const PLCRVoting = artifacts.require('./PLCRVoting.sol');
 const PLCRFactory = artifacts.require('./PLCRFactory.sol');
-const EIP20 = artifacts.require('tokens/eip20/EIP20.sol');
+const EIP20 = artifacts.require('openzeppelin-solidity/contracts/token/ERC20/ERC20.sol');
 
 const utils = require('./utils.js');
 
@@ -15,7 +15,7 @@ contract('PLCRVoting', (accounts) => {
 
     before(async () => {
       const plcrFactory = await PLCRFactory.deployed();
-      const factoryReceipt = await plcrFactory.newPLCRWithToken('1000', 'TestToken', '0', 'TEST');
+      const factoryReceipt = await plcrFactory.newPLCRWithToken('TestToken', 'TEST', '0', '1000');
       plcr = PLCRVoting.at(factoryReceipt.logs[0].args.plcr);
       token = EIP20.at(factoryReceipt.logs[0].args.token);
 

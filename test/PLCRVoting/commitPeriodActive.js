@@ -13,7 +13,7 @@ contract('PLCRVoting', (accounts) => {
 
     before(async () => {
       const plcrFactory = await PLCRFactory.deployed();
-      const receipt = await plcrFactory.newPLCRWithToken('1000', 'TestToken', '0', 'TEST');
+      const receipt = await plcrFactory.newPLCRWithToken('TestToken', 'TEST', '0', '1000');
       plcr = PLCRVoting.at(receipt.logs[0].args.plcr);
     });
 

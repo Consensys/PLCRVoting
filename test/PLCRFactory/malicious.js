@@ -15,16 +15,15 @@ contract('PLCRFactory', () => {
     it('should not overwrite storage in proxy PLCRs when storage is changed in the canonical ' +
       'PLCR contract', async () => {
       const canonizedPLCR = PLCRVoting.at(await plcrFactory.canonizedPLCR.call());
-
       const tokenParams = {
-        supply: '1000',
+        supply: '10000000',
         name: 'TEST',
         decimals: '2',
         symbol: 'TST',
       };
-      const receipt = await plcrFactory.newPLCRWithToken(tokenParams.supply, tokenParams.name,
-        tokenParams.decimals, tokenParams.symbol);
-
+      const receipt = await plcrFactory.newPLCRWithToken(tokenParams.name, tokenParams.symbol,
+        tokenParams.decimals, tokenParams.supply);
+      console.log(receipt.logs[0].args);
       const token = receipt.logs[0].args.token;
       const plcr = PLCRVoting.at(receipt.logs[0].args.plcr);
 

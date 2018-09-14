@@ -19,8 +19,8 @@ contract('PLCRFactory', (accounts) => {
         decimals: '2',
         symbol: 'TST',
       };
-      const receipt = await plcrFactory.newPLCRWithToken(tokenParams.supply, tokenParams.name,
-        tokenParams.decimals, tokenParams.symbol);
+      const receipt = await plcrFactory.newPLCRWithToken(tokenParams.name, tokenParams.symbol,
+        tokenParams.decimals, tokenParams.supply);
 
       const creator = receipt.logs[0].args.creator;
       const token = receipt.logs[0].args.token;
