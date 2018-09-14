@@ -1,16 +1,21 @@
 {
   "package_name": "plcr-revival",
-  "version": "1.3.0",
+  "version": "2.0.0",
   "description": "PLCR voting for ERC20 tokens",
   "authors": [
     "Yorke Rhodes",
     "Cem Ozer",
-    "Aspyn Palatnick"
+    "Aspyn Palatnick",
+    "Mike Goldin",
+    "Akua Nti",
+    "Kenan O'Neal",
+    "Isaac Kang"
   ],
   "keywords": [
     "tokens",
     "consensys",
-    "plcr"
+    "plcr",
+    "voting"
   ],
   "dependencies": {
     "dll": "1.0.4",
