@@ -2,7 +2,7 @@ pragma solidity ^0.4.11;
 
 // This is a useless import, but it forces EIP20.sol to be compiled. We need its build file for
 // the test pipeline.
-import "tokens/eip20/EIP20.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 
 contract Migrations {
   address public owner;

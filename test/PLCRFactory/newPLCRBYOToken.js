@@ -3,7 +3,7 @@
 
 const PLCRFactory = artifacts.require('./PLCRFactory.sol');
 const PLCRVoting = artifacts.require('./PLCRVoting.sol');
-const EIP20 = artifacts.require('tokens/eip20/EIP20.sol');
+const EIP20 = artifacts.require('openzeppelin-solidity/contracts/token/ERC20/ERC20.sol');
 
 contract('PLCRFactory', () => {
   describe('Function: newPLCRBYOToken', () => {
@@ -21,8 +21,8 @@ contract('PLCRFactory', () => {
         decimals: '2',
         symbol: 'TST',
       };
-      const token = await EIP20.new(tokenParams.supply, tokenParams.name, tokenParams.decimals,
-        tokenParams.symbol);
+      const token = await EIP20.new(tokenParams.name, tokenParams.symbol,
+        tokenParams.decimals, tokenParams.supply);
 
       const receipt = await plcrFactory.newPLCRBYOToken(token.address);
       const plcr = PLCRVoting.at(receipt.logs[0].args.plcr);

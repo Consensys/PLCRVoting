@@ -1,8 +1,8 @@
 pragma solidity ^0.4.8;
-import "tokens/eip20/EIP20Interface.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "dll/DLL.sol";
 import "attrstore/AttributeStore.sol";
-import "zeppelin/math/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
 @title Partial-Lock-Commit-Reveal Voting scheme with ERC20 tokens
@@ -53,7 +53,7 @@ contract PLCRVoting {
     mapping(address => DLL.Data) dllMap;
     AttributeStore.Data store;
 
-    EIP20Interface public token;
+    ERC20 public token;
 
     /**
     @dev Initializer. Can only be called once.
@@ -62,7 +62,7 @@ contract PLCRVoting {
     function init(address _token) public {
         require(_token != address(0) && address(token) == address(0));
 
-        token = EIP20Interface(_token);
+        token = ERC20(_token);
         pollNonce = INITIAL_POLL_NONCE;
     }
 
@@ -256,7 +256,12 @@ contract PLCRVoting {
         require(pollMap[_pollID].didReveal[_voter]);
 
         uint winningChoice = isPassed(_pollID) ? 1 : 0;
+
+        bytes32 winnerHash = keccak256(abi.encodePacked(winningChoice, _salt));
+        bytes32 commitHash = getCommitHash(_voter, _pollID);
+
         uint voterVoteOption = pollMap[_pollID].voteOptions[_voter];
+
 
         require(voterVoteOption == winningChoice, "Voter revealed, but not in the majority");
 
