@@ -14,7 +14,7 @@ contract('PLCRVoting', (accounts) => {
     let plcr;
     let token;
 
-    before(async () => {
+    beforeEach(async () => {
       const plcrFactory = await PLCRFactory.deployed();
       const factoryReceipt = await plcrFactory.newPLCRWithToken('TestToken', 'TEST', '0', '10000');
       plcr = PLCRVoting.at(factoryReceipt.logs[0].args.plcr);
@@ -46,7 +46,10 @@ contract('PLCRVoting', (accounts) => {
       const options = utils.defaultOptions();
       options.actor = alice;
 
-      const pollID = '1';
+      const pollID = await utils.startPollAndCommitVote(options, plcr);
+
+      await utils.increaseTime(new BN(options.commitPeriod, 10).add(new BN('1', 10)).toNumber(10));
+      await utils.as(options.actor, plcr.revealVote, pollID, options.vote, options.salt);
 
       try {
         await utils.as(alice, plcr.revealVote, pollID, options.vote, options.salt);

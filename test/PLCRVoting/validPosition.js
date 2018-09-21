@@ -13,7 +13,7 @@ contract('PLCRVoting', (accounts) => {
     let plcr;
     let token;
 
-    before(async () => {
+    beforeEach(async () => {
       const plcrFactory = await PLCRFactory.deployed();
       const factoryReceipt = await plcrFactory.newPLCRWithToken('TestToken', 'TEST', '0', '1000');
       plcr = PLCRVoting.at(factoryReceipt.logs[0].args.plcr);
@@ -47,7 +47,7 @@ contract('PLCRVoting', (accounts) => {
       const secretHash = utils.createVoteHash(1, 420);
       const numTokens = 10;
       try {
-        await utils.as(alice, plcr.commitVote, pollID, secretHash, numTokens, 0);
+        await utils.as(alice, plcr.commitVote, pollID, secretHash, numTokens, 10);
         assert(false, 'Alice was able to unsort her DLL');
       } catch (err) {
         assert(utils.isEVMException(err), err.toString());

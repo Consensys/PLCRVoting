@@ -13,7 +13,7 @@ contract('PLCRVoting', (accounts) => {
     let plcr;
     let token;
 
-    before(async () => {
+    beforeEach(async () => {
       const plcrFactory = await PLCRFactory.deployed();
       const factoryReceipt = await plcrFactory.newPLCRWithToken('TestToken', 'TEST', '0', '1000');
       plcr = PLCRVoting.at(factoryReceipt.logs[0].args.plcr);
@@ -39,7 +39,7 @@ contract('PLCRVoting', (accounts) => {
       await utils.as(alice, plcr.requestVotingRights, '25');
 
       const voteTokenBalance = await plcr.voteTokenBalance.call(alice);
-      assert.strictEqual(voteTokenBalance.toString(10), '35',
+      assert.strictEqual(voteTokenBalance.toString(10), '25',
         'Voting rights were not properly assigned');
     });
 
@@ -52,7 +52,7 @@ contract('PLCRVoting', (accounts) => {
         assert(utils.isEVMException, err);
 
         const voteTokenBalance = await plcr.voteTokenBalance.call(alice);
-        assert.strictEqual(voteTokenBalance.toString(10), '35', errMsg);
+        assert.strictEqual(voteTokenBalance.toString(10), '0', errMsg);
         return;
       }
       assert(false, errMsg);

@@ -13,7 +13,7 @@ contract('PLCRVoting', (accounts) => {
     let plcr;
     let token;
 
-    before(async () => {
+    beforeEach(async () => {
       const plcrFactory = await PLCRFactory.deployed();
       const receipt = await plcrFactory.newPLCRWithToken('TestToken', 'TEST', '0', '10000');
       plcr = PLCRVoting.at(receipt.logs[0].args.plcr);
@@ -41,12 +41,12 @@ contract('PLCRVoting', (accounts) => {
     it('should update a commit for a poll by changing the secretHash', async () => {
       const options = utils.defaultOptions();
       options.actor = alice;
+      const pollID = await utils.startPollAndCommitVote(options, plcr);
+      const originalHash = await plcr.getCommitHash.call(alice, pollID);
       options.vote = '0';
 
       const errMsg = 'Alice was not able to update her commit';
-      const pollID = '1';
 
-      const originalHash = await plcr.getCommitHash.call(alice, pollID);
       const secretHash = utils.createVoteHash(options.vote, options.salt);
       const prevPollID =
         await plcr.getInsertPointForNumTokens.call(options.actor, options.numTokens, pollID);
@@ -85,7 +85,6 @@ contract('PLCRVoting', (accounts) => {
     it('should not allow a user to commit for a poll which does not exist', async () => {
       const errMsg = 'Alice was able to commit to a poll which does not exist';
       const options = utils.defaultOptions();
-
       const secretHash = utils.createVoteHash(options.vote, options.salt);
 
       // The zero poll does not exist
@@ -97,7 +96,7 @@ contract('PLCRVoting', (accounts) => {
       }
 
       const tokensCommitted = await plcr.getLockedTokens.call(alice);
-      assert.strictEqual(tokensCommitted.toString(10), options.numTokens, errMsg);
+      assert.strictEqual(tokensCommitted.toString(10), '0', errMsg);
     });
 
     it('should update a commit for a poll by changing the numTokens, and allow the user to ' +

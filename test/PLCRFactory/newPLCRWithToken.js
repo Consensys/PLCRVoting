@@ -8,7 +8,7 @@ contract('PLCRFactory', (accounts) => {
   describe('Function: newPLCRWithToken', () => {
     let plcrFactory;
 
-    before(async () => {
+    beforeEach(async () => {
       plcrFactory = await PLCRFactory.deployed();
     });
 

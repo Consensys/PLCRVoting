@@ -13,7 +13,7 @@ contract('PLCRVoting', (accounts) => {
     let plcr;
     let token;
 
-    before(async () => {
+    beforeEach(async () => {
       const plcrFactory = await PLCRFactory.deployed();
       const factoryReceipt = await plcrFactory.newPLCRWithToken('TestToken', 'TEST', '0', '1000');
       plcr = PLCRVoting.at(factoryReceipt.logs[0].args.plcr);
@@ -46,10 +46,11 @@ contract('PLCRVoting', (accounts) => {
           assert(utils.isEVMException(err), err);
         }
         const voteTokenBalance = await plcr.voteTokenBalance.call(alice);
-        assert.strictEqual(voteTokenBalance.toNumber(10), 1, errMsg);
+        assert.strictEqual(voteTokenBalance.toNumber(10), 0, errMsg);
       });
 
     it('should withdraw voting rights for all remaining tokens', async () => {
+      await utils.as(alice, plcr.requestVotingRights, 1);
       await utils.as(alice, plcr.withdrawVotingRights, 1);
       const voteTokenBalance = await plcr.voteTokenBalance.call(alice);
       assert.strictEqual(voteTokenBalance.toNumber(10), 0,

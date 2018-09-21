@@ -139,6 +139,7 @@ contract('PLCRVoting', (accounts) => {
 
         const numTokens = 4;
         const insertPoint = await plcr.getInsertPointForNumTokens.call(alice, numTokens, pollID);
+        console.log(insertPoint.toString(10));
         assert.strictEqual(insertPoint.toString(10), '4', errMsg); // after D
       });
 

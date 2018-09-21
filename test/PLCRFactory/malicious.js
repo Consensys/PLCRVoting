@@ -8,7 +8,7 @@ contract('PLCRFactory', () => {
   describe('Malicious actions', () => {
     let plcrFactory;
 
-    before(async () => {
+    beforeEach(async () => {
       plcrFactory = await PLCRFactory.deployed();
     });
 
@@ -23,7 +23,6 @@ contract('PLCRFactory', () => {
       };
       const receipt = await plcrFactory.newPLCRWithToken(tokenParams.name, tokenParams.symbol,
         tokenParams.decimals, tokenParams.supply);
-      console.log(receipt.logs[0].args);
       const token = receipt.logs[0].args.token;
       const plcr = PLCRVoting.at(receipt.logs[0].args.plcr);
 
