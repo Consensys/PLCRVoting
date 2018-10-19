@@ -12,11 +12,11 @@ EPM: [plcr-revival](https://www.ethpm.com/registry/packages/49)
 
 ## Summary
 
-PLCR voting an an efficient system for token-weighted voting on the Ethereum blockchain
+PLCR voting is an efficient system for token-weighted voting on the Ethereum blockchain
 
 PLCR voting enables a user to participate in **multiple polls simultaneously** with their tokens while preventing double-voting of tokens within polls
 
-PLCR voting allows users to withdraw (at any time) the maximum number of tokens which are not actively used voting
+PLCR voting allows users to withdraw (at any time) the maximum number of tokens which are not actively used in voting
 
 PLCR voting (in it's current implementation) **does not stake tokens** -- voting in the losing party of a poll does not result in a loss of one's tokens
 
