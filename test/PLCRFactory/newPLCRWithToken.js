@@ -24,7 +24,7 @@ contract('PLCRFactory', (accounts) => {
 
       const creator = receipt.logs[0].args.creator;
       const token = receipt.logs[0].args.token;
-      const plcr = PLCRVoting.at(receipt.logs[0].args.plcr);
+      const plcr = await PLCRVoting.at(receipt.logs[0].args.plcr);
 
       const plcrToken = await plcr.token.call();
 

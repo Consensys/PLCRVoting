@@ -6,7 +6,7 @@ const PLCRFactory = artifacts.require('./PLCRFactory.sol');
 const EIP20 = artifacts.require('tokens/eip20/EIP20.sol');
 
 const utils = require('./utils.js');
-const BN = require('bignumber.js');
+const BN = require('bn.js');
 
 contract('PLCRVoting', (accounts) => {
   describe('Function: isPassed', () => {
@@ -18,8 +18,8 @@ contract('PLCRVoting', (accounts) => {
       const plcrFactory = await PLCRFactory.deployed();
       const receipt = await plcrFactory.newPLCRWithToken('10000', 'TestToken', '0', 'TEST');
 
-      plcr = PLCRVoting.at(receipt.logs[0].args.plcr);
-      token = EIP20.at(receipt.logs[0].args.token);
+      plcr = await PLCRVoting.at(receipt.logs[0].args.plcr);
+      token = await EIP20.at(receipt.logs[0].args.token);
 
       await Promise.all(
         accounts.map(async (user) => {
@@ -89,7 +89,7 @@ contract('PLCRVoting', (accounts) => {
       // go to the end of the time period
       const increase = new BN(options.commitPeriod, 10)
         .add(new BN(options.revealPeriod, 10))
-        .add('1');
+        .add(new BN('1', 10));
       await utils.increaseTime(increase.toNumber(10));
 
       const isPassed = await plcr.isPassed.call(pollID);

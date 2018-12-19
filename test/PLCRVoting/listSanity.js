@@ -17,8 +17,8 @@ contract('PLCRVoting', (accounts) => {
     before(async () => {
       const plcrFactory = await PLCRFactory.deployed();
       const factoryReceipt = await plcrFactory.newPLCRWithToken('1000', 'TestToken', '0', 'TEST');
-      plcr = PLCRVoting.at(factoryReceipt.logs[0].args.plcr);
-      token = EIP20.at(factoryReceipt.logs[0].args.token);
+      plcr = await PLCRVoting.at(factoryReceipt.logs[0].args.plcr);
+      token = await EIP20.at(factoryReceipt.logs[0].args.token);
 
       // Create { A: 1, B: 5, C: 10 }
       // Then insert { A: 1, D: 3, B: 5, C: 10 }
@@ -76,7 +76,7 @@ contract('PLCRVoting', (accounts) => {
       // { A: 1, D: 3, B: 5, E: 7, C: 10 }
       // { 1: 1, 4: 3, 2: 5, 5: 7, 3: 10 }
       const pollID = '1';
-      const secretHash = '1';
+      const secretHash = '0x0000000000000000000000000000000000000001';
 
       const numTokens = '0';
       const insertPoint = '3';
@@ -94,7 +94,7 @@ contract('PLCRVoting', (accounts) => {
       // { A: 1, D: 3, B: 5, E: 7, C: 10 }
       // { 1: 1, 4: 3, 2: 5, 5: 7, 3: 10 }
       const pollID = '1';
-      const secretHash = '1';
+      const secretHash = '0x0000000000000000000000000000000000000001';
 
       const numTokens = '2';
       const insertPoint = '1';
@@ -112,7 +112,7 @@ contract('PLCRVoting', (accounts) => {
       // { A: 1, D: 3, B: 5, E: 7, C: 10 }
       // { 1: 1, 4: 3, 2: 5, 5: 7, 3: 10 }
       const pollID = '2';
-      const secretHash = '1';
+      const secretHash = '0x0000000000000000000000000000000000000001';
 
       const numTokens = '6';
       const insertPoint = '2';
@@ -130,7 +130,7 @@ contract('PLCRVoting', (accounts) => {
       // { A: 1, D: 3, B: 5, E: 7, C: 10 }
       // { 1: 1, 4: 3, 2: 5, 5: 7, 3: 10 }
       const pollID = '3';
-      const secretHash = '1';
+      const secretHash = '0x0000000000000000000000000000000000000001';
 
       const numTokens = '11';
       const insertPoint = '3';

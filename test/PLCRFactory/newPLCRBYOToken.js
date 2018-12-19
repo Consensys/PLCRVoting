@@ -25,7 +25,7 @@ contract('PLCRFactory', () => {
         tokenParams.symbol);
 
       const receipt = await plcrFactory.newPLCRBYOToken(token.address);
-      const plcr = PLCRVoting.at(receipt.logs[0].args.plcr);
+      const plcr = await PLCRVoting.at(receipt.logs[0].args.plcr);
 
       const plcrToken = await plcr.token.call();
 

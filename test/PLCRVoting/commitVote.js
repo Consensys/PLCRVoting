@@ -17,8 +17,8 @@ contract('PLCRVoting', (accounts) => {
       const plcrFactory = await PLCRFactory.deployed();
       const receipt = await plcrFactory.newPLCRWithToken('10000', 'TestToken', '0', 'TEST');
 
-      plcr = PLCRVoting.at(receipt.logs[0].args.plcr);
-      token = EIP20.at(receipt.logs[0].args.token);
+      plcr = await PLCRVoting.at(receipt.logs[0].args.plcr);
+      token = await EIP20.at(receipt.logs[0].args.token);
 
       await Promise.all(
         accounts.map(async (user) => {
@@ -129,7 +129,7 @@ contract('PLCRVoting', (accounts) => {
 
       // calculate a number of tokens greater than the balance
       const startingBalance = await plcr.voteTokenBalance.call(options.actor);
-      options.numTokens = startingBalance.add('1').toString();
+      options.numTokens = (startingBalance.toNumber() + 1).toString();
 
       // start a poll
       const receipt = await utils.as(options.actor, plcr.startPoll, options.quorum,
@@ -153,7 +153,7 @@ contract('PLCRVoting', (accounts) => {
 
       // verify that the ending votingRights balance was increased
       const endingBalance = await plcr.voteTokenBalance.call(options.actor);
-      assert(endingBalance.toString(), startingBalance.add('1').toString(),
+      assert(endingBalance.toString(), (startingBalance.toNumber() + 1).toString(),
         'ending balance should have been the starting balance + 1');
     });
 

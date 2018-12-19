@@ -6,7 +6,7 @@ const PLCRFactory = artifacts.require('./PLCRFactory.sol');
 const EIP20 = artifacts.require('tokens/eip20/EIP20.sol');
 
 const utils = require('./utils.js');
-const BN = require('bignumber.js');
+const BN = require('bn.js');
 
 contract('PLCRVoting', (accounts) => {
   describe('Function: rescueTokens', () => {
@@ -17,8 +17,8 @@ contract('PLCRVoting', (accounts) => {
     before(async () => {
       const plcrFactory = await PLCRFactory.deployed();
       const factoryReceipt = await plcrFactory.newPLCRWithToken('1000', 'TestToken', '0', 'TEST');
-      plcr = PLCRVoting.at(factoryReceipt.logs[0].args.plcr);
-      token = EIP20.at(factoryReceipt.logs[0].args.token);
+      plcr = await PLCRVoting.at(factoryReceipt.logs[0].args.plcr);
+      token = await EIP20.at(factoryReceipt.logs[0].args.token);
 
       await Promise.all(
         accounts.map(async (user) => {

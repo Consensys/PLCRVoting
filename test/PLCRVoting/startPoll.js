@@ -5,7 +5,7 @@ const PLCRVoting = artifacts.require('./PLCRVoting.sol');
 const PLCRFactory = artifacts.require('./PLCRFactory.sol');
 
 const utils = require('./utils.js');
-const BN = require('bignumber.js');
+const BN = require('bn.js');
 
 contract('PLCRVoting', () => {
   describe('Function: startPoll', () => {
@@ -14,7 +14,7 @@ contract('PLCRVoting', () => {
     before(async () => {
       const plcrFactory = await PLCRFactory.deployed();
       const receipt = await plcrFactory.newPLCRWithToken('1000', 'TestToken', '0', 'TEST');
-      plcr = PLCRVoting.at(receipt.logs[0].args.plcr);
+      plcr = await PLCRVoting.at(receipt.logs[0].args.plcr);
     });
 
     it('should return a poll with ID 1 for the first poll created', async () => {
@@ -34,10 +34,10 @@ contract('PLCRVoting', () => {
 
     it('should revert if block timestamp plus provided _commitDuration is greater than 2^256-1', async () => {
       // getting the maximum of uint and storing in maxEVMuint
-      const maxEVMuint = new BN('2').pow('256').minus('1');
+      const maxEVMuint = new BN('2').pow(new BN('256')).sub(new BN('1'));
       const blockTimestamp = await utils.getBlockTimestamp();
       // setting commitDuration to block macEVMuint - blockTimestamp
-      const commitDuration = maxEVMuint.minus(blockTimestamp).plus('1');
+      const commitDuration = maxEVMuint.sub(new BN(blockTimestamp)).add(new BN('1'));
 
       try {
         await plcr.startPoll('50', commitDuration, '0');
@@ -50,10 +50,10 @@ contract('PLCRVoting', () => {
 
     it('should revert if (block timestamp + _commitDuration) plus provided _revealDuration is greater than 2^256-1', async () => {
       // getting the maximum of uint and storing in maxEVMuint
-      const maxEVMuint = new BN('2').pow('256').minus('1');
+      const maxEVMuint = new BN('2').pow(new BN('256')).sub(new BN('1'));
       const blockTimestamp = await utils.getBlockTimestamp();
       // setting revealDuration to block macEVMuint - blockTimestamp
-      const revealDuration = maxEVMuint.minus(blockTimestamp).plus('1');
+      const revealDuration = maxEVMuint.sub(new BN(blockTimestamp)).add(new BN('1'));
 
       try {
         await plcr.startPoll('50', '0', revealDuration);

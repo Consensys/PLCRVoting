@@ -17,8 +17,8 @@ contract('PLCRVoting', (accounts) => {
       const plcrFactory = await PLCRFactory.deployed();
       const receipt = await plcrFactory.newPLCRWithToken('10000', 'TestToken', '0', 'TEST');
 
-      plcr = PLCRVoting.at(receipt.logs[0].args.plcr);
-      token = EIP20.at(receipt.logs[0].args.token);
+      plcr = await PLCRVoting.at(receipt.logs[0].args.plcr);
+      token = await EIP20.at(receipt.logs[0].args.token);
 
       await Promise.all(
         accounts.map(async (user) => {
