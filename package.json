@@ -6,7 +6,7 @@
     "install": "truffle install",
     "compile": "truffle compile",
     "coverage": "./node_modules/.bin/solidity-coverage",
-    "test": "npm run lint ./ && truffle test",
+    "test": "npm run lint ./ && truffle compile && truffle test",
     "fix": "eslint --fix",
     "lint": "eslint",
     "publish": "truffle publish"
@@ -16,6 +16,7 @@
   "dependencies": {
     "bignumber.js": "5.0.0",
     "bip39": "2.4.0",
+    "bn.js": "^4.11.8",
     "ethereumjs-abi": "0.6.4",
     "ethereumjs-testrpc": "4.1.1",
     "ethereumjs-wallet": "0.6.0",
@@ -23,8 +24,8 @@
     "ethjs-query": "0.2.6",
     "ethjs-rpc": "0.1.5",
     "ethjs-util": "0.1.4",
-    "truffle": "4.1.14",
-    "truffle-hdwallet-provider": "0.0.3"
+    "truffle": "5.0.0",
+    "truffle-hdwallet-provider": "1.0.0-web3one.1"
   },
   "devDependencies": {
     "eslint": "4.4.1",

@@ -15,13 +15,13 @@ if (fs.existsSync('secrets.json')) {
 module.exports = {
   networks: {
     rinkeby: {
-      provider: new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io'),
+      provider: () => new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io'),
       network_id: '*',
       gas: 6000000,
       gasPrice: 20000000000,
     },
     ropsten: {
-      provider: new HDWalletProvider(mnemonic, 'https://ropsten.infura.io'),
+      provider: () => new HDWalletProvider(mnemonic, 'https://ropsten.infura.io'),
       network_id: '*',
       gas: 4700000,
       gasPrice: 20000000000,
@@ -38,6 +38,11 @@ module.exports = {
       port: 7545, // <-- If you change this, also set the port option in .solcover.js.
       gas: 0xfffffffffff, // <-- Use this high gas value
       gasPrice: 0x01, // <-- Use this low gas price
+    },
+  },
+  compilers: {
+    solc: {
+      version: '^0.4.22',
     },
   },
 };
