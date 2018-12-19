@@ -60,7 +60,7 @@ contract PLCRVoting {
     @param _token The address where the ERC20 token contract is deployed
     */
     function init(address _token) public {
-        require(_token != address(0) && address(token) == address(0));
+        require(_token != address(0) && address(token) == address(0), "Provided address is invalid. Must be non-zero and storage not set.");
 
         token = EIP20Interface(_token);
         pollNonce = INITIAL_POLL_NONCE;
@@ -76,9 +76,9 @@ contract PLCRVoting {
     @param _numTokens The number of votingTokens desired in exchange for ERC20 tokens
     */
     function requestVotingRights(uint _numTokens) public {
-        require(token.balanceOf(msg.sender) >= _numTokens);
+        require(token.balanceOf(msg.sender) >= _numTokens, "Msg sender does not have enough balance.");
         voteTokenBalance[msg.sender] += _numTokens;
-        require(token.transferFrom(msg.sender, this, _numTokens));
+        require(token.transferFrom(msg.sender, this, _numTokens), "Msg sender must first approve the PLCRVoting contract to transferFrom.");
         emit _VotingRightsGranted(_numTokens, msg.sender);
     }
 
@@ -88,9 +88,9 @@ contract PLCRVoting {
     */
     function withdrawVotingRights(uint _numTokens) external {
         uint availableTokens = voteTokenBalance[msg.sender].sub(getLockedTokens(msg.sender));
-        require(availableTokens >= _numTokens);
+        require(availableTokens >= _numTokens, "Msg sender is requesting more tokens than available.");
         voteTokenBalance[msg.sender] -= _numTokens;
-        require(token.transfer(msg.sender, _numTokens));
+        require(token.transfer(msg.sender, _numTokens), "Error while transferring tokens to msg sender.");
         emit _VotingRightsWithdrawn(_numTokens, msg.sender);
     }
 
@@ -99,8 +99,8 @@ contract PLCRVoting {
     @param _pollID Integer identifier associated with the target poll
     */
     function rescueTokens(uint _pollID) public {
-        require(isExpired(pollMap[_pollID].revealEndDate));
-        require(dllMap[msg.sender].contains(_pollID));
+        require(isExpired(pollMap[_pollID].revealEndDate), "The poll revealEndDate has not expired.");
+        require(dllMap[msg.sender].contains(_pollID), "Msg sender has not participated in this poll.");
 
         dllMap[msg.sender].remove(_pollID);
         emit _TokensRescued(_pollID, msg.sender);
@@ -129,7 +129,7 @@ contract PLCRVoting {
     @param _prevPollID The ID of the poll that the user has voted the maximum number of tokens in which is still less than or equal to numTokens
     */
     function commitVote(uint _pollID, bytes32 _secretHash, uint _numTokens, uint _prevPollID) public {
-        require(commitPeriodActive(_pollID));
+        require(commitPeriodActive(_pollID), "Commit period is not active.");
 
         // if msg.sender doesn't have enough voting rights,
         // request for enough voting rights
@@ -139,14 +139,14 @@ contract PLCRVoting {
         }
 
         // make sure msg.sender has enough voting rights
-        require(voteTokenBalance[msg.sender] >= _numTokens);
+        require(voteTokenBalance[msg.sender] >= _numTokens, "Msg sender does not have enough voting rights.");
         // prevent user from committing to zero node placeholder
-        require(_pollID != 0);
+        require(_pollID != 0, "Poll must not be zero.");
         // prevent user from committing a secretHash of 0
-        require(_secretHash != 0);
+        require(_secretHash != 0, "Secret hash must not be zero.");
 
         // Check if _prevPollID exists in the user's DLL or if _prevPollID is 0
-        require(_prevPollID == 0 || dllMap[msg.sender].contains(_prevPollID));
+        require(_prevPollID == 0 || dllMap[msg.sender].contains(_prevPollID), "Previous poll must either be zero or msg sender must have participated in the poll.");
 
         uint nextPollID = dllMap[msg.sender].getNext(_prevPollID);
 
@@ -155,7 +155,7 @@ contract PLCRVoting {
             nextPollID = dllMap[msg.sender].getNext(_pollID);
         }
 
-        require(validPosition(_prevPollID, nextPollID, msg.sender, _numTokens));
+        require(validPosition(_prevPollID, nextPollID, msg.sender, _numTokens), "Invalid positioning of DLL.");
         dllMap[msg.sender].insert(_prevPollID, _pollID, nextPollID);
 
         bytes32 UUID = attrUUID(msg.sender, _pollID);
