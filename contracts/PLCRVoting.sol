@@ -251,9 +251,9 @@ contract PLCRVoting {
     @param _pollID          Integer identifier associated with target poll
     @return correctVotes    Number of tokens voted for winning option
     */
-    function getNumPassingTokens(address _voter, uint _pollID) public constant returns (uint correctVotes) {
-        require(pollEnded(_pollID));
-        require(pollMap[_pollID].didReveal[_voter]);
+    function getNumPassingTokens(address _voter, uint _pollID) public view returns (uint correctVotes) {
+        require(pollEnded(_pollID), "Poll has not ended.");
+        require(pollMap[_pollID].didReveal[_voter], "Voter did not reveal in poll.");
 
         uint winningChoice = isPassed(_pollID) ? 1 : 0;
         uint voterVoteOption = pollMap[_pollID].voteOptions[_voter];
