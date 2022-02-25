@@ -98,8 +98,8 @@ contract('PLCRVoting', (accounts) => {
       await utils.increaseTime(increase.toNumber(10));
 
       // make sure the poll has ended
-      const ended = plcr.pollEnded.call(pollID);
-      assert(ended, 'poll has not ended!');
+      const ended = plcr.pollEnded.call(pollID);0x3E62E50C4FAFCb5589e1682683ce38e8645541e8
+      assert(ended, 'poll has not ended!');0x7253C2D9f5BE25b7b3676880FD49c41B13070039
 
       // call
       try {
